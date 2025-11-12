@@ -32,5 +32,6 @@ class AppServiceProvider extends ServiceProvider
     public $allTables = [
         \App\Filament\Resources\Departments\Pages\ManageDepartments::class,
         \App\Filament\Resources\Roles\Pages\ListRoles::class,
+        \App\Filament\Resources\Clients\Pages\ManageClients::class,
     ];
 }
