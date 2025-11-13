@@ -110,7 +110,11 @@ class Task extends Model implements HasMedia
     const STATUS_COMPLETED = 1;
 
     const PRIORITY = [
-        'highest' => 'HIGHEST', 'high' => 'HIGH', 'medium' => 'MEDIUM', 'low' => 'LOW', 'lowest' => 'LOWEST',
+        'highest' => 'HIGHEST',
+        'high' => 'HIGH',
+        'medium' => 'MEDIUM',
+        'low' => 'LOW',
+        'lowest' => 'LOWEST',
     ];
 
     const PATH = 'attachments';
@@ -118,7 +122,13 @@ class Task extends Model implements HasMedia
     public $table = 'tasks';
 
     protected $appends = [
-        'task_duration', 'prefix_task_number', 'task_hours', 'task_total_hours', 'task_total_minutes', 'attachments', 'status_text',
+        'task_duration',
+        'prefix_task_number',
+        'task_hours',
+        'task_total_hours',
+        'task_total_minutes',
+        'attachments',
+        'status_text',
     ];
 
     const PRIORITY_BADGE = [
@@ -240,7 +250,7 @@ class Task extends Model implements HasMedia
     public function getPrefixTaskNumberAttribute()
     {
         if (str_contains(\URL::current(), 'tasks')) {
-            return '#'.$this->project->prefix.'-'.$this->task_number;
+            return '#' . $this->project->prefix . '-' . $this->task_number;
         }
 
         return '';
@@ -266,7 +276,7 @@ class Task extends Model implements HasMedia
         self::$statusArr = Status::toBase()->orderBy('name', 'asc')->pluck('name', 'status')->toArray();
         foreach (self::$statusArr as $key => $status) {
             $status = $status == 'Pending' ? 'Active' : $status;
-            self::$status['STATUS_'.strtoupper($status)] = $key;
+            self::$status['STATUS_' . strtoupper($status)] = $key;
         }
     }
 
@@ -422,5 +432,29 @@ class Task extends Model implements HasMedia
     public function getStatusTextAttribute()
     {
         return self::$statusArr[$this->status];
+    }
+
+    /**
+     * Generate a unique task number per project.
+     *
+     * @param int $projectId
+     * @return int
+     */
+    public static function generateUniqueTaskNumber(int $projectId): int
+    {
+        // Get the last task number in this project (including soft deleted)
+        $lastTask = self::withTrashed()
+            ->where('project_id', $projectId)
+            ->orderByDesc('task_number')
+            ->first();
+
+        $uniqueNumber = $lastTask ? $lastTask->task_number + 1 : 1;
+
+        // Ensure the number is truly unique (in case of gaps)
+        while (self::where('project_id', $projectId)->where('task_number', $uniqueNumber)->exists()) {
+            $uniqueNumber++;
+        }
+
+        return $uniqueNumber;
     }
 }

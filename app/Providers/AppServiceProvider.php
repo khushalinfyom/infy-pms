@@ -33,5 +33,12 @@ class AppServiceProvider extends ServiceProvider
         \App\Filament\Resources\Departments\Pages\ManageDepartments::class,
         \App\Filament\Resources\Roles\Pages\ListRoles::class,
         \App\Filament\Resources\Clients\Pages\ManageClients::class,
+        \App\Filament\Resources\ArchivedUsers\Pages\ManageArchivedUsers::class,
+        \App\Filament\Resources\Tasks\Pages\ManageTasks::class,
+        \App\Filament\Resources\Users\Pages\ManageUsers::class,
+        \App\Filament\Resources\Tags\Pages\ManageTags::class,
+        \App\Filament\Resources\ActivityTypes\Pages\ManageActivityTypes::class,
+        \App\Filament\Resources\Taxes\Pages\ManageTaxes::class,
+
     ];
 }

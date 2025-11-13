@@ -118,7 +118,6 @@ class ListProjects extends Page
                                             return $colors[$project->status] ?? 'gray';
                                         }),
 
-
                                     TextEntry::make('created_at')
                                         ->hiddenLabel()
                                         ->default('1/345')
@@ -152,7 +151,7 @@ class ListProjects extends Page
 
                                         return <<<HTML
                                                     <div style="position: relative; width: 100%; height: 20px; background-color: #e5e7eb; border-radius: 10px; overflow: hidden; ">
-                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: 45%; background-color: {$color}; transition: width 0.3s ease;"></div>
+                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: 90%; background-color: {$color}; transition: width 0.3s ease;"></div>
                                                         <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: {$textColor}; ">
                                                             90%
                                                         </div>
@@ -160,31 +159,61 @@ class ListProjects extends Page
                                                 HTML;
                                     }),
 
-                                ImageEntry::make('users')
-                                    ->label('Team')
-                                    ->hiddenLabel()
-                                    ->default(function () use ($project) {
-                                        $users = $project->users ?? collect();
+                                Group::make([
 
-                                        if ($users->isEmpty()) {
-                                            $users = \App\Models\User::whereIn('id', function ($query) use ($project) {
-                                                $query->select('user_id')
-                                                    ->from('project_user')
-                                                    ->where('project_id', $project->id);
-                                            })->get();
-                                        }
+                                    ImageEntry::make('users')
+                                        ->label('Team')
+                                        ->hiddenLabel()
+                                        ->default(function () use ($project) {
+                                            $users = $project->users ?? collect();
 
-                                        return $users->map(function ($user) {
-                                            return $user->img_avatar
-                                                ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
-                                        })->toArray();
-                                    })
-                                    ->circular()
-                                    ->stacked()
-                                    ->limit(6)
-                                    ->limitedRemainingText()
-                                    ->imageHeight(40)
+                                            if ($users->isEmpty()) {
+                                                $users = \App\Models\User::whereIn('id', function ($query) use ($project) {
+                                                    $query->select('user_id')
+                                                        ->from('project_user')
+                                                        ->where('project_id', $project->id);
+                                                })->get();
+                                            }
 
+                                            return $users->map(function ($user) {
+                                                return $user->img_avatar
+                                                    ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
+                                            })->toArray();
+                                        })
+                                        ->circular()
+                                        ->stacked()
+                                        ->limit(6)
+                                        ->limitedRemainingText()
+                                        ->imageHeight(40)
+                                        ->extraAttributes([
+                                            'style' => 'display: flex; ',
+                                        ]),
+
+                                    Action::make('View')
+                                        ->label('View')
+                                        ->iconButton()
+                                        ->icon('heroicon-s-plus')
+                                        ->color('info')
+                                        ->modalHeading("Edit Assignee")
+                                        ->modalWidth('md')
+                                        ->form([
+                                            Select::make('user_ids')
+                                                ->label('Assign To')
+                                                ->multiple()
+                                                ->options(User::pluck('name', 'id'))
+                                                ->searchable()
+                                                ->preload(),
+
+                                        ])
+                                        ->extraAttributes([
+                                            'style' => 'display: flex; justify-content: flex-start; border: 1px solid #e3e3e0; border-radius: 50%; padding: 0.5rem; margin: 2px 0px 0px -16px ',
+                                        ])
+
+                                ])
+                                    ->columns(2)
+                                    ->extraAttributes([
+                                        'style' => 'display: flex; ',
+                                    ])
                             ]);
                     }
                     return Group::make($projectsData)->columns(3);

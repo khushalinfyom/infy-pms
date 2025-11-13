@@ -1,5 +1,8 @@
 <?php
 
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
+
 if (!function_exists('getUserImageInitial')) {
     function getUserImageInitial($userId, $name)
     {
@@ -9,5 +12,23 @@ if (!function_exists('getUserImageInitial')) {
 
         return 'https://ui-avatars.com/api/?name=' . urlencode($name)
             . '&size=64&rounded=true&color=fff&background=' . $color;
+    }
+}
+
+if (! function_exists('getPhoneNumberFormate')) {
+    function getPhoneNumberFormate($phoneNumber, $regionCode = null)
+    {
+        if (empty($phoneNumber)) {
+            return 'N/A';
+        }
+
+        try {
+            $region = $regionCode ?? 'IN';
+            $phoneUtil = PhoneNumberUtil::getInstance();
+            $parsedNumber = $phoneUtil->parse($phoneNumber, $region);
+            return $phoneUtil->format($parsedNumber, PhoneNumberFormat::INTERNATIONAL);
+        } catch (\Exception $e) {
+            return $phoneNumber;
+        }
     }
 }
