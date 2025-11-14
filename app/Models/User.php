@@ -179,7 +179,9 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         'name',
         'email',
         'password',
+        'region_code',
         'phone',
+        'set_password',
         'created_by',
         'email_verified_at',
         'is_email_verified',
@@ -257,6 +259,14 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
         'password_confirmation' => 'min:6',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
     /**
      * Send the password reset notification.
      *
@@ -282,7 +292,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
      */
     public function projects()
     {
-        return $this->belongsToMany(Project::class);
+        return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'project_id');
     }
 
     /**
