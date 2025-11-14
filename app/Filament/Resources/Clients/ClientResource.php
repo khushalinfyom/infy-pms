@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clients;
 
+use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Clients\Pages\ManageClients;
 use App\Filament\Resources\Departments\DepartmentResource;
 use App\Models\Client;
@@ -35,6 +36,8 @@ class ClientResource extends Resource
     protected static ?string $model = Client::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static ?int $navigationSort = AdminPanelSidebar::CLIENTS->value;
 
     protected static ?string $recordTitleAttribute = 'Client';
 

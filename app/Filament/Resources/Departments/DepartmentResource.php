@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Departments;
 
+use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Departments\Pages\ManageDepartments;
 use App\Models\Department;
 use BackedEnum;
@@ -26,6 +27,8 @@ class DepartmentResource extends Resource
     protected static ?string $model = Department::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
+
+    protected static ?int $navigationSort = AdminPanelSidebar::DEPARTMENTS->value;
 
     protected static ?string $recordTitleAttribute = 'Department';
 
@@ -96,6 +99,7 @@ class DepartmentResource extends Resource
                     ->tooltip('Edit')
                     ->iconButton()
                     ->modalHeading('Edit Department')
+                    ->modalWidth('xl')
                     ->successNotificationTitle('Department updated successfully!'),
 
                 \App\Filament\Actions\CustomDeleteAction::make()

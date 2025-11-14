@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Shailesh-InfyOm
@@ -59,6 +60,16 @@ class ReportFilter extends Model
         'report_id' => 'integer',
         'param_id' => 'integer',
     ];
+
+    public function report()
+    {
+        return $this->belongsTo(Report::class, 'report_id');
+    }
+
+    public function param()
+    {
+        return $this->morphTo(__FUNCTION__, 'param_type', 'param_id');
+    }
 
     /**
      * @param  Builder  $query
