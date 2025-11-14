@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Filament\Support\Facades\FilamentView;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use Filament\Auth\Http\Responses\Contracts\LogoutResponse;
 use Filament\Tables\View\TablesRenderHook;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +15,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            LoginResponse::class,
+            \App\Http\Responses\LoginResponse::class
+        );
+
+        $this->app->singleton(
+            LogoutResponse::class,
+            \App\Http\Responses\LogoutResponse::class
+        );
     }
 
     /**
