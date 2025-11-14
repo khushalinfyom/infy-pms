@@ -23,7 +23,7 @@ class ManageClients extends ManageRecords
                 ->label('New Client')
                 ->createAnother(false)
                 ->modalHeading('Create Client')
-                ->modalWidth('lg')
+                ->modalWidth('xl')
                 ->action(function (array $data) {
 
                     if (User::where('email', $data['email'])->exists()) {
