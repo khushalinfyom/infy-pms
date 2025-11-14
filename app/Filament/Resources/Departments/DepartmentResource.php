@@ -36,16 +36,19 @@ class DepartmentResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
-                    ->unique()
-                    ->required(),
-
-                ColorPicker::make('color')
-                    ->label('Color')
-                    ->placeholder('Color')
-                    ->required(),
+                Group::make([
+                    TextInput::make('name')
+                        ->label('Name')
+                        ->placeholder('Name')
+                        ->unique()
+                        ->required()
+                        ->columnSpan(3),
+    
+                    ColorPicker::make('color')
+                        ->label('Color')
+                        ->placeholder('Color')
+                        ->required(),
+                ])->columns(4)->columnSpanFull(),
 
                 RichEditor::make('description')
                     ->label('Description')
