@@ -18,7 +18,8 @@ class ManageDepartments extends ManageRecords
                 ->label('New Department')
                 ->successNotificationTitle('Department created successfully!')
                 ->createAnother(false)
-                ->modalHeading('Create Department'),
+                ->modalHeading('Create Department')
+                ->modalWidth('xl'),
         ];
     }
 }

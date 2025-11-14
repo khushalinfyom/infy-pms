@@ -121,12 +121,32 @@ class Report extends Model
         'department_id.required' => 'The department field is required.',
     ];
 
+    public function departments()
+    {
+        return $this->belongsToMany(
+            Department::class,
+            'report_filters',
+            'report_id',
+            'param_id'
+        )->wherePivot('param_type', Department::class);
+    }
+
+    public function clients()
+    {
+        return $this->belongsToMany(
+            Client::class,
+            'report_filters',
+            'report_id',
+            'param_id'
+        )->wherePivot('param_type', Client::class);
+    }
+
     /**
      * @return BelongsToMany
      */
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'report_filters', 'report_id', 'param_id');
+        return $this->belongsToMany(Project::class, 'report_filters', 'report_id', 'param_id')->wherePivot('param_type', Project::class);
     }
 
     /**
@@ -135,6 +155,26 @@ class Report extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'report_filters',
+            'report_id',
+            'param_id'
+        )->wherePivot('param_type', User::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(
+            Tag::class,
+            'report_filters',
+            'report_id',
+            'param_id'
+        )->wherePivot('param_type', Tag::class);
     }
 
     /**
@@ -152,10 +192,15 @@ class Report extends Model
         } elseif ($startDate->format('Y-m-d') == $startOfMonth && $endDate->format('Y-m-d') == $endOfMonth && $startDate->month == $endDate->month) {
             return $startDate->format('M Y');
         } elseif ($startDate->month == $endDate->month) {
-            return $startDate->format('jS').' - '.$endDate->format('jS M Y');
+            return $startDate->format('jS') . ' - ' . $endDate->format('jS M Y');
         } elseif ($startDate->month != $endDate->month) {
-            return $startDate->format('jS M').' - '.$endDate->format('jS M Y');
+            return $startDate->format('jS M') . ' - ' . $endDate->format('jS M Y');
         }
+    }
+
+    public function filters()
+    {
+        return $this->hasMany(ReportFilter::class, 'report_id');
     }
 
     /**

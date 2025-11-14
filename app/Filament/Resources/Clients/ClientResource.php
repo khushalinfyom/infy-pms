@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clients;
 
+use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Clients\Pages\ManageClients;
 use App\Filament\Resources\Departments\DepartmentResource;
 use App\Models\Client;
@@ -26,6 +27,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Exceptions\Halt;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Hash;
 
 class ClientResource extends Resource
@@ -33,6 +36,8 @@ class ClientResource extends Resource
     protected static ?string $model = Client::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static ?int $navigationSort = AdminPanelSidebar::CLIENTS->value;
 
     protected static ?string $recordTitleAttribute = 'Client';
 
@@ -119,14 +124,37 @@ class ClientResource extends Resource
             })
             ->recordTitleAttribute('Client')
             ->columns([
+
+                SpatieMediaLibraryImageColumn::make('clients')
+                    ->label('Profile')
+                    ->disk(config('app.media_disk'))
+                    ->collection('clients')
+                    ->circular()
+                    ->width(40)
+                    ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name),
+
                 TextColumn::make('name')
                     ->label('Name')
-                    ->searchable(),
+                    ->searchable(['name', 'email'])
+                    ->description(function (Client $record) {
+                        return $record->email;
+                    })
+                    ->limit(100)
+                    ->wrap(),
 
-                TextColumn::make('email')
-                    ->label('Email address')
+                TextColumn::make('department.name')
+                    ->label('Department')
                     ->searchable(),
             ])
+            ->filters([
+                SelectFilter::make('department_id')
+                    ->label('Department')
+                    ->options(Department::all()->pluck('name', 'id'))
+                    ->native(false)
+                    ->searchable()
+                    ->preload(),
+            ])
+            ->deferFilters(false)
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
@@ -210,42 +238,99 @@ class ClientResource extends Resource
                     $operation === 'create' || ($operation === 'edit' && !$get('user_id'))
                 ),
 
+            Checkbox::make('change_password')
+                ->label('Want to change password ?')
+                ->columnSpanFull()
+                ->live()
+                ->visible(
+                    fn(string $operation, Get $get) =>
+                    $operation === 'edit' && $get('user_id')
+                ),
+
             TextInput::make('password')
-                ->label(
-                    fn(string $operation, Get $get) => ($operation === 'edit' && $get('user_id')) ? 'New Password' : 'Password'
-                )
-                ->placeholder(
-                    fn(string $operation, Get $get) => ($operation === 'edit' && $get('user_id')) ? 'Enter New Password' : 'Enter Password'
-                )
+                ->label(function (string $operation, Get $get) {
+                    if ($operation === 'edit' && $get('user_id')) {
+                        return 'New Password';
+                    }
+                    return 'Password';
+                })
+                ->placeholder(function (string $operation, Get $get) {
+                    if ($operation === 'edit' && $get('user_id')) {
+                        return 'Enter New Password';
+                    }
+                    return 'Enter Password';
+                })
                 ->password()
                 ->minLength(8)
-                ->required(
-                    fn(string $operation, Get $get) => ($operation === 'create' && $get('active')) ||
-                        ($operation === 'edit' && !$get('user_id') && $get('active')) ||
-                        ($operation === 'edit' && $get('user_id'))
-                )
-                ->live()
+                ->required(function (string $operation, Get $get) {
+                    if ($operation === 'create' && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && !$get('user_id') && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && $get('user_id') && $get('change_password')) {
+                        return true;
+                    }
+
+                    return false;
+                })
                 ->revealable()
-                ->visible(
-                    fn(string $operation, Get $get) => ($operation === 'create' && $get('active')) ||
-                        ($operation === 'edit' && ($get('active') || $get('user_id')))
-                ),
+                ->live()
+                ->visible(function (string $operation, Get $get) {
+                    if ($operation === 'create' && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && !$get('user_id') && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && $get('user_id') && $get('change_password')) {
+                        return true;
+                    }
+
+                    return false;
+                }),
 
             TextInput::make('confirm_password')
                 ->label('Confirm Password')
                 ->placeholder('Confirm Password')
                 ->password()
-                ->required(
-                    fn(string $operation, Get $get) => ($operation === 'create' && $get('active')) ||
-                        ($operation === 'edit' && !$get('user_id') && $get('active')) ||
-                        ($operation === 'edit' && $get('user_id'))
-                )
-                ->revealable()
                 ->same('password')
-                ->visible(
-                    fn(string $operation, Get $get) => ($operation === 'create' && $get('active')) ||
-                        ($operation === 'edit' && ($get('active') || $get('user_id')))
-                )
+                ->required(function (string $operation, Get $get) {
+                    if ($operation === 'create' && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && !$get('user_id') && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && $get('user_id') && $get('change_password')) {
+                        return true;
+                    }
+
+                    return false;
+                })
+                ->revealable()
+                ->visible(function (string $operation, Get $get) {
+                    if ($operation === 'create' && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && !$get('user_id') && $get('active')) {
+                        return true;
+                    }
+
+                    if ($operation === 'edit' && $get('user_id') && $get('change_password')) {
+                        return true;
+                    }
+
+                    return false;
+                })
                 ->maxLength(255),
         ];
     }

@@ -212,7 +212,7 @@ class Project extends Model implements HasMedia
      */
     public function users()
     {
-        return $this->belongsToMany(\App\Models\User::class)->withTimestamps();
+        return $this->belongsToMany(User::class, 'project_user', 'project_id', 'user_id')->withTimestamps();
     }
 
     /**
