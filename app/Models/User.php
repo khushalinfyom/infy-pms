@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Notifications\MailResetPasswordNotification;
 use App\Traits\ImageTrait;
 use Eloquent;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -127,7 +130,7 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * @method static \Database\Factories\UserFactory factory(...$parameters)
  */
-class User extends Authenticatable implements MustVerifyEmail, HasMedia
+class User extends Authenticatable implements MustVerifyEmail, HasMedia, FilamentUser, HasAvatar
 {
     use HasFactory;
     use Notifiable;
@@ -265,6 +268,16 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->profile_url;
     }
 
     /**

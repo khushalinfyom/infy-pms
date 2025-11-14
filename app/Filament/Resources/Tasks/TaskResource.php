@@ -44,11 +44,6 @@ class TaskResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Task';
 
-    public static function getNavigationGroup(): ?string
-    {
-        return 'Tasks';
-    }
-
     public static function form(Schema $schema): Schema
     {
         return $schema
