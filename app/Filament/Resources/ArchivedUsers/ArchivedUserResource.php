@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ArchivedUsers;
 
+use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\ArchivedUsers\Pages\ManageArchivedUsers;
 use App\Models\User;
 use BackedEnum;
@@ -19,6 +20,8 @@ class ArchivedUserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserMinus;
+
+    protected static ?int $navigationSort = AdminPanelSidebar::ARCHIVED_USERS->value;
 
     protected static ?string $recordTitleAttribute = 'User';
 

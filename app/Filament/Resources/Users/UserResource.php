@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Models\Role;
 use App\Models\User;
@@ -39,6 +40,8 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
+
+    protected static ?int $navigationSort = AdminPanelSidebar::USERS->value;
 
     protected static ?string $recordTitleAttribute = 'User';
 
@@ -259,14 +262,14 @@ class UserResource extends Resource
                     ->label('Status')
                     ->options(User::STATUS)
                     ->native(false)
+                    ->default(User::ACTIVE)
                     ->query(function (Builder $query, array $data): Builder {
                         $status = $data['value'];
                         if ($status == User::ACTIVE) {
                             $query->where('is_active', true)->whereNull('deleted_at');
                         } elseif ($status == User::DEACTIVE) {
                             $query->where('is_active', false)->whereNull('deleted_at');
-                        }
-                        elseif ($status == User::ARCHIVED) {
+                        } elseif ($status == User::ARCHIVED) {
                             $query->whereNotNull('deleted_at');
                             // dd($query->get());
                         }

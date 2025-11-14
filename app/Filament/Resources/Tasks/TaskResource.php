@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Tasks;
 
+use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Tasks\Pages\ManageTasks;
 use App\Models\Project;
 use App\Models\Task;
@@ -39,7 +40,14 @@ class TaskResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedListBullet;
 
+    protected static ?int $navigationSort = AdminPanelSidebar::TASKS->value;
+
     protected static ?string $recordTitleAttribute = 'Task';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Tasks';
+    }
 
     public static function form(Schema $schema): Schema
     {

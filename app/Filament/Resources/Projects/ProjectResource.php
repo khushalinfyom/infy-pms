@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Projects;
 
+use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Projects\Pages\CreateProject;
 use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
@@ -23,6 +24,8 @@ class ProjectResource extends Resource
     protected static ?string $model = Project::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolder;
+
+    protected static ?int $navigationSort = AdminPanelSidebar::PROJECTS->value;
 
     protected static ?string $recordTitleAttribute = 'Project';
 

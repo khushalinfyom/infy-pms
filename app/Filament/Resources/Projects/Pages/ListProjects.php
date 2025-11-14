@@ -168,7 +168,7 @@ class ListProjects extends Page
                                             $users = $project->users ?? collect();
 
                                             if ($users->isEmpty()) {
-                                                $users = \App\Models\User::whereIn('id', function ($query) use ($project) {
+                                                $users = User::whereIn('id', function ($query) use ($project) {
                                                     $query->select('user_id')
                                                         ->from('project_user')
                                                         ->where('project_id', $project->id);
@@ -186,33 +186,47 @@ class ListProjects extends Page
                                         ->limitedRemainingText()
                                         ->imageHeight(40)
                                         ->extraAttributes([
-                                            'style' => 'display: flex; ',
+                                            'style' => 'display: flex;',
                                         ]),
 
-                                    Action::make('View')
+                                    Action::make('View' . $project->id)
                                         ->label('View')
                                         ->iconButton()
                                         ->icon('heroicon-s-plus')
                                         ->color('info')
                                         ->modalHeading("Edit Assignee")
                                         ->modalWidth('md')
-                                        ->form([
-                                            Select::make('user_ids')
-                                                ->label('Assign To')
-                                                ->multiple()
-                                                ->options(User::pluck('name', 'id'))
-                                                ->searchable()
-                                                ->preload(),
-
+                                        ->fillForm(fn() => [
+                                            'users' => $project->users->pluck('id')->toArray(),
                                         ])
+                                        ->form([
+                                            Select::make('users')
+                                                ->label('Users')
+                                                ->multiple()
+                                                ->preload()
+                                                ->searchable()
+                                                ->required()
+                                                ->options(\App\Models\User::pluck('name', 'id'))
+                                                ->columnSpanFull(),
+                                        ])
+
+                                        ->action(function (array $data) use ($project) {
+                                            $project->users()->sync($data['users']);
+                                        })
+                                        ->after(fn() => redirect(request()->header('Referer')))
+                                        ->successNotificationTitle('Assignee updated successfully!')
                                         ->extraAttributes([
-                                            'style' => 'display: flex; justify-content: flex-start; border: 1px solid #e3e3e0; border-radius: 50%; padding: 0.5rem; margin: 2px 0px 0px -16px ',
+                                            'style' => 'display: flex; justify-content: center; align-items: center; border: 1px solid #5689fd; border-radius: 50%; padding: 0.5rem; margin: 2px 0px 2px -17px;',
                                         ])
 
                                 ])
-                                    ->columns(2)
+                                    ->columns([
+                                        'default' => 2,
+                                        'sm' => 2,
+                                        'xs' => 1,
+                                    ])
                                     ->extraAttributes([
-                                        'style' => 'display: flex; ',
+                                        'style' => 'display: flex; flex-wrap: wrap; gap: 10px; align-items: center; ',
                                     ])
                             ]);
                     }
