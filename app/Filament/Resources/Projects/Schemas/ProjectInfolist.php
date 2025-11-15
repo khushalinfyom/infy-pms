@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Projects\Schemas;
 
+use App\Filament\Infolists\Components\ProjectUserEntry;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -43,8 +44,41 @@ class ProjectInfolist
             ->schema([
                 Section::make()
                     ->schema([
-                        TextEntry::make('name')->label('Name'),
-                    ])->columnSpan(3),
+
+                        Group::make([
+
+                            TextEntry::make('name')
+                                ->hiddenLabel()
+                                ->html()
+                                ->formatStateUsing(function ($state, $record) {
+                                    return "<b>{$state}</b>" . ' (' . ($record->prefix ?? '') . ')';
+                                }),
+
+                            TextEntry::make('status')
+                                ->hiddenLabel()
+                                ->badge()
+                                ->formatStateUsing(fn($state) => Project::STATUS[$state] ?? 'N/A')
+                                ->color(fn($state) => match ($state) {
+                                    Project::STATUS_ONGOING  => 'primary',
+                                    Project::STATUS_FINISHED => 'success',
+                                    Project::STATUS_ONHOLD   => 'warning',
+                                    Project::STATUS_ARCHIVED => 'info',
+                                    default => 'secondary',
+                                }),
+
+                            TextEntry::make('description')
+                                ->label('Project Overview')
+                                ->placeholder('N/A')
+                                ->html(),
+                        ])
+                            ->columns(1),
+
+                        Group::make([])->columns(1),
+
+                    ])->columnSpan(3)
+                    ->columns(2)
+                    ->extraAttributes(['class' => 'h-full']),
+
                 Group::make([
                     Section::make()
                         ->schema([
@@ -79,39 +113,26 @@ class ProjectInfolist
                                 })
                         ])
                 ]),
-                Fieldset::make('Users')
-                    ->label('')
+                Section::make()
                     ->schema(function ($record) {
                         $sections = [];
+
                         foreach ($record->users as $user) {
-                            $sections[] = Section::make('')
+                            $sections[] = Fieldset::make('')
                                 ->schema([
-                                    SpatieMediaLibraryImageEntry::make("user_{$user->id}_image_path")
+
+                                    ProjectUserEntry::make("user_{$user->id}")
                                         ->hiddenLabel()
-                                        ->collection(User::IMAGE_PATH)
-                                        ->default($user->image_path)
-                                        ->circular()
-                                        ->height(100)
-                                        ->width(100)
-                                        ->defaultImageUrl(fn() => 'https://ui-avatars.com/api/?name=' . urlencode($user->name)),
-                                    Group::make([
-
-                                        TextEntry::make("user_{$user->id}_name")
-                                            ->label('Name')
-                                            ->default($user->name),
-                                        TextEntry::make("user_{$user->id}_email")
-                                            ->label('Email')
-                                            ->default($user->email),
-
-                                    ])
-
+                                        ->user($user),
                                 ])
+                                ->extraAttributes(['style' => 'display: flex;'])
                                 ->columns(2);
                         }
+
                         return $sections;
                     })
                     ->columnSpanFull()
-                    ->columns(4),
+                    ->columns(4)
             ])->columns(4);
     }
 

@@ -133,27 +133,30 @@ class ListProjects extends Page
                                     ->columnSpanFull()
                                     ->html()
                                     ->default(function () use ($project) {
-                                        $progress = $project->progress ?? 0;
+                                        $progress = $project->projectProgress();
+                                        $progressFormatted = number_format($progress, 2);
                                         $color = $project->color ?? '#3b82f6';
+                                        $background = '#e5e7eb';
 
                                         $hex = ltrim($color, '#');
                                         if (strlen($hex) === 3) {
                                             $hex = "{$hex[0]}{$hex[0]}{$hex[1]}{$hex[1]}{$hex[2]}{$hex[2]}";
                                         }
-
                                         $r = hexdec(substr($hex, 0, 2));
                                         $g = hexdec(substr($hex, 2, 2));
                                         $b = hexdec(substr($hex, 4, 2));
 
                                         $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+                                        $fillTextColor = $brightness > 155 ? 'black' : 'white';
+                                        $backgroundTextColor = '#1f2937';
 
-                                        $textColor = $brightness > 155 ? 'black' : 'white';
+                                        $textColor = $progress > 45 ? $fillTextColor : $backgroundTextColor;
 
                                         return <<<HTML
-                                                    <div style="position: relative; width: 100%; height: 20px; background-color: #e5e7eb; border-radius: 10px; overflow: hidden; ">
-                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: 90%; background-color: {$color}; transition: width 0.3s ease;"></div>
-                                                        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: {$textColor}; ">
-                                                            90%
+                                                    <div style="position: relative; width: 100%; height: 20px; background-color: {$background}; border-radius: 10px; overflow: hidden;">
+                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: {$progress}%; background-color: {$color}; transition: width 0.3s ease;"></div>
+                                                        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: {$textColor};">
+                                                            {$progressFormatted}%
                                                         </div>
                                                     </div>
                                                 HTML;

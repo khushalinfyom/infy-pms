@@ -6,3 +6,11 @@
 .fi-fo-color-picker-preview {
     margin-right: 11px !important;
 }
+
+.fi-sc-section.h-full {
+    height: 100% !important;
+}
+
+.fi-sc-section.h-full .fi-section{
+    height: 100% !important;
+}
