@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Projects\Pages;
 
 use App\Filament\Resources\Projects\ProjectResource;
 use Filament\Actions\Action;
-use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewProject extends ViewRecord
@@ -20,5 +19,10 @@ class ViewProject extends ViewRecord
                 ->url(ProjectResource::getUrl('index'))
                 ->color('gray'),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return $this->record->name . ' - Project Details';
     }
 }

@@ -29,6 +29,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Exceptions\Halt;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class ClientResource extends Resource
@@ -201,12 +202,16 @@ class ClientResource extends Resource
                         return $data;
                     }),
 
-
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
                     ->tooltip('Delete')
                     ->modalHeading('Delete Client')
+                    ->before(function ($record) {
+                        $record->update([
+                            'deleted_by' => auth()->id(),
+                        ]);
+                    })
                     ->successNotificationTitle('Client deleted successfully!'),
             ])
             ->toolbarActions([
@@ -214,6 +219,13 @@ class ClientResource extends Resource
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
                         ->modalHeading('Delete Clients')
+                        ->before(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'deleted_by' => auth()->id(),
+                                ]);
+                            }
+                        })
                         ->successNotificationTitle('Clients deleted successfully!'),
                 ]),
             ]);
