@@ -9,6 +9,7 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -77,6 +78,11 @@ class ListProjects extends Page
 
 
                                     ActionGroup::make([
+
+                                        Action::make('view' . $project->id)
+                                            ->label('View')
+                                            ->icon('heroicon-s-eye')
+                                            ->url(fn() => ProjectResource::getUrl('view', ['record' => $project->id])),
 
                                         self::getEditForm($project),
 
@@ -209,7 +215,9 @@ class ListProjects extends Page
                                                 ->preload()
                                                 ->searchable()
                                                 ->required()
-                                                ->options(\App\Models\User::pluck('name', 'id'))
+                                                ->options(
+                                                    User::where('is_active', true)->pluck('name', 'id')
+                                                )
                                                 ->columnSpanFull(),
                                         ])
 

@@ -69,7 +69,9 @@ class Setting extends Model implements HasMedia
 
     public $table = 'settings';
 
-    public const PATH = 'settings';
+    public const APP_LOGO = 'app_logo';
+
+    public const APP_FAVICON = 'app_favicon';
 
     const CURRENCIES = [
         'eur' => 'Euro (EUR)',
@@ -137,7 +139,7 @@ class Setting extends Model implements HasMedia
     public function getLogoPathAttribute()
     {
         /** @var Media $media */
-        $media = $this->getMedia(self::PATH)->first();
+        $media = $this->getMedia(self::APP_LOGO)->first();
         if (! empty($media)) {
             return $media->getFullUrl();
         }

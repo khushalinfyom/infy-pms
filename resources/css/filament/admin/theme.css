@@ -11,6 +11,10 @@
     height: 100% !important;
 }
 
-.fi-sc-section.h-full .fi-section{
+.fi-sc-section.h-full .fi-section {
     height: 100% !important;
+}
+.project-side-card .fi-icon.fi-size-lg {
+    width: 200px !important;
+    height: 50px !important;
 }

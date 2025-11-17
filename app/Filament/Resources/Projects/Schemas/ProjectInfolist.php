@@ -3,14 +3,18 @@
 namespace App\Filament\Resources\Projects\Schemas;
 
 use App\Filament\Infolists\Components\ProjectUserEntry;
+use App\Filament\Resources\Projects\Widgets\ProjectProgessChartWidget;
+use App\Filament\Resources\Projects\Widgets\ProjectTaskTable;
+use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Livewire;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
@@ -18,6 +22,7 @@ use Filament\Schemas\Components\Section;
 
 class ProjectInfolist
 {
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -69,11 +74,14 @@ class ProjectInfolist
                             TextEntry::make('description')
                                 ->label('Project Overview')
                                 ->placeholder('N/A')
-                                ->html(),
+                                ->html()
+                                ->default(fn() => $project->description ?? 'N/A'),
                         ])
                             ->columns(1),
 
-                        Group::make([])->columns(1),
+                        Group::make([
+                            Livewire::make(ProjectProgessChartWidget::class)
+                        ])->columns(1),
 
                     ])->columnSpan(3)
                     ->columns(2)
@@ -82,25 +90,82 @@ class ProjectInfolist
                 Group::make([
                     Section::make()
                         ->schema([
-                            TextEntry::make('client.name')
-                                ->label('Client'),
-                        ]),
+                            SpatieMediaLibraryImageEntry::make('clients')
+                                ->label('Client Photo')
+                                ->collection(Client::IMAGE_PATH)
+                                ->circular()
+                                ->hiddenLabel()
+                                ->width(70)
+                                ->height(70)
+                                ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->client->name))
+                                ->columns(1),
+
+                            TextEntry::make('client_info')
+                                ->label('Client')
+                                ->hiddenLabel()
+                                ->state(function ($record) {
+                                    $client = $record->client;
+                                    return $client
+                                        ? " <b>{$client->name}</b>\n{$client->email}"
+                                        : 'N/A';
+                                })
+                                ->formatStateUsing(fn(string $state) => nl2br($state))
+                                ->html()
+                                ->columnSpan(2),
+                        ])
+                        ->columns(3),
+
                     Section::make()
                         ->schema([
+
+                            IconEntry::make('status')
+                                ->hiddenLabel()
+                                ->icon('phosphor-money-fill')
+                                ->columnSpan(1)
+                                ->extraAttributes([
+                                    'class' => 'project-side-card',
+                                    'style' => 'align-items: center; display: flex; justify-content: center; margin-left: -10px;'
+                                ]),
+
                             TextEntry::make('price')
                                 ->label('Budget')
                                 ->prefix('$ ')
-                                ->default(0),
-                        ]),
+                                ->default(0)
+                                ->columnSpan(2),
+                        ])
+                        ->columns(3),
+
                     Section::make()
                         ->schema([
+                            IconEntry::make('status')
+                                ->hiddenLabel()
+                                ->icon('phosphor-credit-card-fill')
+                                ->columnSpan(1)
+                                ->extraAttributes([
+                                    'class' => 'project-side-card',
+                                    'style' => 'align-items: center; display: flex; justify-content: center; margin-left: -10px;'
+                                ]),
+
                             TextEntry::make('budget_type')
                                 ->label('Budget Type')
                                 ->placeholder('N/A')
-                                ->formatStateUsing(fn($state) => Project::BUDGET_TYPE[$state] ?? 'N/A'),
-                        ]),
+                                ->formatStateUsing(fn($state) => Project::BUDGET_TYPE[$state] ?? 'N/A')
+                                ->columnSpan(2),
+                        ])
+                        ->columns(3),
+
                     Section::make()
                         ->schema([
+
+                            IconEntry::make('status')
+                                ->hiddenLabel()
+                                ->icon('phosphor-list-bullets-fill')
+                                ->columnSpan(1)
+                                ->extraAttributes([
+                                    'class' => 'project-side-card',
+                                    'style' => 'align-items: center; display: flex; justify-content: center; margin-left: -10px;'
+                                ]),
+
                             TextEntry::make('created_at')
                                 ->label('Tasks')
                                 ->formatStateUsing(function ($state, $record) {
@@ -111,7 +176,9 @@ class ProjectInfolist
 
                                     return "{$pending}/{$total} Pending Tasks";
                                 })
+                                ->columnSpan(2),
                         ])
+                        ->columns(3),
                 ]),
                 Section::make()
                     ->schema(function ($record) {
@@ -140,14 +207,75 @@ class ProjectInfolist
     {
         return Tab::make('activity')
             ->label('Activity')
-            ->schema([]);
+            ->schema([
+                Section::make('Activity Log')
+                    ->schema([
+                        RepeatableEntry::make('activities')
+                            ->hiddenLabel()
+                            ->schema([
+
+                                IconEntry::make('activity_icon')
+                                    ->hiddenLabel()
+                                    ->state('phosphor-list-bullets-fill')
+                                    ->icon(fn($state) => $state)
+                                    ->extraAttributes([
+                                        'class' => 'project-side-card',
+                                    ])
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'sm'      => 1,
+                                        'lg'      => 1,
+                                    ]),
+
+
+                                TextEntry::make('log_name')
+                                    ->hiddenLabel()
+                                    ->state(function ($record) {
+                                        $logName = $record->log_name ?? 'N/A';
+                                        $user = $record->causer?->name ?? 'System';
+                                        $description = $record->description ?? 'No description';
+
+                                        return "{$logName} \n <b> {$user} {$description} </b>";
+                                    })
+                                    ->formatStateUsing(fn(string $state) => nl2br($state))
+                                    ->html()
+                                    ->columnSpan([
+                                        'default' => 8,
+                                        'sm'      => 9,
+                                        'lg'      => 10,
+                                    ]),
+
+                                TextEntry::make('created_at')
+                                    ->hiddenLabel()
+                                    ->state(fn($record) => $record->created_at?->diffForHumans())
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'sm'      => 2,
+                                        'lg'      => 1,
+                                    ]),
+
+                            ])
+                            ->columns([
+                                'default' => 1,
+                                'sm'      => 12,
+                                'lg'      => 12,
+                            ])
+                    ])
+                    ->columnSpanFull(),
+            ]);
     }
+
 
     public static function getTasksTab(): Tab
     {
         return Tab::make('tasks')
             ->label('Tasks')
-            ->schema([]);
+            ->schema([
+
+                Livewire::make(ProjectTaskTable::class)
+                    ->columnSpanFull(),
+
+            ]);
     }
 
     public static function getAttachmentsTab(): Tab

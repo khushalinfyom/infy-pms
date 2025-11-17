@@ -11,9 +11,11 @@
         "filament/spatie-laravel-media-library-plugin": "^4.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "leandrocfe/filament-apex-charts": "^4.0",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-medialibrary": "^11.17",
         "spatie/laravel-permission": "^6.23",
+        "tonegabes/filament-phosphor-icons": "^1.2",
         "ysfkaya/filament-phone-input": "^4.0"
     },
     "require-dev": {

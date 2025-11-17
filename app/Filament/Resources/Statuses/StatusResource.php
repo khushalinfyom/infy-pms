@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 
 class StatusResource extends Resource
 {
@@ -30,7 +31,12 @@ class StatusResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return 'Task Statuses';
+        return 'Task Status';
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return 'Task Status';
     }
 
     public static function form(Schema $schema): Schema
