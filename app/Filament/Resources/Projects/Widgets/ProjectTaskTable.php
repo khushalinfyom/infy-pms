@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Projects\Widgets;
 
 use App\Models\Comment;
-use App\Models\Project;
 use App\Models\Status;
 use App\Models\Task;
 use App\Models\User;
@@ -14,14 +13,13 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Group;
 use Filament\Tables\Columns\TextColumn;
@@ -188,8 +186,6 @@ class ProjectTaskTable extends TableWidget
                                             ->html()
                                             ->default('No description added yet.'),
 
-
-
                                         Fieldset::make('Attachments')
                                             ->schema([
 
@@ -268,7 +264,13 @@ class ProjectTaskTable extends TableWidget
                                                             ->required()
                                                             ->columnSpanFull()
                                                             ->placeholder('Add comment...')
-                                                            ->extraAttributes(['style' => 'min-height: 200px;']),
+                                                            ->extraAttributes(['style' => 'min-height: 200px;'])
+                                                            ->toolbarButtons([
+                                                                ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                                                                ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                                                                ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                                                                ['undo', 'redo'],
+                                                            ]),
                                                     ])
                                                     ->action(function (array $data, $record) {
                                                         if ($record && !empty($data['new_comment'])) {
@@ -522,14 +524,10 @@ class ProjectTaskTable extends TableWidget
                         ->placeholder('Title')
                         ->required(),
 
-                    Select::make('project_id')
-                        ->label('Project')
-                        ->options(Project::all()->pluck('name', 'id'))
-                        ->searchable()
-                        ->preload()
-                        ->native(false)
-                        ->reactive()
-                        ->required(),
+                    Hidden::make('project_id')
+                        ->default(function ($livewire) {
+                            return $livewire->record?->id;
+                        }),
 
                     Select::make('priority')
                         ->label('Priority')
@@ -629,7 +627,13 @@ class ProjectTaskTable extends TableWidget
                         ->label('Description')
                         ->placeholder('Description')
                         ->columnSpanFull()
-                        ->extraAttributes(['style' => 'min-height: 200px;']),
+                        ->extraAttributes(['style' => 'min-height: 200px;'])
+                        ->toolbarButtons([
+                            ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                            ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                            ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                            ['undo', 'redo'],
+                        ]),
                 ])->columns(2),
         ];
     }

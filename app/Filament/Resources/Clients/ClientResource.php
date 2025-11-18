@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Clients;
 
 use App\Enums\AdminPanelSidebar;
+use App\Filament\Infolists\Components\ClientEntry;
 use App\Filament\Resources\Clients\Pages\ManageClients;
 use App\Filament\Resources\Departments\DepartmentResource;
 use App\Models\Client;
@@ -17,9 +18,13 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -93,20 +98,142 @@ class ClientResource extends Resource
     {
         return $schema
             ->components([
-                TextEntry::make('name')
-                    ->label('Name'),
 
-                TextEntry::make('department.name')
-                    ->label('Department'),
+                Section::make('')
+                    ->schema([
+                        Group::make([
 
-                TextEntry::make('email')
-                    ->label('Email address'),
+                            ClientEntry::make('client')
+                                ->client(fn($record) => $record)
+                                ->columnSpanFull()
+                                ->hiddenLabel(),
+                        ])
+                            ->columns(3),
 
-                TextEntry::make('website')
-                    ->label('Website')
-                    ->placeholder('N/A'),
-            ])
-            ->columns(2);
+                        Group::make([
+
+                            TextEntry::make('department.name')
+                                ->label('Department')
+                                ->badge()
+                                ->color('info'),
+
+                            TextEntry::make('website')
+                                ->label('Website')
+                                ->placeholder('N/A')
+                                ->url(fn(Client $record) => filled($record->website) ? $record->website : null)
+                                ->openUrlInNewTab()
+                                ->extraAttributes(fn(Client $record) => [
+                                    'style' => filled($record->website)
+                                        ? '
+                                        color:#0d6efd;
+                                        text-decoration:underline;
+                                        cursor:pointer;
+                                        display:inline-block;
+                                        max-width:200px;
+                                        white-space:nowrap;
+                                        overflow:hidden;
+                                        text-overflow:ellipsis;
+                                      '
+                                        : '
+                                        color:#6c757d;
+                                        display:inline-block;
+                                        max-width:200px;
+                                        white-space:nowrap;
+                                        overflow:hidden;
+                                        text-overflow:ellipsis;
+                                      ',
+                                ]),
+                        ])
+                            ->columns(2),
+
+                    ])
+                    ->columnSpanFull()
+                    ->columns(1),
+
+                Group::make([
+
+                    Section::make('')
+                        ->schema([
+                            TextEntry::make('created_at')
+                                ->label('Total Projects')
+                                ->formatStateUsing(fn(Client $record) => $record->projects->count())
+                                ->extraAttributes([
+                                    'style' => '
+                                                color:#2315ff;
+                                                font-size:18px;
+                                                font-weight:600;
+                                            ',
+                                ])
+                        ])
+                        ->columnSpanFull()
+                        ->extraAttributes([
+                            'class' => 'total-projects',
+                        ]),
+
+                    Section::make('')
+                        ->schema([
+                            TextEntry::make('project_progress.completedProjects')
+                                ->label('Finished Projects')
+                                ->extraAttributes([
+                                    'style' => 'color:#226c14;
+                                                font-size:18px;
+                                                font-weight:600;',
+                                ]),
+                        ])
+                        ->extraAttributes([
+                            'class' => 'finished-projects'
+                        ]),
+
+                    Section::make('')
+                        ->schema([
+                            TextEntry::make('project_progress.openProjects')
+                                ->label('Open Projects')
+                                ->extraAttributes([
+                                    'style' => 'color:#3b1d74;
+                                                font-size:18px;
+                                                font-weight:600;',
+                                ]),
+                        ])
+                        ->extraAttributes([
+                            'class' => 'open-projects'
+                        ]),
+
+                    Section::make('')
+                        ->schema([
+                            TextEntry::make('project_progress.holdProjects')
+                                ->label('Hold Projects')
+                                ->extraAttributes([
+                                    'style' => 'color:#734120;
+                                                font-size:18px;
+                                                font-weight:600;',
+                                ]),
+                        ])
+                        ->extraAttributes([
+                            'class' => 'hold-projects'
+                        ]),
+
+                    Section::make('')
+                        ->schema([
+                            TextEntry::make('project_progress.archivedProjects')
+                                ->label('Archived Projects')
+                                ->extraAttributes([
+                                    'style' => 'color:#222223;
+                                                font-size:18px;
+                                                font-weight:600;',
+                                ]),
+                        ])
+                        ->extraAttributes([
+                            'class' => 'archived-projects'
+                        ]),
+
+                ])
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->extraAttributes([
+                        'class' => 'client',
+                    ]),
+
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -145,7 +272,8 @@ class ClientResource extends Resource
 
                 TextColumn::make('department.name')
                     ->label('Department')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder('N/A'),
             ])
             ->filters([
                 SelectFilter::make('department_id')

@@ -16,6 +16,7 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -88,12 +89,6 @@ class InvoiceTemplate extends Page
                     Group::make()
                         ->schema([
 
-                            // Select::make('default_invoice_template')
-                            //     ->label('Invoice Template')
-                            //     ->options(Setting::INVOICE__TEMPLATE_ARRAY)
-                            //     ->native(false)
-                            //     ->required(),
-
                             Select::make('default_invoice_template')
                                 ->options(Setting::INVOICE__TEMPLATE_ARRAY)
                                 ->label('Invoice Template')
@@ -108,7 +103,7 @@ class InvoiceTemplate extends Page
                                     }
 
                                     $this->selectedTemplate = $state;
-                                    $this->invoiceColor = Setting::where('key', $state)->first()->template_color ?? '#000000';
+                                    $this->invoiceColor = Setting::where('key', $state)->first()->template_color ?? '#e02121ff';
                                     $this->dispatch('updateColorPicker', color: $this->invoiceColor);
                                 })
                                 ->searchable(),
@@ -116,7 +111,8 @@ class InvoiceTemplate extends Page
                             ColorPicker::make('default_invoice_color')
                                 ->label('Invoice Color')
                                 ->placeholder('Invoice Color')
-                                ->required(),
+                                ->required()
+                                ->live(),
                         ])
                         ->columns(3)
                         ->columnSpanFull(),
@@ -126,13 +122,25 @@ class InvoiceTemplate extends Page
                             ViewField::make('')
                                 ->live()
                                 ->view('invoices.components.invoice-template-preview')
-                                ->viewData([
-                                    'data' => $this->data,
-                                    'invoiceTemplate' => $this->data['default_invoice_template'] ?? 'defaultTemplate',
-                                    'invColor' => $this->data['default_invoice_color'] ?? '#000000',
+                                ->viewData(fn(Get $get) => [
+                                    'data' => $get(), 
+                                    'invoiceTemplate' => $get('default_invoice_template') ?? 'defaultTemplate',
+                                    'invColor' => $get('default_invoice_color') ?? '#000000',
                                 ])
+                                ->columnSpanFull()
+                                ->extraAttributes([
+                                    'class' => 'w-full',
+                                    'style' => 'padding:0;',
+                                ]),
+                        ])
+                        ->columnSpanFull()
+                        ->extraAttributes([
+                            'class' => 'w-full',
+                            'style' => 'width:100%; padding:0;',
                         ]),
+
                 ])->columns(2)
+                    ->columnSpanFull(),
             ])
             ->columns(1)
             ->statePath('data');

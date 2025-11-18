@@ -43,7 +43,7 @@ class DepartmentResource extends Resource
                         ->unique()
                         ->required()
                         ->columnSpan(3),
-    
+
                     ColorPicker::make('color')
                         ->label('Color')
                         ->placeholder('Color')
@@ -54,7 +54,13 @@ class DepartmentResource extends Resource
                     ->label('Description')
                     ->placeholder('Description')
                     ->columnSpanFull()
-                    ->extraAttributes(['style' => 'height: 200px;']),
+                    ->extraAttributes(['style' => 'height: 200px;'])
+                    ->toolbarButtons([
+                        ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                        ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                        ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                        ['undo', 'redo'],
+                    ]),
             ]);
     }
 
@@ -179,7 +185,13 @@ class DepartmentResource extends Resource
                     ->label('Description')
                     ->placeholder('Description')
                     ->columnSpanFull()
-                    ->extraAttributes(['style' => 'height: 200px;']),
+                    ->extraAttributes(['style' => 'height: 200px;'])
+                    ->toolbarButtons([
+                        ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                        ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                        ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                        ['undo', 'redo'],
+                    ]),
             ])
             ->action(function (array $data) use ($set, $inputName, $record) {
                 if (isset($record) && $record) {

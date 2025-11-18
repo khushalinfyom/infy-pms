@@ -9,7 +9,6 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -183,7 +182,6 @@ class ListProjects extends Page
                                                         ->where('project_id', $project->id);
                                                 })->get();
                                             }
-
                                             return $users->map(function ($user) {
                                                 return $user->img_avatar
                                                     ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
@@ -329,7 +327,13 @@ class ListProjects extends Page
 
                         Select::make('currency')
                             ->label('Currency')
-                            ->options(Project::CURRENCY)
+                            ->options(function () {
+                                return collect(Project::CURRENCY)->mapWithKeys(function ($name, $key) {
+                                    return [$key => Project::getCurrencyClass($key) . ' ' . $name];
+                                })->toArray();
+                            })
+                            ->searchable()
+                            ->preload()
                             ->native(false)
                             ->required(),
 
@@ -351,7 +355,13 @@ class ListProjects extends Page
                         ->label('Description')
                         ->placeholder('Description')
                         ->columnSpanFull()
-                        ->extraAttributes(['style' => 'min-height: 200px;']),
+                        ->extraAttributes(['style' => 'min-height: 200px;'])
+                        ->toolbarButtons([
+                            ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                            ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                            ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                            ['undo', 'redo'],
+                        ]),
 
 
                 ])

@@ -3,6 +3,10 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\CustomEditProfile;
+use App\Filament\Pages\CustomLogin;
+use App\Filament\Pages\CustomRequestPasswordReset;
+use App\Filament\Pages\CustomResetPassword;
+use Filament\Enums\GlobalSearchPosition;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,10 +35,11 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('/')
-            ->login()
+            ->login(CustomLogin::class)
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->passwordReset($requestAction = CustomRequestPasswordReset::class, $resetAction = CustomResetPassword::class)
             ->breadcrumbs(false)
             ->globalSearch(false)
             ->maxContentWidth('full')

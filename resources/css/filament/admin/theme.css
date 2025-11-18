@@ -14,7 +14,33 @@
 .fi-sc-section.h-full .fi-section {
     height: 100% !important;
 }
+
 .project-side-card .fi-icon.fi-size-lg {
     width: 200px !important;
     height: 50px !important;
+}
+
+.client .total-projects .fi-section-content-ctn {
+    background-color: rgb(176, 217, 250) !important;
+    border-radius: 12px !important;
+}
+
+.client .finished-projects .fi-section-content-ctn {
+    background-color: #bcfab0 !important;
+    border-radius: 12px !important;
+}
+
+.client .open-projects .fi-section-content-ctn {
+    background-color: #e0d0ff !important;
+    border-radius: 12px !important;
+}
+
+.client .hold-projects .fi-section-content-ctn {
+    background-color: #ffd7bf !important;
+    border-radius: 12px !important;
+}
+
+.client .archived-projects .fi-section-content-ctn {
+    background-color: #d6d6d6 !important;
+    border-radius: 12px !important;
 }

@@ -35,7 +35,13 @@ class RoleForm
                             ->label('Description')
                             ->placeholder('Description')
                             ->columnSpanFull()
-                            ->extraAttributes(['style' => 'min-height: 250px;']),
+                            ->extraAttributes(['style' => 'min-height: 250px;'])
+                            ->toolbarButtons([
+                                ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                                ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                                ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                                ['undo', 'redo'],
+                            ]),
                     ])
                     ->columnSpanFull()
                     ->columns(1),

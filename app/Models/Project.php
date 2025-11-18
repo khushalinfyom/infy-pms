@@ -256,13 +256,13 @@ class Project extends Model implements HasMedia
     {
         switch ($key) {
             case 1:
-                return 'fas fa-rupee-sign';
+                return '₹';
             case 5:
-                return 'fas fa-euro-sign';
+                return '€';
             case 6:
-                return 'fas fa-pound-sign';
+                return '£';
             default:
-                return 'fas fa-dollar-sign';
+                return '$';
         }
     }
 
