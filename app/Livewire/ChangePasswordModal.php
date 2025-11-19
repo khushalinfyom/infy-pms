@@ -87,6 +87,7 @@ class ChangePasswordModal extends Component implements HasForms
                 ->success()
                 ->title('Password changed successfully.')
                 ->send();
+            return redirect()->route('filament.admin.auth.login');
         } catch (Exception $exception) {
             Notification::make()
                 ->danger()
