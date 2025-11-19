@@ -78,9 +78,10 @@ class ProjectInfolist
                                 ->default(fn() => $project->description ?? 'N/A'),
                         ])
                             ->columns(1),
-
                         Group::make([
-                            Livewire::make(ProjectProgessChartWidget::class)
+                            Livewire::make(ProjectProgessChartWidget::class, fn($record) => [
+                                'projectId' => $record->id,
+                            ])
                         ])->columns(1),
 
                     ])->columnSpan(3)
@@ -88,15 +89,15 @@ class ProjectInfolist
                     ->extraAttributes(['class' => 'h-full']),
 
                 Group::make([
-                    Section::make()
+                    Fieldset::make('Client')
                         ->schema([
                             SpatieMediaLibraryImageEntry::make('clients')
                                 ->label('Client Photo')
                                 ->collection(Client::IMAGE_PATH)
                                 ->circular()
                                 ->hiddenLabel()
-                                ->width(70)
-                                ->height(70)
+                                ->width(60)
+                                ->height(60)
                                 ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->client->name))
                                 ->columns(1),
 
@@ -105,9 +106,11 @@ class ProjectInfolist
                                 ->hiddenLabel()
                                 ->state(function ($record) {
                                     $client = $record->client;
-                                    return $client
-                                        ? " <b>{$client->name}</b>\n{$client->email}"
-                                        : 'N/A';
+                                    $text = " <b>{$client->name}</b>\n{$client->email}";
+                                    if ($client->department && $client->department->name) {
+                                        $text .= "\n". $client->department->name;
+                                    }
+                                    return $text;
                                 })
                                 ->formatStateUsing(fn(string $state) => nl2br($state))
                                 ->html()
@@ -180,7 +183,7 @@ class ProjectInfolist
                         ])
                         ->columns(3),
                 ]),
-                Section::make()
+                Fieldset::make('Users')
                     ->schema(function ($record) {
                         $sections = [];
 

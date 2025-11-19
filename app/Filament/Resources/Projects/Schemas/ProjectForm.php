@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\Projects\Schemas;
 
+use App\Filament\Resources\Clients\ClientResource;
 use App\Models\Client;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class ProjectForm
@@ -14,6 +17,9 @@ class ProjectForm
     {
         return $schema
             ->components([
+
+                Hidden::make('created_by')
+                    ->default(getLoggedInUserId()),
 
                 TextInput::make('name')
                     ->label('Name')
@@ -47,7 +53,10 @@ class ProjectForm
                     ->searchable()
                     ->preload()
                     ->native(false)
-                    ->required(),
+                    ->required()
+                    ->suffixAction(function (Get $get) {
+                        return ClientResource::getSuffixAction('client_id', 'department_id', $get('department_id'));
+                    }),
 
                 ColorPicker::make('color')
                     ->label('Color')

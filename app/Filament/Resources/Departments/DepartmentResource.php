@@ -109,7 +109,18 @@ class DepartmentResource extends Resource
                     ->iconButton()
                     ->modalHeading('Edit Department')
                     ->modalWidth('xl')
-                    ->successNotificationTitle('Department updated successfully!'),
+                    ->successNotificationTitle('Department updated successfully!')
+                    ->after(function ($record) {
+                        activity()
+                            ->causedBy(getLoggedInUser())
+                            ->performedOn($record)
+                            ->withProperties([
+                                'model' => Department::class,
+                                'data'  => '',
+                            ])
+                            ->useLog('Department Updated')
+                            ->log('Department updated');
+                    }),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
@@ -200,6 +211,17 @@ class DepartmentResource extends Resource
                         'color' => $data['color'],
                         'description' => $data['description'],
                     ]);
+
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Department::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('Department Updated')
+                        ->log('Department ' . $record->name . ' updated');
+
                     Notification::make()
                         ->title('Department updated successfully!')
                         ->success()
@@ -210,6 +232,17 @@ class DepartmentResource extends Resource
                         'color' => $data['color'],
                         'description' => $data['description'],
                     ]);
+
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Department::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('New Department Created')
+                        ->log('New Department ' . $record->name . ' created');
+
                     Notification::make()
                         ->title('Department created successfully!')
                         ->success()

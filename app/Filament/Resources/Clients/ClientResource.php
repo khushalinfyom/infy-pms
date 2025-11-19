@@ -10,6 +10,7 @@ use App\Models\Client;
 use App\Models\Department;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -328,6 +329,17 @@ class ClientResource extends Resource
                         }
 
                         return $data;
+                    })
+                    ->after(function ($record) {
+                        activity()
+                            ->causedBy(getLoggedInUser())
+                            ->performedOn($record)
+                            ->withProperties([
+                                'model' => Client::class,
+                                'data'  => '',
+                            ])
+                            ->useLog('Client Updated')
+                            ->log('Client updated');
                     }),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
@@ -473,5 +485,94 @@ class ClientResource extends Resource
                 })
                 ->maxLength(255),
         ];
+    }
+
+    public static function getSuffixAction($inputName = null, $departmentInputName = null, $departmentId = null, $recordId = null)
+    {
+        $record = null;
+        if (!empty($recordId)) {
+            $record = Client::find($recordId);
+        }
+        return Action::make('createClient')
+            ->icon(function () use ($record) {
+                if (isset($record) && $record) {
+                    return 'heroicon-s-pencil-square';
+                } else {
+                    return 'heroicon-s-plus';
+                }
+            })
+            ->modalWidth('md')
+            ->label(function () use ($record) {
+                if (isset($record) && $record) {
+                    return 'Edit Client';
+                } else {
+                    return 'New Client';
+                }
+            })
+            ->modalHeading(function () use ($record) {
+                if (isset($record) && $record) {
+                    return 'Edit Client';
+                } else {
+                    return 'Create Client';
+                }
+            })
+            ->form([
+                TextInput::make('name')
+                    ->label('Name')
+                    ->placeholder('Name')
+                    ->required(),
+
+                TextInput::make('email')
+                    ->label('Email')
+                    ->placeholder('Email')
+                    ->email()
+                    ->unique(Client::class, 'email')
+                    ->columnSpanFull()
+                    ->required(),
+
+                Select::make('department_id')
+                    ->label('Department')
+                    ->options(Department::all()->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+            ])
+            ->action(function (array $data, Set $set) use ($inputName, $departmentInputName, $record) {
+                if (isset($record) && $record) {
+                    $record->update([
+                        'department_id' => $data['department_id'],
+                        'name' => $data['name'],
+                        'email' => $data['email'],
+                    ]);
+                    Notification::make()
+                        ->title('Client updated successfully!')
+                        ->success()
+                        ->send();
+                } else {
+                    $record = Client::create([
+                        'department_id' => $data['department_id'],
+                        'name' => $data['name'],
+                        'email' => $data['email'],
+                        'created_by' => Auth::user()->id,
+                    ]);
+
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Client::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('New Client Created')
+                        ->log('New Client ' . $record->name . ' created');
+
+                    Notification::make()
+                        ->title('Client created successfully!')
+                        ->success()
+                        ->send();
+                }
+                $set($departmentInputName, $data['department_id']);
+                $set($inputName, $record->id);
+            });
     }
 }

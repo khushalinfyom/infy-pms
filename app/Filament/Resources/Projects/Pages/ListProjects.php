@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\Pages;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -39,7 +40,18 @@ class ListProjects extends Page
                 ->modalWidth('2xl')
                 ->createAnother(false)
                 ->successNotificationTitle('Project created successfully!')
-                ->form(fn($form) => ProjectResource::form($form)),
+                ->form(fn($form) => ProjectResource::form($form))
+                ->after(function ($record) {
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Project::class,
+                            'data'  => $record->name,
+                        ])
+                        ->useLog('Project Created')
+                        ->log('Created project');
+                }),
         ];
     }
 
@@ -125,7 +137,12 @@ class ListProjects extends Page
 
                                     TextEntry::make('created_at')
                                         ->hiddenLabel()
-                                        ->default('1/345')
+                                        ->default(function () use ($project) {
+                                            $total = $project->tasks()->count();
+                                            $pending = $project->tasks()->where('status', Task::STATUS_PENDING)->count();
+
+                                            return "{$pending}/{$total}";
+                                        })
                                         ->extraAttributes([
                                             'style' => 'display: flex; justify-content: flex-end;',
                                         ]),

@@ -55,6 +55,16 @@ class ManageClients extends ManageRecords
                         'created_by' => auth()->id(),
                         'user_id' => $user->id ?? null,
                     ]);
+
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($client)
+                        ->withProperties([
+                            'model' => Client::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('New Client Created')
+                        ->log('New Client ' . $client->name . ' created');
                 })
                 ->successNotificationTitle('Client created successfully!'),
         ];

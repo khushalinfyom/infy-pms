@@ -28,7 +28,7 @@ class CustomLogin extends Login
         return $schema
             ->components([
                 $this->getEmailFormComponent()->label('Email Address')->placeholder('Email Address'),
-                $this->getPasswordFormComponent()->label('Password')->placeholder('Password')->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3"> {{ __("messages.home.forgot_password") }}</x-filament::link>')) : null)->extraAttributes(['class' => 'password-field']),
+                $this->getPasswordFormComponent()->label('Password')->placeholder('Password')->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3"> {{ "Forgot password?" }}</x-filament::link>')) : null)->extraAttributes(['class' => 'password-field']),
                 $this->getRememberFormComponent()->label('Remember Me'),
             ]);
     }

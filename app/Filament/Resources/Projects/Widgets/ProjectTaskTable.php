@@ -49,7 +49,7 @@ class ProjectTaskTable extends TableWidget
                     return 'No tasks found for "' . $livewire->tableSearch . '"';
                 }
             })
-            ->query(Task::where('project_id', $this->record->id)->where('status', '=', 0))
+            ->query(Task::where('project_id', $this->record->id)->where('status', '!=', 1))
             ->columns([
 
                 TextColumn::make('title')
