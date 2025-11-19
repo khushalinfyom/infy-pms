@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Departments\Pages;
 
 use App\Filament\Resources\Departments\DepartmentResource;
+use App\Models\Department;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 
@@ -19,7 +20,18 @@ class ManageDepartments extends ManageRecords
                 ->successNotificationTitle('Department created successfully!')
                 ->createAnother(false)
                 ->modalHeading('Create Department')
-                ->modalWidth('xl'),
+                ->modalWidth('xl')
+                ->after(function ($record) {
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Department::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('New Department Created')
+                        ->log('New Department ' . $record->name . ' created');
+                }),
         ];
     }
 }

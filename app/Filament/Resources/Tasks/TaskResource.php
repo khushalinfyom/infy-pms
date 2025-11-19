@@ -44,11 +44,6 @@ class TaskResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Task';
 
-    public static function getNavigationGroup(): ?string
-    {
-        return 'Tasks';
-    }
-
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -149,7 +144,13 @@ class TaskResource extends Resource
                     ->label('Description')
                     ->placeholder('Description')
                     ->columnSpanFull()
-                    ->extraAttributes(['style' => 'min-height: 200px;']),
+                    ->extraAttributes(['style' => 'min-height: 200px;'])
+                    ->toolbarButtons([
+                        ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                        ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                        ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                        ['undo', 'redo'],
+                    ]),
 
             ]);
     }

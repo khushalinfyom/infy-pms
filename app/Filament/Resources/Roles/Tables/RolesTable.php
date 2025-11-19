@@ -14,6 +14,7 @@ class RolesTable
     {
         return $table
             ->recordAction(null)
+            ->recordUrl(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
             ->recordActionsColumnLabel('Actions')

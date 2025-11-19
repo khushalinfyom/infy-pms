@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\Pages;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -39,7 +40,18 @@ class ListProjects extends Page
                 ->modalWidth('2xl')
                 ->createAnother(false)
                 ->successNotificationTitle('Project created successfully!')
-                ->form(fn($form) => ProjectResource::form($form)),
+                ->form(fn($form) => ProjectResource::form($form))
+                ->after(function ($record) {
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Project::class,
+                            'data'  => $record->name,
+                        ])
+                        ->useLog('Project Created')
+                        ->log('Created project');
+                }),
         ];
     }
 
@@ -77,6 +89,11 @@ class ListProjects extends Page
 
 
                                     ActionGroup::make([
+
+                                        Action::make('view' . $project->id)
+                                            ->label('View')
+                                            ->icon('heroicon-s-eye')
+                                            ->url(fn() => ProjectResource::getUrl('view', ['record' => $project->id])),
 
                                         self::getEditForm($project),
 
@@ -120,7 +137,12 @@ class ListProjects extends Page
 
                                     TextEntry::make('created_at')
                                         ->hiddenLabel()
-                                        ->default('1/345')
+                                        ->default(function () use ($project) {
+                                            $total = $project->tasks()->count();
+                                            $pending = $project->tasks()->where('status', Task::STATUS_PENDING)->count();
+
+                                            return "{$pending}/{$total}";
+                                        })
                                         ->extraAttributes([
                                             'style' => 'display: flex; justify-content: flex-end;',
                                         ]),
@@ -133,27 +155,30 @@ class ListProjects extends Page
                                     ->columnSpanFull()
                                     ->html()
                                     ->default(function () use ($project) {
-                                        $progress = $project->progress ?? 0;
+                                        $progress = $project->projectProgress();
+                                        $progressFormatted = number_format($progress, 2);
                                         $color = $project->color ?? '#3b82f6';
+                                        $background = '#e5e7eb';
 
                                         $hex = ltrim($color, '#');
                                         if (strlen($hex) === 3) {
                                             $hex = "{$hex[0]}{$hex[0]}{$hex[1]}{$hex[1]}{$hex[2]}{$hex[2]}";
                                         }
-
                                         $r = hexdec(substr($hex, 0, 2));
                                         $g = hexdec(substr($hex, 2, 2));
                                         $b = hexdec(substr($hex, 4, 2));
 
                                         $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+                                        $fillTextColor = $brightness > 155 ? 'black' : 'white';
+                                        $backgroundTextColor = '#1f2937';
 
-                                        $textColor = $brightness > 155 ? 'black' : 'white';
+                                        $textColor = $progress > 45 ? $fillTextColor : $backgroundTextColor;
 
                                         return <<<HTML
-                                                    <div style="position: relative; width: 100%; height: 20px; background-color: #e5e7eb; border-radius: 10px; overflow: hidden; ">
-                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: 90%; background-color: {$color}; transition: width 0.3s ease;"></div>
-                                                        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: {$textColor}; ">
-                                                            90%
+                                                    <div style="position: relative; width: 100%; height: 20px; background-color: {$background}; border-radius: 10px; overflow: hidden;">
+                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: {$progress}%; background-color: {$color}; transition: width 0.3s ease;"></div>
+                                                        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: {$textColor};">
+                                                            {$progressFormatted}%
                                                         </div>
                                                     </div>
                                                 HTML;
@@ -174,7 +199,6 @@ class ListProjects extends Page
                                                         ->where('project_id', $project->id);
                                                 })->get();
                                             }
-
                                             return $users->map(function ($user) {
                                                 return $user->img_avatar
                                                     ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
@@ -206,7 +230,9 @@ class ListProjects extends Page
                                                 ->preload()
                                                 ->searchable()
                                                 ->required()
-                                                ->options(\App\Models\User::pluck('name', 'id'))
+                                                ->options(
+                                                    User::where('is_active', true)->pluck('name', 'id')
+                                                )
                                                 ->columnSpanFull(),
                                         ])
 
@@ -318,7 +344,13 @@ class ListProjects extends Page
 
                         Select::make('currency')
                             ->label('Currency')
-                            ->options(Project::CURRENCY)
+                            ->options(function () {
+                                return collect(Project::CURRENCY)->mapWithKeys(function ($name, $key) {
+                                    return [$key => Project::getCurrencyClass($key) . ' ' . $name];
+                                })->toArray();
+                            })
+                            ->searchable()
+                            ->preload()
                             ->native(false)
                             ->required(),
 
@@ -340,7 +372,13 @@ class ListProjects extends Page
                         ->label('Description')
                         ->placeholder('Description')
                         ->columnSpanFull()
-                        ->extraAttributes(['style' => 'min-height: 200px;']),
+                        ->extraAttributes(['style' => 'min-height: 200px;'])
+                        ->toolbarButtons([
+                            ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                            ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                            ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                            ['undo', 'redo'],
+                        ]),
 
 
                 ])

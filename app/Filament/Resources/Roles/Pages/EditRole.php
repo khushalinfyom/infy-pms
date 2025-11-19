@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Roles\Pages;
 
 use App\Filament\Resources\Roles\RoleResource;
+use App\Models\Role;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
 
@@ -18,7 +19,6 @@ class EditRole extends EditRecord
                 ->icon('heroicon-s-arrow-left')
                 ->url(RoleResource::getUrl('index'))
                 ->color('gray'),
-
         ];
     }
 
@@ -35,5 +35,18 @@ class EditRole extends EditRecord
     protected function getRedirectUrl(): ?string
     {
         return $this->getResourceUrl('index');
+    }
+
+    protected function afterSave(): void
+    {
+        activity()
+            ->causedBy(getLoggedInUser())
+            ->performedOn($this->record)
+            ->withProperties([
+                'model' => Role::class,
+                'data'  => '',
+            ])
+            ->useLog('Role Updated')
+            ->log('Role updated.');
     }
 }

@@ -43,7 +43,7 @@ class DepartmentResource extends Resource
                         ->unique()
                         ->required()
                         ->columnSpan(3),
-    
+
                     ColorPicker::make('color')
                         ->label('Color')
                         ->placeholder('Color')
@@ -54,7 +54,13 @@ class DepartmentResource extends Resource
                     ->label('Description')
                     ->placeholder('Description')
                     ->columnSpanFull()
-                    ->extraAttributes(['style' => 'height: 200px;']),
+                    ->extraAttributes(['style' => 'height: 200px;'])
+                    ->toolbarButtons([
+                        ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                        ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                        ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                        ['undo', 'redo'],
+                    ]),
             ]);
     }
 
@@ -103,7 +109,18 @@ class DepartmentResource extends Resource
                     ->iconButton()
                     ->modalHeading('Edit Department')
                     ->modalWidth('xl')
-                    ->successNotificationTitle('Department updated successfully!'),
+                    ->successNotificationTitle('Department updated successfully!')
+                    ->after(function ($record) {
+                        activity()
+                            ->causedBy(getLoggedInUser())
+                            ->performedOn($record)
+                            ->withProperties([
+                                'model' => Department::class,
+                                'data'  => '',
+                            ])
+                            ->useLog('Department Updated')
+                            ->log('Department updated');
+                    }),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
@@ -179,7 +196,13 @@ class DepartmentResource extends Resource
                     ->label('Description')
                     ->placeholder('Description')
                     ->columnSpanFull()
-                    ->extraAttributes(['style' => 'height: 200px;']),
+                    ->extraAttributes(['style' => 'height: 200px;'])
+                    ->toolbarButtons([
+                        ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                        ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                        ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                        ['undo', 'redo'],
+                    ]),
             ])
             ->action(function (array $data) use ($set, $inputName, $record) {
                 if (isset($record) && $record) {
@@ -188,6 +211,17 @@ class DepartmentResource extends Resource
                         'color' => $data['color'],
                         'description' => $data['description'],
                     ]);
+
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Department::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('Department Updated')
+                        ->log('Department ' . $record->name . ' updated');
+
                     Notification::make()
                         ->title('Department updated successfully!')
                         ->success()
@@ -198,6 +232,17 @@ class DepartmentResource extends Resource
                         'color' => $data['color'],
                         'description' => $data['description'],
                     ]);
+
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Department::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('New Department Created')
+                        ->log('New Department ' . $record->name . ' created');
+
                     Notification::make()
                         ->title('Department created successfully!')
                         ->success()

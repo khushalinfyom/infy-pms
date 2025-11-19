@@ -18,11 +18,13 @@ class CustomPathGenerator implements PathGenerator
 {
     public function getPath(Media $media): string
     {
-        $path = '{PARENT_DIR}'.DIRECTORY_SEPARATOR.$media->id.DIRECTORY_SEPARATOR;
+        $path = '{PARENT_DIR}' . DIRECTORY_SEPARATOR . $media->id . DIRECTORY_SEPARATOR;
 
         switch ($media->collection_name) {
-            case Setting::PATH:
-                return str_replace('{PARENT_DIR}', Setting::PATH, $path);
+            case Setting::APP_LOGO:
+                return str_replace('{PARENT_DIR}', Setting::APP_LOGO, $path);
+            case Setting::APP_FAVICON:
+                return str_replace('{PARENT_DIR}', Setting::APP_FAVICON, $path);
             case Task::PATH:
                 return str_replace('{PARENT_DIR}', Task::PATH, $path);
             case User::IMAGE_PATH:
@@ -40,11 +42,11 @@ class CustomPathGenerator implements PathGenerator
 
     public function getPathForConversions(Media $media): string
     {
-        return $this->getPath($media).'thumbnails/';
+        return $this->getPath($media) . 'thumbnails/';
     }
 
     public function getPathForResponsiveImages(Media $media): string
     {
-        return $this->getPath($media).'rs-images/';
+        return $this->getPath($media) . 'rs-images/';
     }
 }

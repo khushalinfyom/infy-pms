@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -212,7 +213,7 @@ class Project extends Model implements HasMedia
      */
     public function users()
     {
-        return $this->belongsToMany(User::class, 'project_user', 'project_id', 'user_id')->withTimestamps();
+        return $this->belongsToMany(User::class, 'project_user', 'project_id', 'user_id')->withTimestamps()->where('is_active', '=', true);
     }
 
     /**
@@ -255,13 +256,13 @@ class Project extends Model implements HasMedia
     {
         switch ($key) {
             case 1:
-                return 'fas fa-rupee-sign';
+                return '₹';
             case 5:
-                return 'fas fa-euro-sign';
+                return '€';
             case 6:
-                return 'fas fa-pound-sign';
+                return '£';
             default:
-                return 'fas fa-dollar-sign';
+                return '$';
         }
     }
 
@@ -288,5 +289,16 @@ class Project extends Model implements HasMedia
         if (!empty($media)) {
             return $media;
         }
+    }
+
+    public function activities()
+    {
+        return $this->morphMany(Activity::class, 'subject')
+            ->latest();
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'task_tags', 'task_id', 'tag_id');
     }
 }
