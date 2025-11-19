@@ -160,6 +160,20 @@ class ProjectTaskTable extends TableWidget
                         if (!empty($data['tags'])) {
                             $task->tags()->sync($data['tags']);
                         }
+
+                        $project = $task->project;
+
+                        if ($project) {
+                            activity()
+                                ->causedBy(getLoggedInUser())
+                                ->performedOn($project)
+                                ->withProperties([
+                                    'model' => Task::class,
+                                    'data'  => 'of ' . $project->name,
+                                ])
+                                ->useLog('Task Created')
+                                ->log('Created new task ' . $task->title);
+                        }
                     })
                     ->successNotificationTitle('Task Created Successfully'),
             ])

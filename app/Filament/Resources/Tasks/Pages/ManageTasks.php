@@ -54,6 +54,20 @@ class ManageTasks extends ManageRecords
                                 ]);
                             }
                         }
+
+                        $project = $record->project;
+
+                        if ($project) {
+                            activity()
+                                ->causedBy(getLoggedInUser())
+                                ->performedOn($project)
+                                ->withProperties([
+                                    'model' => Task::class,
+                                    'data'  => 'of ' . $project->name,
+                                ])
+                                ->useLog('Task Created')
+                                ->log('Created new task ' . $record->title);
+                        }
                     })
                     ->successNotificationTitle('Task created successfully!'),
 

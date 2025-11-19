@@ -51,6 +51,16 @@ class ListProjects extends Page
                         ])
                         ->useLog('Project Created')
                         ->log('Created project');
+
+                    activity()
+                        ->causedBy(getLoggedInUser())
+                        ->performedOn($record)
+                        ->withProperties([
+                            'model' => Project::class,
+                            'data'  => '',
+                        ])
+                        ->useLog('Project Assign To User')
+                        ->log('Assigned ' . $record->name . ' to ' . implode(',', $record->users()->pluck('name')->toArray()));
                 }),
         ];
     }
@@ -68,6 +78,7 @@ class ListProjects extends Page
                 if (!empty($projects)) {
                     $projectsData = [];
                     foreach ($projects as $project) {
+                        /** @var Project $project */
                         $projectsData[] = Section::make()
                             ->schema([
                                 Group::make([
@@ -206,7 +217,7 @@ class ListProjects extends Page
                                         })
                                         ->circular()
                                         ->stacked()
-                                        ->limit(6)
+                                        ->limit(5)
                                         ->limitedRemainingText()
                                         ->imageHeight(40)
                                         ->extraAttributes([
@@ -235,9 +246,17 @@ class ListProjects extends Page
                                                 )
                                                 ->columnSpanFull(),
                                         ])
-
                                         ->action(function (array $data) use ($project) {
                                             $project->users()->sync($data['users']);
+                                            activity()
+                                                ->causedBy(getLoggedInUser())
+                                                ->performedOn($project)
+                                                ->withProperties([
+                                                    'model' => Project::class,
+                                                    'data'  => '',
+                                                ])
+                                                ->useLog('Project Assignee Updated')
+                                                ->log('Assigned ' . $project->name . ' to ' . implode(', ', $project->users()->pluck('name')->toArray()));
                                         })
                                         ->after(fn() => redirect(request()->header('Referer')))
                                         ->successNotificationTitle('Assignee updated successfully!')
@@ -400,6 +419,16 @@ class ListProjects extends Page
                 if (isset($data['user_ids'])) {
                     $project->users()->sync($data['user_ids']);
                 }
+
+                activity()
+                    ->causedBy(getLoggedInUser())
+                    ->performedOn($project)
+                    ->withProperties([
+                        'model' => Project::class,
+                        'data'  => $project->name,
+                    ])
+                    ->useLog('Project Updated')
+                    ->log('Updated Project');
             })
             ->successNotificationTitle('Project updated successfully!');
     }

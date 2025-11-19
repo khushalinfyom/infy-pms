@@ -6,6 +6,7 @@ use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Client;
 use App\Models\Department;
 use App\Models\Project;
+use App\Models\Report;
 use App\Models\Tag;
 use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
@@ -69,6 +70,18 @@ class CreateReport extends CreateRecord
                 'param_type' => Tag::class,
                 'param_id' => $tagId,
             ]);
+        }
+
+        foreach ($report->projects as $project) {
+            activity()
+                ->causedBy(getLoggedInUser())
+                ->performedOn($project)
+                ->withProperties([
+                    'model' => Report::class,
+                    'data'  => 'of ' . $project->name,
+                ])
+                ->useLog('Report Created')
+                ->log('Created project report');
         }
     }
 }

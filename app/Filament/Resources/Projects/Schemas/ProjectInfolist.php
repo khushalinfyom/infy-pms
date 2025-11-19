@@ -38,6 +38,7 @@ class ProjectInfolist
 
                         self::getAttachmentsTab(),
                     ])
+                    ->persistTabInQueryString()
                     ->columnSpanFull()
             ]);
     }
@@ -108,7 +109,7 @@ class ProjectInfolist
                                     $client = $record->client;
                                     $text = " <b>{$client->name}</b>\n{$client->email}";
                                     if ($client->department && $client->department->name) {
-                                        $text .= "\n". $client->department->name;
+                                        $text .= "\n" . $client->department->name;
                                     }
                                     return $text;
                                 })
@@ -215,6 +216,13 @@ class ProjectInfolist
                     ->schema([
                         RepeatableEntry::make('activities')
                             ->hiddenLabel()
+                            // ->state(
+                            //     fn($record) =>
+                            //     $record->activities()
+                            //         ->orderBy('created_at', 'desc')
+                            //         ->get()
+                            //         ->toArray()
+                            // )
                             ->schema([
 
                                 IconEntry::make('activity_icon')
