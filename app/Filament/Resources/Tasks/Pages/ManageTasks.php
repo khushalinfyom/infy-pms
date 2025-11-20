@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Tasks\Pages;
 
 use App\Filament\Resources\Tasks\TaskResource;
 use App\Models\Task;
+use App\Models\UserNotification;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
@@ -53,6 +54,17 @@ class ManageTasks extends ManageRecords
                                     'user_id' => $userId,
                                 ]);
                             }
+                        }
+
+                        $userIds = $data['users'] ?? $record->taskAssignee()->pluck('users.id')->toArray();
+
+                        foreach ($userIds as $id) {
+                            UserNotification::create([
+                                'title'       => 'New Task Assigned',
+                                'description' => $record->title . ' assigned to you',
+                                'type'        => Task::class,
+                                'user_id'     => $id,
+                            ]);
                         }
 
                         $project = $record->project;

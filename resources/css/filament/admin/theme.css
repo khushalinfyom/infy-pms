@@ -44,3 +44,8 @@
     background-color: #d6d6d6 !important;
     border-radius: 12px !important;
 }
+
+.fi-sidebar-nav{
+    padding-block-start: 20px !important;
+    gap: 20px !important;
+}

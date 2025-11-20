@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\UserNotification;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
@@ -41,7 +42,18 @@ class ListProjects extends Page
                 ->createAnother(false)
                 ->successNotificationTitle('Project created successfully!')
                 ->form(fn($form) => ProjectResource::form($form))
-                ->after(function ($record) {
+                ->after(function ($record, array $data) {
+                    $userIds = $data['users'] ?? $record->users()->pluck('users.id')->toArray();
+
+                    foreach ($userIds as $id) {
+                        UserNotification::create([
+                            'title'       => 'New Project Assigned',
+                            'description' => $record->name . ' assigned to you',
+                            'type'        => Project::class,
+                            'user_id'     => $id,
+                        ]);
+                    }
+
                     activity()
                         ->causedBy(getLoggedInUser())
                         ->performedOn($record)
@@ -404,6 +416,10 @@ class ListProjects extends Page
                     ->columns(2),
             ])
             ->action(function (array $data) use ($project): void {
+
+                $oldStatus = $project->status;
+                $newStatus = $data['status'] ?? $project->status;
+
                 $project->update([
                     'name' => $data['name'],
                     'prefix' => $data['prefix'],
@@ -418,6 +434,30 @@ class ListProjects extends Page
 
                 if (isset($data['user_ids'])) {
                     $project->users()->sync($data['user_ids']);
+                }
+
+                if ($oldStatus != $newStatus) {
+                    $oldStatusText = Project::STATUS[$oldStatus] ?? $oldStatus;
+                    $newStatusText = Project::STATUS[$newStatus] ?? $newStatus;
+
+                    $projectUsers = $project->users()->pluck('users.id')->toArray();
+                    foreach ($projectUsers as $userId) {
+                        UserNotification::create([
+                            'title'       => 'Project Status Changed',
+                            'description' => 'Project status changed from ' . $oldStatusText . ' to ' . $newStatusText,
+                            'type'        => Project::class,
+                            'user_id'     => $userId,
+                        ]);
+                    }
+
+                    if (!empty($project->client->user_id)) {
+                        UserNotification::create([
+                            'title'       => 'Project Status Changed',
+                            'description' => 'Project status changed from ' . $oldStatusText . ' to ' . $newStatusText,
+                            'type'        => Project::class,
+                            'user_id'     => $project->client->user_id,
+                        ]);
+                    }
                 }
 
                 activity()

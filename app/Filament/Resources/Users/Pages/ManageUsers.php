@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Models\Project;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
@@ -33,6 +35,24 @@ class ManageUsers extends ManageRecords
                 ->after(function ($record, array $data): void {
                     if (isset($data['role_id'])) {
                         $record->syncRoles([$data['role_id']]);
+                    }
+
+                    $projects = $record->projects()->pluck('projects.id')->toArray();
+
+                    foreach ($projects as $projectId) {
+                        $project = Project::find($projectId);
+
+                        if ($project) {
+                            activity()
+                                ->causedBy(getLoggedInUser())
+                                ->performedOn($project)
+                                ->withProperties([
+                                    'model' => User::class,
+                                    'data'  => $project->name,
+                                ])
+                                ->useLog('User Assigned to Project')
+                                ->log('Assigned ' . $record->name . ' to project');
+                        }
                     }
                 }),
         ];
