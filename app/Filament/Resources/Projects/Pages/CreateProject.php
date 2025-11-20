@@ -26,30 +26,4 @@ class CreateProject extends CreateRecord
     {
         return $this->getResourceUrl('index');
     }
-
-    // protected function afterCreate(): void
-    // {
-    //     activity()
-    //         ->causedBy(getLoggedInUser())
-    //         ->performedOn($this->record)
-    //         ->withProperties([
-    //             'model' => Project::class,
-    //             'data'  => '',
-    //         ])
-    //         ->useLog('Project Created')
-    //         ->log('Project ' . $this->record->name . ' created.');
-    // }
-
-    public function afterCreate()
-    {
-        activity()
-            ->causedBy(getLoggedInUser())
-            ->performedOn($this->record)
-            ->withProperties([
-                'model' => Project::class,
-                'data'  => '',
-            ])
-            ->useLog('Project Created')
-            ->log('Project ' . $this->record->name . ' created.');
-    }
 }

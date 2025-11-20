@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\Status;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\UserNotification;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -159,6 +160,31 @@ class ProjectTaskTable extends TableWidget
 
                         if (!empty($data['tags'])) {
                             $task->tags()->sync($data['tags']);
+                        }
+
+                        $userIds = $data['taskAssignee'] ?? [];
+
+                        foreach ($userIds as $id) {
+                            UserNotification::create([
+                                'title'       => 'New Task Assigned',
+                                'description' => $task->title . ' assigned to you',
+                                'type'        => Task::class,
+                                'user_id'     => $id,
+                            ]);
+                        }
+
+                        $project = $task->project;
+
+                        if ($project) {
+                            activity()
+                                ->causedBy(getLoggedInUser())
+                                ->performedOn($project)
+                                ->withProperties([
+                                    'model' => Task::class,
+                                    'data'  => 'of ' . $project->name,
+                                ])
+                                ->useLog('Task Created')
+                                ->log('Created new task ' . $task->title);
                         }
                     })
                     ->successNotificationTitle('Task Created Successfully'),
