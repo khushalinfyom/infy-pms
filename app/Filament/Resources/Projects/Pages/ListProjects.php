@@ -15,6 +15,8 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Schema;
@@ -23,14 +25,71 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Support\Icons\Heroicon;
 use Livewire\WithPagination;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-class ListProjects extends Page
+class ListProjects extends Page implements HasForms
 {
-    use WithPagination;
+    use WithPagination, InteractsWithForms;
 
     protected static string $resource = ProjectResource::class;
 
     protected string $view = 'filament.resources.projects.pages.list-projects';
+
+    // Add perPage property
+    public int $perPage = 12;
+
+    // Add search property
+    public string $search = '';
+
+    // Add filter properties
+    public int | null $status = Project::STATUS_ONGOING;
+    public int | null $client_id = null;
+
+    // Add page options
+    protected array $perPageOptions = [5, 10, 20, 50, 100, 'all'];
+
+    protected function getFormSchema(): array
+    {
+        return [
+            TextInput::make('search')
+                ->hiddenLabel()
+                ->placeholder('Search projects...')
+                ->live(debounce: 500)
+                ->afterStateUpdated(function ($state) {
+                    $this->search = $state;
+                    $this->resetPage();
+                }),
+
+            Select::make('status')
+                ->hiddenLabel()
+                ->options(Project::STATUS)
+                ->placeholder('All Statuses')
+                ->native(false)
+                ->extraAttributes([
+                    'style' => 'min-width: 180px'
+                ])
+                ->live()
+                ->afterStateUpdated(function ($state) {
+                    $this->status = $state;
+                    $this->resetPage();
+                }),
+
+            Select::make('client_id')
+                ->hiddenLabel()
+                ->options(Client::pluck('name', 'id'))
+                ->placeholder('All Clients')
+                ->native(false)
+                ->searchable()
+                ->extraAttributes([
+                    'style' => 'min-width: 250px'
+                ])
+                ->live()
+                ->afterStateUpdated(function ($state) {
+                    $this->client_id = $state;
+                    $this->resetPage();
+                }),
+        ];
+    }
 
     protected function getHeaderActions(): array
     {
@@ -77,14 +136,57 @@ class ListProjects extends Page
         ];
     }
 
-    public static function getProjects()
+    // Add method to get page options
+    public function getPerPageOptions(): array
     {
-        return Project::with(['client', 'users'])->latest()->paginate(12);
+        return $this->perPageOptions;
     }
 
-    public static function projectsInfolist(Schema $schema): Schema
+    // Get paginated projects
+    public function getProjectsProperty()
     {
-        $projects = self::getProjects();
+        return $this->getProjects($this->perPage);
+    }
+
+    // Modify getProjects method to support pagination options and search
+    public function getProjects($perPage = 12)
+    {
+        $query = Project::with(['client', 'users'])->latest();
+
+        // Apply search filter
+        if (!empty($this->search)) {
+            $query->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('prefix', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Apply status filter
+        if (!is_null($this->status) && $this->status > 0) {
+            $query->where('status', $this->status);
+        }
+
+        // Apply client filter
+        if (!is_null($this->client_id)) {
+            $query->where('client_id', $this->client_id);
+        }
+
+        if ($perPage === 'all') {
+            $projects = $query->get();
+            return new LengthAwarePaginator(
+                $projects,
+                $projects->count(),
+                $projects->count(),
+                1
+            );
+        }
+
+        return $query->paginate($perPage);
+    }
+
+    public function projectsInfolist(Schema $schema): Schema
+    {
+        $projects = $this->getProjectsProperty();
         return $schema
             ->components(function () use ($projects) {
                 if (!empty($projects)) {
@@ -290,6 +392,34 @@ class ListProjects extends Page
                     return Group::make($projectsData)->columns(3);
                 }
             });
+    }
+
+    // Add method to update per page
+    public function updatedPerPage($value): void
+    {
+        $this->resetPage();
+    }
+
+    // Get status label for display
+    public function getStatusLabel(): string
+    {
+        if (is_null($this->status)) {
+            return '';
+        }
+
+        $statuses = Project::STATUS;
+        return $statuses[$this->status] ?? '';
+    }
+
+    // Get client name for display
+    public function getClientName(): string
+    {
+        if (is_null($this->client_id)) {
+            return '';
+        }
+
+        $client = Client::find($this->client_id);
+        return $client ? $client->name : '';
     }
 
     public static function getEditForm(Project $project): Action
