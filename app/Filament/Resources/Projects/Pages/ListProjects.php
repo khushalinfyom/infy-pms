@@ -361,7 +361,44 @@ class ListProjects extends Page implements HasForms
                                                 ->columnSpanFull(),
                                         ])
                                         ->action(function (array $data) use ($project) {
+
+                                            $oldUserIds = $project->users()->pluck('users.id')->toArray();
                                             $project->users()->sync($data['users']);
+
+                                            $newUserIds = array_diff($data['users'], $oldUserIds);
+                                            $removedUserIds = array_diff($oldUserIds, $data['users']);
+
+                                            foreach ($removedUserIds as $removedUserId) {
+                                                UserNotification::create([
+                                                    'title'       => 'Removed From Project',
+                                                    'description' => 'You were removed from ' . $project->name,
+                                                    'type'        => Project::class,
+                                                    'user_id'     => $removedUserId,
+                                                ]);
+                                            }
+
+                                            foreach ($newUserIds as $newUserId) {
+                                                $newUser = User::find($newUserId);
+                                                if ($newUser) {
+                                                    foreach ($newUserIds as $newUserId) {
+                                                        UserNotification::create([
+                                                            'title'       => 'New Project Assigned',
+                                                            'description' => $project->name . ' assigned to you',
+                                                            'type'        => Project::class,
+                                                            'user_id'     => $newUserId,
+                                                        ]);
+                                                    }
+                                                    foreach ($oldUserIds as $oldUserId) {
+                                                        UserNotification::create([
+                                                            'title'       => 'New User Assigned to Project',
+                                                            'description' => $newUser->name . ' assigned to ' . $project->name,
+                                                            'type'        => Project::class,
+                                                            'user_id'     => $oldUserId,
+                                                        ]);
+                                                    }
+                                                }
+                                            }
+
                                             activity()
                                                 ->causedBy(getLoggedInUser())
                                                 ->performedOn($project)
@@ -550,6 +587,8 @@ class ListProjects extends Page implements HasForms
                 $oldStatus = $project->status;
                 $newStatus = $data['status'] ?? $project->status;
 
+                $oldUserIds = $project->users()->pluck('users.id')->toArray();
+
                 $project->update([
                     'name' => $data['name'],
                     'prefix' => $data['prefix'],
@@ -564,6 +603,30 @@ class ListProjects extends Page implements HasForms
 
                 if (isset($data['user_ids'])) {
                     $project->users()->sync($data['user_ids']);
+                }
+
+                $newUserIds = array_diff($data['user_ids'], $oldUserIds);
+                $removedUserIds = array_diff($oldUserIds, $data['user_ids']);
+
+                foreach ($newUserIds as $newUserId) {
+                    $newUser = User::find($newUserId);
+                    if ($newUser) {
+                        UserNotification::create([
+                            'title'       => 'New Project Assigned',
+                            'description' => $project->name . ' assigned to you',
+                            'type'        => Project::class,
+                            'user_id'     => $newUser->id,
+                        ]);
+                    }
+                }
+
+                foreach ($removedUserIds as $removedUserId) {
+                    UserNotification::create([
+                        'title'       => 'Removed From Project',
+                        'description' => 'You removed from ' . $project->name,
+                        'type'        => Project::class,
+                        'user_id'     => $removedUserId,
+                    ]);
                 }
 
                 if ($oldStatus != $newStatus) {
@@ -589,6 +652,8 @@ class ListProjects extends Page implements HasForms
                         ]);
                     }
                 }
+
+
 
                 activity()
                     ->causedBy(getLoggedInUser())
