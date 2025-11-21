@@ -6,6 +6,7 @@ use App\Enums\AdminPanelSidebar;
 use App\Filament\Infolists\Components\ClientEntry;
 use App\Filament\Resources\Clients\Pages\ManageClients;
 use App\Filament\Resources\Departments\DepartmentResource;
+use App\Filament\Tables\Columns\ClientImageColumn;
 use App\Models\Client;
 use App\Models\Department;
 use App\Models\User;
@@ -19,9 +20,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\ViewEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Group;
@@ -33,7 +32,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Exceptions\Halt;
-use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -243,7 +241,7 @@ class ClientResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Actions')
+            ->recordActionsColumnLabel('Action')
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
                     return 'No clients found.';
@@ -254,22 +252,11 @@ class ClientResource extends Resource
             ->recordTitleAttribute('Client')
             ->columns([
 
-                SpatieMediaLibraryImageColumn::make('clients')
-                    ->label('Profile')
-                    ->disk(config('app.media_disk'))
-                    ->collection('clients')
-                    ->circular()
-                    ->width(40)
-                    ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name),
-
-                TextColumn::make('name')
-                    ->label('Name')
-                    ->searchable(['name', 'email'])
-                    ->description(function (Client $record) {
-                        return $record->email;
-                    })
-                    ->limit(100)
-                    ->wrap(),
+                ClientImageColumn::make('clients')
+                    ->label('Client')
+                    ->view('filament.tables.columns.client-image-column')
+                    ->sortable()
+                    ->searchable(['name', 'email']),
 
                 TextColumn::make('department.name')
                     ->label('Department')

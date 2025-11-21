@@ -21,6 +21,13 @@ class ManageDepartments extends ManageRecords
                 ->createAnother(false)
                 ->modalHeading('Create Department')
                 ->modalWidth('xl')
+                ->mutateFormDataUsing(function (array $data): array {
+                    if (trim(strip_tags($data['description'] ?? '')) === '') {
+                        $data['description'] = null;
+                    }
+
+                    return $data;
+                })
                 ->after(function ($record) {
                     activity()
                         ->causedBy(getLoggedInUser())

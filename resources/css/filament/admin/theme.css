@@ -20,6 +20,11 @@
     height: 50px !important;
 }
 
+.project-activity-card .fi-icon.fi-size-lg {
+    width: 100px !important;
+    height: 50px !important;
+}
+
 .client .total-projects .fi-section-content-ctn {
     background-color: rgb(176, 217, 250) !important;
     border-radius: 12px !important;
@@ -48,4 +53,16 @@
 .fi-sidebar-nav{
     padding-block-start: 20px !important;
     gap: 20px !important;
+}
+
+.project-price-card .fi-icon.fi-size-lg {
+    color: #ff7575 !important;
+}
+
+.project-budget-type-card .fi-icon.fi-size-lg {
+    color: #7387ff !important;
+}
+
+.project-created-at-card .fi-icon.fi-size-lg {
+    color: #5bad2d !important;
 }

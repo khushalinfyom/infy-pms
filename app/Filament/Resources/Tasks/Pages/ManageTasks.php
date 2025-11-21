@@ -8,13 +8,35 @@ use App\Models\UserNotification;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
-use Filament\Resources\Pages\ManageRecords;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Resources\Pages\Page;
+use Illuminate\View\View;
 
-class ManageTasks extends ManageRecords
+class ManageTasks extends Page implements HasForms
 {
+    use InteractsWithForms;
+
     protected static string $resource = TaskResource::class;
+
+    protected string $view = 'filament.resources.tasks.pages.manage-tasks';
+
+    public ?array $data = [];
+
+    public function getHeading(): string
+    {
+        return 'Tasks';
+    }
+
+    public function mount(): void
+    {
+        $this->data = $this->getTasks();
+    }
+
+    public function getTasks(): array
+    {
+        return Task::with(['project.users'])->latest()->take(10)->get()->toArray();
+    }
 
     protected function getHeaderActions(): array
     {
@@ -27,35 +49,27 @@ class ManageTasks extends ManageRecords
                     ->icon('heroicon-s-plus')
                     ->modalHeading('Create Task')
                     ->createAnother(false)
+                    ->form(fn($form) => TaskResource::form($form))
                     ->using(function (array $data) {
-                        if (!isset($data['estimate_time_type'])) {
-                            $data['estimate_time_type'] = Task::IN_HOURS;
-                        }
 
-                        if ($data['estimate_time_type'] == Task::IN_HOURS) {
-                            $data['estimate_time'] = $data['estimate_time'] ?? '00:00';
-                        } else {
-                            $data['estimate_time'] = is_numeric($data['estimate_time']) ? $data['estimate_time'] : '0';
-                        }
+                        $data['estimate_time_type'] = $data['estimate_time_type'] ?? Task::IN_HOURS;
+                        $data['estimate_time'] = $data['estimate_time'] ?? null;
 
                         if (empty($data['task_number']) && isset($data['project_id'])) {
                             $data['task_number'] = Task::generateUniqueTaskNumber($data['project_id']);
                         }
 
-                        $data['created_by'] = Auth::id();
+                        $data['created_by'] = getLoggedInUser()->id;
 
-                        return Task::create($data);
-                    })
-                    ->after(function ($record, $data) {
-                        if (! empty($data['taskAssignee'])) {
-                            foreach ($data['taskAssignee'] as $userId) {
-                                DB::table('task_assignees')->insert([
-                                    'task_id' => $record->id,
-                                    'user_id' => $userId,
-                                ]);
-                            }
+                        $task = Task::create($data);
+
+                        if (!empty($data['taskAssignee']) && is_array($data['taskAssignee'])) {
+                            $task->taskAssignee()->sync($data['taskAssignee']);
                         }
 
+                        return $task;
+                    })
+                    ->after(function ($record, $data) {
                         $userIds = $data['users'] ?? $record->taskAssignee()->pluck('users.id')->toArray();
 
                         foreach ($userIds as $id) {

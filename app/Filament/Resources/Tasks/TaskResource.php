@@ -93,6 +93,45 @@ class TaskResource extends Resource
                     ->native(false)
                     ->minDate(now()),
 
+                // TextInput::make('estimate_time')
+                //     ->label('Estimate Time')
+                //     ->reactive()
+                //     ->placeholder('Enter estimate')
+                //     ->default(0)
+                //     ->afterStateHydrated(function ($set, $get) {
+                //         if (! $get('estimate_time_type')) {
+                //             $set('estimate_time_type', Task::IN_HOURS);
+                //         }
+                //     })
+                //     ->extraInputAttributes(function ($get) {
+                //         return [
+                //             'type' => $get('estimate_time_type') === Task::IN_HOURS ? 'time' : 'number',
+                //             'min' => 0,
+                //         ];
+                //     })
+                //     ->suffixAction(
+                //         Action::make('set_hours')
+                //             ->button()
+                //             ->label('In Hours')
+                //             ->size('xs')
+                //             ->color(fn($get) => $get('estimate_time_type') === Task::IN_HOURS ? 'primary' : 'secondary')
+                //             ->action(function ($set) {
+                //                 $set('estimate_time_type', Task::IN_HOURS);
+                //                 $set('estimate_time', null);
+                //             })
+                //     )
+                //     ->suffixAction(
+                //         Action::make('set_days')
+                //             ->button()
+                //             ->label('In Days')
+                //             ->size('xs')
+                //             ->color(fn($get) => $get('estimate_time_type') === Task::IN_DAYS ? 'primary' : 'secondary')
+                //             ->action(function ($set) {
+                //                 $set('estimate_time_type', Task::IN_DAYS);
+                //                 $set('estimate_time', null);
+                //             })
+                //     ),
+
                 TextInput::make('estimate_time')
                     ->label('Estimate Time')
                     ->reactive()
@@ -109,28 +148,27 @@ class TaskResource extends Resource
                             'min' => 0,
                         ];
                     })
-                    ->suffixAction(
+                    ->suffixActions([
                         Action::make('set_hours')
                             ->button()
                             ->label('In Hours')
                             ->size('xs')
                             ->color(fn($get) => $get('estimate_time_type') === Task::IN_HOURS ? 'primary' : 'secondary')
                             ->action(function ($set) {
-                                $set('estimate_time_type', Task::IN_HOURS);
+                                $set('estimate_time_type', Task::IN_HOURS); // saves 0
                                 $set('estimate_time', null);
-                            })
-                    )
-                    ->suffixAction(
+                            }),
+
                         Action::make('set_days')
                             ->button()
                             ->label('In Days')
                             ->size('xs')
                             ->color(fn($get) => $get('estimate_time_type') === Task::IN_DAYS ? 'primary' : 'secondary')
                             ->action(function ($set) {
-                                $set('estimate_time_type', Task::IN_DAYS);
+                                $set('estimate_time_type', Task::IN_DAYS); // saves 1
                                 $set('estimate_time', null);
-                            })
-                    ),
+                            }),
+                    ]),
 
                 Select::make('tags')
                     ->label('Tags')
@@ -152,7 +190,8 @@ class TaskResource extends Resource
                         ['undo', 'redo'],
                     ]),
 
-            ]);
+            ])
+            ->columns(2);
     }
 
     public static function infolist(Schema $schema): Schema
@@ -207,7 +246,7 @@ class TaskResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Actions')
+            ->recordActionsColumnLabel('Action')
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
                     return 'No tasks found.';
@@ -217,48 +256,9 @@ class TaskResource extends Resource
             })
             ->recordTitleAttribute('Task')
             ->columns([
-                TextColumn::make('priority')
-                    ->searchable(),
                 TextColumn::make('title')
                     ->searchable(),
-                TextColumn::make('project_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('status')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('due_date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('completed_on')
-                    ->date()
-                    ->sortable(),
-                IconColumn::make('is_default')
-                    ->boolean(),
-                TextColumn::make('task_number')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('deleted_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('estimate_time')
-                    ->searchable(),
-                TextColumn::make('estimate_time_type')
+                TextColumn::make('project.name')
                     ->numeric()
                     ->sortable(),
             ])

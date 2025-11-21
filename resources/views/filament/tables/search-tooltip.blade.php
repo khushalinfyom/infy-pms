@@ -13,14 +13,8 @@
             ->values();
     }
 @endphp
-
-<style>
-    .me-3 {
-        margin-right: -10px;
-    }
-</style>
 <span
-    class="relative inline-block cursor-help text-gray-400 me-4 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+    class="relative inline-block cursor-help text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
     x-tooltip="{
             content: '{{ 'Search by' . ' ' . $searchableLabels->implode(', ') }}.',
             theme: {

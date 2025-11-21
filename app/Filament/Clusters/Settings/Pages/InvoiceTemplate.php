@@ -4,6 +4,7 @@ namespace App\Filament\Clusters\Settings\Pages;
 
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
+use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
@@ -18,11 +19,14 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 
 class InvoiceTemplate extends Page
 {
     protected string $view = 'filament.clusters.settings.pages.invoice-template';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
     protected static ?string $cluster = SettingsCluster::class;
 
@@ -117,26 +121,18 @@ class InvoiceTemplate extends Page
                         ->columns(3)
                         ->columnSpanFull(),
 
-                    Section::make()
-                        ->schema([
-                            ViewField::make('')
-                                ->live()
-                                ->view('invoices.components.invoice-template-preview')
-                                ->viewData(fn(Get $get) => [
-                                    'data' => $get(), 
-                                    'invoiceTemplate' => $get('default_invoice_template') ?? 'defaultTemplate',
-                                    'invColor' => $get('default_invoice_color') ?? '#000000',
-                                ])
-                                ->columnSpanFull()
-                                ->extraAttributes([
-                                    'class' => 'w-full',
-                                    'style' => 'padding:0;',
-                                ]),
+                    ViewField::make('')
+                        ->live()
+                        ->view('invoices.components.invoice-template-preview')
+                        ->viewData(fn(Get $get) => [
+                            'data' => $get(),
+                            'invoiceTemplate' => $get('default_invoice_template') ?? 'defaultTemplate',
+                            'invColor' => $get('default_invoice_color') ?? '#000000',
                         ])
                         ->columnSpanFull()
                         ->extraAttributes([
                             'class' => 'w-full',
-                            'style' => 'width:100%; padding:0;',
+                            'style' => 'padding:0;',
                         ]),
 
                 ])->columns(2)

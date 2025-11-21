@@ -7,12 +7,11 @@
             }
         });
     }, { rootMargin: '100px' });
-    
+
     observer.observe($refs.loadMoreTrigger);">
 
         <div class="space-y-4">
 
-            {{-- Activity List --}}
             @foreach ($this->activities as $activity)
                 <div class="">
                     <div class="flex items-start space-x-3">
@@ -20,7 +19,7 @@
                             <div
                                 class="relative flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900
                                 after:content-[''] after:absolute after:left-1/2 after:top-full after:-translate-x-1/2
-                                after:w-[2px] after:h-20 after:bg-primary-500">
+                                after:w-[2px] after:h-20 after:bg-primary-500 mt-3">
 
                                 <x-filament::icon :icon="$this->getActivityIcon($activity['subject_type'] ?? null)"
                                     class="w-6 h-6 text-primary-600 dark:text-primary-400" />
@@ -55,12 +54,10 @@
                 </div>
             @endforeach
 
-            {{-- Loader Skeletons - Livewire controlled --}}
             <div x-ref="loadMoreTrigger">
 
                 <div wire:loading wire:target="loadMore" class="space-y-4 w-full">
 
-                    {{-- Skeleton 1 --}}
                     <div class="w-full">
                         <div class="flex items-start space-x-3">
                             <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
@@ -77,7 +74,6 @@
 
                 </div>
 
-                {{-- No More Records --}}
                 @if (!$this->hasMorePages && !$this->loading && count($this->activities) > 0)
                     <div class="text-sm text-center text-gray-500 py-4">
                         No more activities to load
@@ -85,8 +81,6 @@
                 @endif
             </div>
 
-
-            {{-- No activities --}}
             @if (count($this->activities) === 0 && !$this->loading)
                 <div class="flex flex-col items-center justify-center py-12 text-center">
                     <x-filament::icon icon="heroicon-o-document-text" class="w-12 h-12 text-gray-400" />

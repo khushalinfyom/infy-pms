@@ -4,6 +4,7 @@ namespace App\Filament\Clusters\Settings\Pages;
 
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
+use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
@@ -16,11 +17,14 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 
 class GoogleRecaptcha extends Page
 {
     protected string $view = 'filament.clusters.settings.pages.google-recaptcha';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCheckBadge;
 
     protected static ?string $cluster = SettingsCluster::class;
 
