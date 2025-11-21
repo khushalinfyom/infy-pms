@@ -73,7 +73,8 @@ class DepartmentResource extends Resource
 
                 TextEntry::make('description')
                     ->label('Description')
-                    ->html(),
+                    ->html()
+                    ->default('N/A'),
             ])->columns(1);
     }
 
@@ -83,7 +84,7 @@ class DepartmentResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Actions')
+            ->recordActionsColumnLabel('Action')
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
                     return 'No departments found.';
@@ -110,6 +111,12 @@ class DepartmentResource extends Resource
                     ->modalHeading('Edit Department')
                     ->modalWidth('xl')
                     ->successNotificationTitle('Department updated successfully!')
+                    ->mutateFormDataUsing(function (array $data): array {
+                        if (trim(strip_tags($data['description'] ?? '')) === '') {
+                            $data['description'] = null;
+                        }
+                        return $data;
+                    })
                     ->after(function ($record) {
                         activity()
                             ->causedBy(getLoggedInUser())

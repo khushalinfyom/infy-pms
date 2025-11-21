@@ -51,7 +51,7 @@ class TagResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Actions')
+            ->recordActionsColumnLabel('Action')
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
                     return 'No tags found.';

@@ -34,7 +34,7 @@ class ProjectUserEntry extends Entry
 
         $image = $user->getFirstMediaUrl(User::IMAGE_PATH);
         if (empty($image)) {
-            $image = "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&size=128";
+            $image = "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&size=128&background=random";
         }
 
         return [

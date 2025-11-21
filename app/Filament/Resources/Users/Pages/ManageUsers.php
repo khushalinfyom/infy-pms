@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Pages;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\UserNotification;
 use Carbon\Carbon;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
@@ -37,24 +38,28 @@ class ManageUsers extends ManageRecords
                         $record->syncRoles([$data['role_id']]);
                     }
 
-                    $projects = $record->projects()->pluck('projects.id')->toArray();
+                    $record->load('projects');
 
-                    foreach ($projects as $projectId) {
-                        $project = Project::find($projectId);
+                    foreach ($record->projects as $project) {
+                        activity()
+                            ->causedBy(getLoggedInUser())
+                            ->performedOn($project)
+                            ->withProperties([
+                                'model' => User::class,
+                                'data' => $record->name,
+                            ])
+                            ->useLog('User Assigned to Project')
+                            ->log('Assigned ' . $record->name . ' to project');
 
-                        if ($project) {
-                            activity()
-                                ->causedBy(getLoggedInUser())
-                                ->performedOn($project)
-                                ->withProperties([
-                                    'model' => User::class,
-                                    'data'  => $project->name,
-                                ])
-                                ->useLog('User Assigned to Project')
-                                ->log('Assigned ' . $record->name . ' to project');
-                        }
+                        UserNotification::create([
+                            'title'       => 'New Project Assigned',
+                            'description' => $project->name . ' assigned to you',
+                            'type'        => Project::class,
+                            'user_id'     => $record->id,
+                        ]);
                     }
                 }),
+
         ];
     }
 }

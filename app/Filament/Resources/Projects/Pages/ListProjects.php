@@ -35,17 +35,13 @@ class ListProjects extends Page implements HasForms
 
     protected string $view = 'filament.resources.projects.pages.list-projects';
 
-    // Add perPage property
     public int $perPage = 12;
 
-    // Add search property
     public string $search = '';
 
-    // Add filter properties
     public int | null $status = Project::STATUS_ONGOING;
     public int | null $client_id = null;
 
-    // Add page options
     protected array $perPageOptions = [5, 10, 20, 50, 100, 'all'];
 
     protected function getFormSchema(): array
@@ -136,24 +132,20 @@ class ListProjects extends Page implements HasForms
         ];
     }
 
-    // Add method to get page options
     public function getPerPageOptions(): array
     {
         return $this->perPageOptions;
     }
 
-    // Get paginated projects
     public function getProjectsProperty()
     {
         return $this->getProjects($this->perPage);
     }
 
-    // Modify getProjects method to support pagination options and search
     public function getProjects($perPage = 12)
     {
         $query = Project::with(['client', 'users'])->latest();
 
-        // Apply search filter
         if (!empty($this->search)) {
             $query->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')
@@ -161,12 +153,10 @@ class ListProjects extends Page implements HasForms
             });
         }
 
-        // Apply status filter
         if (!is_null($this->status) && $this->status > 0) {
             $query->where('status', $this->status);
         }
 
-        // Apply client filter
         if (!is_null($this->client_id)) {
             $query->where('client_id', $this->client_id);
         }
@@ -196,22 +186,35 @@ class ListProjects extends Page implements HasForms
                         $projectsData[] = Section::make()
                             ->schema([
                                 Group::make([
+                                    Group::make([
 
-                                    TextEntry::make('name')
-                                        ->hiddenLabel()
-                                        ->html()
-                                        ->url(ProjectResource::getUrl('view', ['record' => $project->id]))
-                                        ->default(function () use ($project) {
-                                            $prefix = $project->prefix ?? '';
-                                            $name = $project->name ?? '-';
+                                        ImageEntry::make('image')
+                                            ->circular()
+                                            ->hiddenLabel()
+                                            ->width(45)
+                                            ->height(45)
+                                            ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($project->name) . '&background=random')
+                                            ->columnSpan(1),
 
-                                            $formatted = $prefix
-                                                ? "({$prefix}) - <strong>{$name}</strong>"
-                                                : "<strong>{$name}</strong>";
+                                        TextEntry::make('name')
+                                            ->hiddenLabel()
+                                            ->html()
+                                            ->url(ProjectResource::getUrl('view', ['record' => $project->id]))
+                                            ->default(function () use ($project) {
+                                                $prefix = $project->prefix ?? '';
+                                                $name = $project->name ?? '-';
 
-                                            return $formatted;
-                                        }),
+                                                $formatted = $prefix
+                                                    ? "<strong style='font-size: 16px;'>{$name}</strong> <br> <span style='font-size: 12px;'>({$prefix})</span>"
+                                                    : "<strong style='font-size: 12px;'>{$name}</strong>";
 
+                                                return $formatted;
+                                            })
+                                            ->columnSpan(6),
+
+                                    ])
+                                        ->columns(7)
+                                        ->columnSpan(4),
 
                                     ActionGroup::make([
 
@@ -225,12 +228,58 @@ class ListProjects extends Page implements HasForms
                                         self::getDeleteAction($project),
                                     ])
                                         ->extraAttributes(['style' => 'margin-left: auto;'])
-
-
                                 ])
-                                    ->columns(2),
+                                    ->columns(5),
 
                                 Group::make([
+                                    Group::make([
+
+                                        TextEntry::make('created_at')
+                                            ->hiddenLabel()
+                                            ->default(function () use ($project) {
+
+                                                $progress = $project->projectProgress();
+                                                $progressFormatted = number_format($progress, 2);
+
+                                                return "{$progressFormatted}%";
+                                            }),
+
+                                        TextEntry::make('created_at')
+                                            ->hiddenLabel()
+                                            ->default(function () use ($project) {
+                                                $total = $project->tasks()->count();
+                                                $pending = $project->tasks()->where('status', Task::STATUS_PENDING)->count();
+
+                                                return "{$pending}/{$total}";
+                                            })
+                                            ->extraAttributes([
+                                                'style' => 'display: flex; justify-content: flex-end;',
+                                            ]),
+
+                                    ])
+                                        ->columns(2)
+                                        ->columnSpan(4),
+                                ])
+                                    ->columns(5),
+
+                                Group::make([
+
+                                    TextEntry::make('progress')
+                                        ->hiddenLabel()
+                                        ->columnSpanFull()
+                                        ->html()
+                                        ->default(function () use ($project) {
+                                            $progress = $project->projectProgress();
+                                            $color = $project->color ?? '#3b82f6';
+                                            $background = '#e5e7eb';
+
+                                            return <<<HTML
+                                                    <div style="position: relative; width: 100%; height: 8px; background-color: {$background}; border-radius: 10px; overflow: hidden;">
+                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: {$progress}%; background-color: {$color}; transition: width 0.3s ease;"></div>
+                                                    </div>
+                                                HTML;
+                                        })
+                                        ->columnSpan(4),
 
                                     TextEntry::make('status')
                                         ->hiddenLabel()
@@ -258,56 +307,11 @@ class ListProjects extends Page implements HasForms
                                             ];
 
                                             return $colors[$project->status] ?? 'gray';
-                                        }),
-
-                                    TextEntry::make('created_at')
-                                        ->hiddenLabel()
-                                        ->default(function () use ($project) {
-                                            $total = $project->tasks()->count();
-                                            $pending = $project->tasks()->where('status', Task::STATUS_PENDING)->count();
-
-                                            return "{$pending}/{$total}";
-                                        })
-                                        ->extraAttributes([
-                                            'style' => 'display: flex; justify-content: flex-end;',
-                                        ]),
+                                        })->extraAttributes(['style' => 'margin-top: -15px;'])
+                                        ->columnSpan(1),
 
                                 ])
-                                    ->columns(2),
-
-                                TextEntry::make('progress')
-                                    ->hiddenLabel()
-                                    ->columnSpanFull()
-                                    ->html()
-                                    ->default(function () use ($project) {
-                                        $progress = $project->projectProgress();
-                                        $progressFormatted = number_format($progress, 2);
-                                        $color = $project->color ?? '#3b82f6';
-                                        $background = '#e5e7eb';
-
-                                        $hex = ltrim($color, '#');
-                                        if (strlen($hex) === 3) {
-                                            $hex = "{$hex[0]}{$hex[0]}{$hex[1]}{$hex[1]}{$hex[2]}{$hex[2]}";
-                                        }
-                                        $r = hexdec(substr($hex, 0, 2));
-                                        $g = hexdec(substr($hex, 2, 2));
-                                        $b = hexdec(substr($hex, 4, 2));
-
-                                        $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
-                                        $fillTextColor = $brightness > 155 ? 'black' : 'white';
-                                        $backgroundTextColor = '#1f2937';
-
-                                        $textColor = $progress > 45 ? $fillTextColor : $backgroundTextColor;
-
-                                        return <<<HTML
-                                                    <div style="position: relative; width: 100%; height: 20px; background-color: {$background}; border-radius: 10px; overflow: hidden;">
-                                                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: {$progress}%; background-color: {$color}; transition: width 0.3s ease;"></div>
-                                                        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: {$textColor};">
-                                                            {$progressFormatted}%
-                                                        </div>
-                                                    </div>
-                                                HTML;
-                                    }),
+                                    ->columns(5),
 
                                 Group::make([
 
@@ -361,7 +365,44 @@ class ListProjects extends Page implements HasForms
                                                 ->columnSpanFull(),
                                         ])
                                         ->action(function (array $data) use ($project) {
+
+                                            $oldUserIds = $project->users()->pluck('users.id')->toArray();
                                             $project->users()->sync($data['users']);
+
+                                            $newUserIds = array_diff($data['users'], $oldUserIds);
+                                            $removedUserIds = array_diff($oldUserIds, $data['users']);
+
+                                            foreach ($removedUserIds as $removedUserId) {
+                                                UserNotification::create([
+                                                    'title'       => 'Removed From Project',
+                                                    'description' => 'You were removed from ' . $project->name,
+                                                    'type'        => Project::class,
+                                                    'user_id'     => $removedUserId,
+                                                ]);
+                                            }
+
+                                            foreach ($newUserIds as $newUserId) {
+                                                $newUser = User::find($newUserId);
+                                                if ($newUser) {
+                                                    foreach ($newUserIds as $newUserId) {
+                                                        UserNotification::create([
+                                                            'title'       => 'New Project Assigned',
+                                                            'description' => $project->name . ' assigned to you',
+                                                            'type'        => Project::class,
+                                                            'user_id'     => $newUserId,
+                                                        ]);
+                                                    }
+                                                    foreach ($oldUserIds as $oldUserId) {
+                                                        UserNotification::create([
+                                                            'title'       => 'New User Assigned to Project',
+                                                            'description' => $newUser->name . ' assigned to ' . $project->name,
+                                                            'type'        => Project::class,
+                                                            'user_id'     => $oldUserId,
+                                                        ]);
+                                                    }
+                                                }
+                                            }
+
                                             activity()
                                                 ->causedBy(getLoggedInUser())
                                                 ->performedOn($project)
@@ -394,13 +435,11 @@ class ListProjects extends Page implements HasForms
             });
     }
 
-    // Add method to update per page
     public function updatedPerPage($value): void
     {
         $this->resetPage();
     }
 
-    // Get status label for display
     public function getStatusLabel(): string
     {
         if (is_null($this->status)) {
@@ -411,7 +450,6 @@ class ListProjects extends Page implements HasForms
         return $statuses[$this->status] ?? '';
     }
 
-    // Get client name for display
     public function getClientName(): string
     {
         if (is_null($this->client_id)) {
@@ -550,6 +588,8 @@ class ListProjects extends Page implements HasForms
                 $oldStatus = $project->status;
                 $newStatus = $data['status'] ?? $project->status;
 
+                $oldUserIds = $project->users()->pluck('users.id')->toArray();
+
                 $project->update([
                     'name' => $data['name'],
                     'prefix' => $data['prefix'],
@@ -564,6 +604,39 @@ class ListProjects extends Page implements HasForms
 
                 if (isset($data['user_ids'])) {
                     $project->users()->sync($data['user_ids']);
+                }
+
+                $newUserIds = array_diff($data['user_ids'], $oldUserIds);
+                $removedUserIds = array_diff($oldUserIds, $data['user_ids']);
+
+                foreach ($newUserIds as $newUserId) {
+                    $newUser = User::find($newUserId);
+                    if ($newUser) {
+                        UserNotification::create([
+                            'title'       => 'New Project Assigned',
+                            'description' => $project->name . ' assigned to you',
+                            'type'        => Project::class,
+                            'user_id'     => $newUser->id,
+                        ]);
+
+                        foreach (array_diff($oldUserIds, $removedUserIds) as $existingUserId) {
+                            UserNotification::create([
+                                'title'       => 'New User Assigned to Project',
+                                'description' => $newUser->name . ' assigned to ' . $project->name,
+                                'type'        => Project::class,
+                                'user_id'     => $existingUserId,
+                            ]);
+                        }
+                    }
+                }
+
+                foreach ($removedUserIds as $removedUserId) {
+                    UserNotification::create([
+                        'title'       => 'Removed From Project',
+                        'description' => 'You removed from ' . $project->name,
+                        'type'        => Project::class,
+                        'user_id'     => $removedUserId,
+                    ]);
                 }
 
                 if ($oldStatus != $newStatus) {

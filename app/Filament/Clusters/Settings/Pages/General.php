@@ -5,6 +5,7 @@ namespace App\Filament\Clusters\Settings\Pages;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
 use App\Models\Status;
+use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -21,6 +22,7 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Ysfkaya\FilamentPhoneInput\Forms\PhoneInput;
 
@@ -29,6 +31,8 @@ class General extends Page implements HasForms
     use InteractsWithForms;
 
     protected string $view = 'filament.clusters.settings.pages.general';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;
 
     protected static ?string $cluster = SettingsCluster::class;
 

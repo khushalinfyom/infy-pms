@@ -8,6 +8,13 @@ use Livewire\Component;
 
 class NotificationRead extends Component
 {
+    public string $tab = 'new';
+
+    public function switchTab($name)
+    {
+        $this->tab = $name;
+    }
+
     public function markAsRead($notificationId)
     {
         $notification = UserNotification::find($notificationId);
@@ -32,11 +39,18 @@ class NotificationRead extends Component
 
     public function render()
     {
-        $notifications = UserNotification::where('user_id', auth()->id())
-            ->where('read_at', null)
+        $newNotifications = UserNotification::where('user_id', auth()->id())
+            ->whereNull('read_at')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('filament.notification.notification-read', ['notifications' => $notifications]);
+        $historyNotifications = UserNotification::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('filament.notification.notification-read', [
+            'newNotifications' => $newNotifications,
+            'historyNotifications' => $historyNotifications,
+        ]);
     }
 }

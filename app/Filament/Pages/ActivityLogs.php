@@ -4,12 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Enums\AdminPanelSidebar;
 use App\Models\ProjectActivity;
-use App\Models\User;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
-use Livewire\Attributes\On;
 
 class ActivityLogs extends Page
 {
@@ -19,7 +17,6 @@ class ActivityLogs extends Page
 
     protected static ?int $navigationSort = AdminPanelSidebar::ACTIVITY_LOGS->value;
 
-    // Add properties for pagination
     public int $perPage = 10;
     public int $page = 1;
     public bool $hasMorePages = true;
@@ -41,20 +38,17 @@ class ActivityLogs extends Page
         $this->loadActivities();
     }
 
-    // Load activities with pagination
     public function loadActivities(): void
     {
         $this->loading = true;
         $this->dispatch('loading-started');
 
-        // Get activities with pagination
         $activities = ProjectActivity::with(['causer', 'subject'])
             ->latest()
             ->paginate($this->perPage, ['*'], 'page', $this->page);
 
         $this->hasMorePages = $activities->hasMorePages();
 
-        // If this is the first page, set the activities, otherwise append them
         if ($this->page === 1) {
             $this->activities = $activities->items();
         } else {
@@ -65,7 +59,6 @@ class ActivityLogs extends Page
         $this->dispatch('loading-finished');
     }
 
-    // Load more activities (for infinite scroll)
     public function loadMore(): void
     {
         sleep(10);
@@ -77,7 +70,6 @@ class ActivityLogs extends Page
         $this->loadActivities();
     }
 
-    // Get activity icon based on model type
     public function getActivityIcon(?string $modelType): string
     {
         if (!$modelType) {
@@ -108,7 +100,6 @@ class ActivityLogs extends Page
         }
     }
 
-    // Get activity color based on log name or description
     public function getActivityColor(string $description): string
     {
         if (str_contains(strtolower($description), 'create') || str_contains(strtolower($description), 'new')) {
@@ -122,7 +113,6 @@ class ActivityLogs extends Page
         }
     }
 
-    // Get subject type name
     public function getSubjectTypeName(?string $subjectType): string
     {
         if (!$subjectType) {
