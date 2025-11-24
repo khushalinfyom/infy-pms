@@ -4,35 +4,46 @@ namespace App\Filament\Resources\Tasks;
 
 use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Tasks\Pages\ManageTasks;
+use App\Filament\Resources\Tasks\Pages\TaskDetails;
+use App\Filament\Resources\Tasks\Widgets\TaskAttachmentTable;
+use App\Filament\Resources\Tasks\Widgets\TaskCommentsTable;
+use App\Filament\Resources\Tasks\Widgets\TaskTimeEntryTable;
+use App\Filament\Resources\Tasks\Widgets\ViewTaskDetails;
+use App\Models\Comment;
 use App\Models\Project;
+use App\Models\Status;
 use App\Models\Task;
 use App\Models\User;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Livewire;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\Checkbox;
 
 class TaskResource extends Resource
 {
@@ -61,7 +72,10 @@ class TaskResource extends Resource
                     ->preload()
                     ->native(false)
                     ->reactive()
-                    ->required(),
+                    ->required()
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $set('taskAssignee', null);
+                    }),
 
                 Select::make('priority')
                     ->label('Priority')
@@ -85,7 +99,16 @@ class TaskResource extends Resource
                     ->preload()
                     ->searchable()
                     ->native(false)
-                    ->required(fn(callable $get) => !empty($get('project_id'))),
+                    ->required(fn(callable $get) => !empty($get('project_id')))
+                    ->afterStateHydrated(function (callable $set, callable $get) {
+                        $taskId = $get('id');
+                        if ($taskId) {
+                            $task = Task::with('taskAssignee')->find($taskId);
+                            if ($task) {
+                                $set('taskAssignee', $task->taskAssignee->pluck('id')->toArray());
+                            }
+                        }
+                    }),
 
                 DatePicker::make('due_date')
                     ->label('Due Date')
@@ -155,7 +178,7 @@ class TaskResource extends Resource
                             ->size('xs')
                             ->color(fn($get) => $get('estimate_time_type') === Task::IN_HOURS ? 'primary' : 'secondary')
                             ->action(function ($set) {
-                                $set('estimate_time_type', Task::IN_HOURS); // saves 0
+                                $set('estimate_time_type', Task::IN_HOURS);
                                 $set('estimate_time', null);
                             }),
 
@@ -165,7 +188,7 @@ class TaskResource extends Resource
                             ->size('xs')
                             ->color(fn($get) => $get('estimate_time_type') === Task::IN_DAYS ? 'primary' : 'secondary')
                             ->action(function ($set) {
-                                $set('estimate_time_type', Task::IN_DAYS); // saves 1
+                                $set('estimate_time_type', Task::IN_DAYS);
                                 $set('estimate_time', null);
                             }),
                     ]),
@@ -198,45 +221,88 @@ class TaskResource extends Resource
     {
         return $schema
             ->components([
-                TextEntry::make('priority')
-                    ->placeholder('-'),
-                TextEntry::make('title'),
-                TextEntry::make('description')
-                    ->columnSpanFull(),
-                TextEntry::make('project_id')
-                    ->numeric(),
-                TextEntry::make('status')
-                    ->numeric(),
-                TextEntry::make('due_date')
-                    ->date()
-                    ->placeholder('-'),
-                TextEntry::make('completed_on')
-                    ->date()
-                    ->placeholder('-'),
-                IconEntry::make('is_default')
-                    ->boolean(),
-                TextEntry::make('task_number')
-                    ->numeric(),
-                TextEntry::make('created_by')
-                    ->numeric()
-                    ->placeholder('-'),
-                TextEntry::make('deleted_by')
-                    ->numeric()
-                    ->placeholder('-'),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('deleted_at')
-                    ->dateTime()
-                    ->visible(fn(Task $record): bool => $record->trashed()),
-                TextEntry::make('estimate_time')
-                    ->placeholder('-'),
-                TextEntry::make('estimate_time_type')
-                    ->numeric()
-                    ->placeholder('-'),
+                Tabs::make('Tabs')
+                    ->contained(false)
+                    ->persistTabInQueryString()
+                    ->tabs([
+                        Tab::make('taskdetail')
+                            ->label('Task Details')
+                            ->schema([
+                                Section::make()
+                                    ->schema([
+
+                                        TextEntry::make('title')
+                                            ->hiddenLabel()
+                                            ->columnSpanFull(),
+
+                                        TextEntry::make('assignees')
+                                            ->label('Assignee')
+                                            ->getStateUsing(function ($record) {
+                                                return $record->taskAssignee->pluck('name')->implode(', ');
+                                            }),
+
+                                        TextEntry::make('due_date')
+                                            ->label('Due Date')
+                                            ->formatStateUsing(fn($state) => Carbon::parse($state)->format('jS F, Y'))
+                                            ->visible(fn($record) => $record->due_date),
+
+                                        TextEntry::make('status')
+                                            ->label('Status')
+                                            ->getStateUsing(fn($record) => $record->getStatusTextAttribute()),
+
+                                        TextEntry::make('duration')
+                                            ->label('Time Tracking')
+                                            ->getStateUsing(function ($record) {
+                                                $totalMinutes = $record->timeEntries->sum('duration');
+                                                $hours = floor($totalMinutes / 60);
+                                                $minutes = $totalMinutes % 60;
+                                                return sprintf('%02d:%02d M', $hours, $minutes);
+                                            }),
+
+                                        TextEntry::make('created_by')
+                                            ->label('Reporter')
+                                            ->getStateUsing(function ($record) {
+                                                return $record->createdUser->name;
+                                            }),
+
+                                        TextEntry::make('created_at')
+                                            ->label('Created On')
+                                            ->getStateUsing(fn($record) => Carbon::parse($record->created_at)->diffForHumans()),
+
+                                        TextEntry::make('updated_at')
+                                            ->label('Updated On')
+                                            ->getStateUsing(fn($record) => Carbon::parse($record->updated_at)->diffForHumans()),
+
+                                        TextEntry::make('description')
+                                            ->label('Description')
+                                            ->html()
+                                            ->columnSpanFull()
+                                    ])
+                                    ->columns(3),
+                            ]),
+
+                        Tab::make('attachments')
+                            ->label('Attachments')
+                            ->schema([
+                                Livewire::make(TaskAttachmentTable::class)
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Tab::make('comments')
+                            ->label('Comments')
+                            ->schema([
+                                Livewire::make(TaskCommentsTable::class)
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Tab::make('taskTimeEntry')
+                            ->label('Task Time Entries')
+                            ->schema([
+                                Livewire::make(TaskTimeEntryTable::class)
+                                    ->columnSpanFull(),
+                            ])
+                    ])
+                    ->columnSpan(4),
             ]);
     }
 
@@ -256,28 +322,368 @@ class TaskResource extends Resource
             })
             ->recordTitleAttribute('Task')
             ->columns([
+
                 TextColumn::make('title')
+                    ->label('Title')
                     ->searchable(),
+
                 TextColumn::make('project.name')
-                    ->numeric()
-                    ->sortable(),
-            ])
-            ->filters([
-                TrashedFilter::make(),
+                    ->label('Project')
+                    ->searchable(),
+
+                ImageColumn::make('users')
+                    ->label('Assignees')
+                    ->circular()
+                    ->stacked()
+                    ->limit(6)
+                    ->limitedRemainingText()
+                    ->imageHeight(40)
+                    ->getStateUsing(function ($record) {
+                        return $record->taskAssignee->map(function ($user) {
+                            $avatar = $user->getFirstMediaUrl(User::IMAGE_PATH);
+
+                            return $avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=random';
+                        })->toArray();
+                    }),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
-                ForceDeleteAction::make(),
-                RestoreAction::make(),
+                Action::make('view')
+                    ->tooltip('View')
+                    ->icon('heroicon-s-eye')
+                    ->iconButton()
+                    ->modalWidth('4xl')
+                    ->modalHeading('Task Details')
+                    ->infolist([
+                        Group::make()
+                            ->schema([
+
+                                Group::make()
+                                    ->schema([
+
+                                        TextEntry::make('title')
+                                            ->hiddenLabel()
+                                            ->html()
+                                            ->extraAttributes(['style' => 'font-size: 1.25rem; font-weight: 600;']),
+
+                                        TextEntry::make('description')
+                                            ->label('Description')
+                                            ->html()
+                                            ->placeholder('No description added yet.'),
+
+                                        Fieldset::make('Attachments')
+                                            ->schema([
+
+                                                Action::make('add_attachment')
+                                                    ->label('New Attachment')
+                                                    ->icon('heroicon-s-plus')
+                                                    ->modalHeading('Upload Attachment')
+                                                    ->modalWidth('lg')
+                                                    ->form([
+                                                        SpatieMediaLibraryFileUpload::make('upload_file')
+                                                            ->label('Select File')
+                                                            ->directory('task-attachments')
+                                                            ->preserveFilenames()
+                                                            ->maxSize(10240)
+                                                            ->required(),
+                                                    ])
+                                                    ->action(function (array $data, $record) {
+
+                                                        if ($record && !empty($data['upload_file'])) {
+                                                            $record
+                                                                ->addMedia($data['upload_file']->getRealPath())
+                                                                ->usingFileName($data['upload_file']->getClientOriginalName())
+                                                                ->toMediaCollection('attachments');
+                                                        }
+                                                    }),
+
+                                                Repeater::make('attachments')
+                                                    ->label('All Attachments')
+                                                    ->default(function ($record) {
+                                                        if (!$record) return [];
+
+                                                        return $record->getMedia('attachments')->map(function ($media) {
+                                                            return [
+                                                                'file_name' => $media->file_name,
+                                                                'file_url'  => $media->getFullUrl(),
+                                                                'created_at' => $media->created_at->diffForHumans(),
+                                                            ];
+                                                        })->toArray();
+                                                    })
+                                                    ->schema([
+                                                        Group::make()->schema([
+
+                                                            ImageEntry::make('file_url')
+                                                                ->circular()
+                                                                ->imageHeight(40)
+                                                                ->label(''),
+
+                                                            TextEntry::make('file_name')
+                                                                ->label('')
+                                                                ->extraAttributes(['style' => 'font-weight: 600;']),
+
+                                                            TextEntry::make('created_at')
+                                                                ->label('')
+                                                                ->extraAttributes(['style' => 'font-size: 12px; color: #888;']),
+                                                        ]),
+                                                    ])
+                                                    ->columns(1)
+
+                                            ])
+                                            ->columns(1),
+
+                                        Fieldset::make('Comments')
+                                            ->schema([
+
+                                                Action::make('add_comment')
+                                                    ->label('New Comment')
+                                                    ->icon('heroicon-s-plus')
+                                                    ->modalHeading('Create Comment')
+                                                    ->modalWidth('xl')
+                                                    ->form([
+                                                        RichEditor::make('new_comment')
+                                                            ->label('Comment')
+                                                            ->required()
+                                                            ->columnSpanFull()
+                                                            ->placeholder('Add comment...')
+                                                            ->extraAttributes(['style' => 'min-height: 200px;'])
+                                                            ->toolbarButtons([
+                                                                ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                                                                ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                                                                ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                                                                ['undo', 'redo'],
+                                                            ]),
+                                                    ])
+                                                    ->action(function (array $data, $record) {
+                                                        if ($record && !empty($data['new_comment'])) {
+                                                            Comment::create([
+                                                                'comment' => $data['new_comment'],
+                                                                'task_id' => $record->id,
+                                                                'created_by' => auth()->id(),
+                                                            ]);
+                                                        }
+                                                    }),
+
+                                                Repeater::make('comment')
+                                                    ->label('Comments')
+                                                    ->default(function ($record) {
+                                                        if (!$record) return [];
+
+                                                        return $record->comments->map(function ($item) {
+                                                            return [
+                                                                'user_name'  => $item->createdUser->name ?? 'Unknown User',
+                                                                'avatar'     => $item->user_avatar,
+                                                                'comment'    => $item->comment,
+                                                                'created_at' => $item->created_at->diffForHumans(),
+                                                            ];
+                                                        })->toArray();
+                                                    })
+
+                                                    ->schema([
+                                                        Group::make()->schema([
+                                                            ImageEntry::make('avatar')
+                                                                ->circular()
+                                                                ->imageHeight(35)
+                                                                ->label(''),
+
+                                                            TextEntry::make('user_name')
+                                                                ->label('')
+                                                                ->extraAttributes(['style' => 'font-weight: 600;']),
+
+                                                            TextEntry::make('created_at')
+                                                                ->label('')
+                                                                ->extraAttributes(['style' => 'font-size: 12px; color: #888;']),
+
+                                                            TextEntry::make('comment')
+                                                                ->label('')
+                                                                ->html(),
+                                                        ]),
+                                                    ])
+                                                    ->columns(1)
+
+                                            ])
+                                            ->columns(1),
+                                    ])
+                                    ->columnSpan(2),
+
+                                Group::make()
+                                    ->schema([
+
+                                        ImageEntry::make('task_assignees')
+                                            ->label('Assignee')
+                                            ->default(function ($record) {
+
+                                                if (!$record) return [];
+
+                                                $users = \App\Models\User::whereIn('id', function ($query) use ($record) {
+                                                    $query->select('user_id')
+                                                        ->from('task_assignees')
+                                                        ->where('task_id', $record->id);
+                                                })->get();
+
+                                                return $users->map(function ($user) {
+                                                    return $user->img_avatar
+                                                        ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
+                                                })->toArray();
+                                            })
+                                            ->stacked()
+                                            ->circular()
+                                            ->limit(6)
+                                            ->limitedRemainingText()
+                                            ->imageHeight(40)
+                                            ->extraAttributes([
+                                                'style' => 'display: flex;',
+                                            ]),
+
+                                        TextEntry::make('duration')
+                                            ->label('Time Tracking')
+                                            ->getStateUsing(function ($record) {
+                                                $totalMinutes = $record->timeEntries->sum('duration');
+                                                $hours = floor($totalMinutes / 60);
+                                                $minutes = $totalMinutes % 60;
+
+                                                $time = sprintf('%02d:%02d M', $hours, $minutes);
+
+                                                return "<div class='text-center font-bold text-xl'>{$time}</div>";
+                                            })
+                                            ->formatStateUsing(fn($state) => $state)
+                                            ->html(), 
+
+                                        Fieldset::make('Settings')
+                                            ->schema([
+
+                                                TextEntry::make('created_at')
+                                                    ->label('Start At')
+                                                    ->inlineLabel()
+                                                    ->formatStateUsing(function ($state) {
+                                                        return Carbon::parse($state)->format('jS M, Y');
+                                                    }),
+
+                                                TextEntry::make('due_date')
+                                                    ->label('Due Date')
+                                                    ->inlineLabel()
+                                                    ->formatStateUsing(function ($state) {
+                                                        if (!$state) {
+                                                            return 'N/A';
+                                                        }
+
+                                                        $date = Carbon::parse($state);
+                                                        return $date->format('jS M, Y');
+                                                    })
+                                                    ->placeholder('N/A'),
+
+                                                TextEntry::make('status')
+                                                    ->label('Status')
+                                                    ->inlineLabel()
+                                                    ->formatStateUsing(fn($state) => Status::where('status', $state)->value('name') ?? $state),
+
+                                                TextEntry::make('priority')
+                                                    ->label('Priority')
+                                                    ->inlineLabel()
+                                                    ->default('N/A')
+                                                    ->formatStateUsing(fn($state) => Task::PRIORITY[$state] ?? $state),
+
+                                            ])
+                                            ->columns(1),
+
+                                        Fieldset::make('Information')
+                                            ->schema([
+
+                                                TextEntry::make('created_by')
+                                                    ->label('Created By')
+                                                    ->inlineLabel()
+                                                    ->formatStateUsing(function ($state) {
+                                                        return User::find($state)->name;
+                                                    }),
+
+                                                TextEntry::make('created_at')
+                                                    ->label('Created On')
+                                                    ->inlineLabel()
+                                                    ->formatStateUsing(function ($state) {
+                                                        return Carbon::parse($state)->format('jS M, Y');
+                                                    }),
+
+                                                TextEntry::make('time_tracking')
+                                                    ->label('Time Tracking')
+                                                    ->inlineLabel()
+                                                    ->formatStateUsing(function ($record) {
+                                                        $totalMinutes = $record->time_tracking ?? 0;
+                                                        $hours = floor($totalMinutes / 60);
+                                                        $minutes = $totalMinutes % 60;
+                                                        $seconds = 0;
+
+                                                        if ($hours == 0) {
+                                                            return sprintf('%02d:%02d m', $minutes, $seconds);
+                                                        }
+
+                                                        return sprintf('%02d:%02d h', $hours, $minutes);
+                                                    })
+                                                    ->default('00:00 m'),
+
+                                                TextEntry::make('project.name')
+                                                    ->label('Project')
+                                                    ->inlineLabel(),
+
+
+                                            ])
+                                            ->columns(1),
+
+                                    ])
+                                    ->columnSpan(1),
+
+                            ])
+                            ->columnSpanFull()
+                            ->columns(3),
+                    ]),
+
+                Action::make('due date')
+                    ->iconButton()
+                    ->tooltip('Set Due Date')
+                    ->icon('heroicon-s-calendar')
+                    ->modalWidth('md')
+                    ->modalHeading('Add Due Date')
+                    ->form([
+                        DatePicker::make('due_date')
+                            ->label('Due Date')
+                            ->required()
+                            ->native(false)
+                            ->placeholder('Due Date')
+                            ->minDate(Carbon::now()->subDays(1)),
+                    ])
+                    ->action(function ($record, $data) {
+                        $record->update($data);
+                    })
+                    ->visible(function ($record) {
+                        return $record->due_date == null;
+                    })
+                    ->successNotificationTitle('Due Date added successfully!'),
+
+                ActionGroup::make([
+
+                    EditAction::make()
+                        ->modalWidth('4xl')
+                        ->modalHeading('Edit Task')
+                        ->successNotificationTitle('Task updated successfully!')
+                        ->after(function ($record, array $data) {
+                            if (isset($data['taskAssignee'])) {
+                                $record->taskAssignee()->sync($data['taskAssignee']);
+                            }
+                        }),
+
+                    DeleteAction::make()
+                        ->tooltip('Delete')
+                        ->modalHeading('Delete Task')
+                        ->successNotificationTitle('Task deleted successfully!'),
+                ]),
+
+                Action::make('details')
+                    ->iconButton()
+                    ->tooltip('Details')
+                    ->icon('heroicon-o-arrow-right-circle')
+                    ->url(fn($record) => TaskResource::getUrl('taskdetails', ['record' => $record->id])),
+
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
+                BulkActionGroup::make([]),
             ]);
     }
 
@@ -285,14 +691,7 @@ class TaskResource extends Resource
     {
         return [
             'index' => ManageTasks::route('/'),
+            'taskdetails' => TaskDetails::route('/{record}'),
         ];
-    }
-
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
     }
 }

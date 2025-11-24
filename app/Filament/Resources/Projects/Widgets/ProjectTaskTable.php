@@ -417,7 +417,8 @@ class ProjectTaskTable extends TableWidget
 
                                                         $date = Carbon::parse($state);
                                                         return $date->format('jS M, Y');
-                                                    }),
+                                                    })
+                                                    ->placeholder('N/A'),
 
                                                 TextEntry::make('status')
                                                     ->label('Status')

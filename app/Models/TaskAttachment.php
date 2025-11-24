@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Traits\ImageTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Storage;
 
 /**
@@ -28,10 +30,11 @@ use Storage;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TaskAttachment whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class TaskAttachment extends Model
+class TaskAttachment extends Model implements HasMedia
 {
     use HasFactory;
     use ImageTrait;
+    use InteractsWithMedia;
 
     const PATH = 'attachments';
 

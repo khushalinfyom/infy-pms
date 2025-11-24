@@ -7,6 +7,7 @@ use App\Models\Expense;
 use App\Models\Project;
 use App\Models\Setting;
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use App\Models\User;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\MediaLibrary\Support\PathGenerator\PathGenerator;
@@ -35,6 +36,8 @@ class CustomPathGenerator implements PathGenerator
                 return str_replace('{PARENT_DIR}', Expense::ATTACHMENT_PATH, $path);
             case Project::PATH:
                 return str_replace('{PARENT_DIR}', Project::PATH, $path);
+            case TaskAttachment::PATH:
+                return str_replace('{PARENT_DIR}', TaskAttachment::PATH, $path);
             case 'default':
                 return '';
         }
