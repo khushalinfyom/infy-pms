@@ -10,15 +10,20 @@ use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Schemas\Components\Group;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+
+use Filament\Notifications\Actions\Action as NotificationAction;
+use Illuminate\Notifications\Action as NotificationsAction;
 
 class ManageTasks extends ManageRecords
 {
@@ -109,23 +114,56 @@ class ManageTasks extends ManageRecords
                     ->modalWidth('2xl')
                     ->modalHeading('Create Time Entry')
                     ->form($this->createTimeEntryForm())
-                    // ->using(function (array $data) {
-                    //     if (!isset($data['duration']) || empty($data['duration'])) {
-                    //         $start = Carbon::parse($data['start_time']);
-                    //         $end = Carbon::parse($data['end_time']);
-                    //         $seconds = $start->diffInSeconds($end);
-                    //         $minutes = round($seconds / 60, 2);
-                    //         $data['duration'] = $minutes;
-                    //     }
+                    ->after(function (array $data) {
+                        if (!isset($data['duration']) || empty($data['duration'])) {
+                            $start = Carbon::parse($data['start_time']);
+                            $end = Carbon::parse($data['end_time']);
+                            $seconds = $start->diffInSeconds($end);
+                            $minutes = round($seconds / 60, 2);
+                            $data['duration'] = $minutes;
+                        }
 
-                    //     return TimeEntry::create($data);
-                    // })
+                        return TimeEntry::create($data);
+                    })
                     ->successNotificationTitle('Time Entry created successfully!'),
 
-                Action::make('copy today activity')
+                Action::make('copyTodayActivity')
                     ->label('Copy Today Activity')
                     ->icon('heroicon-s-document-duplicate')
-                    ->successNotificationTitle('Today Activity copied successfully!'),
+                    ->action(function () {
+                        $timeEntries = TimeEntry::getTodayEntries();
+
+                        $note = '** Today Time entry Activity - ' . now()->format('jS M Y') . "**\n";
+
+                        $projects = [];
+
+                        foreach ($timeEntries as $entry) {
+                            $projectName = $entry->task->project->name;
+                            $taskId = $entry->task_id;
+
+                            $projects[$projectName][$taskId]['name'] = $entry->task->title;
+
+                            if (!isset($projects[$projectName][$taskId]['note'])) {
+                                $projects[$projectName][$taskId]['note'] = '';
+                            }
+
+                            $projects[$projectName][$taskId]['note'] .= "\n" . $entry->note . "\n";
+                        }
+
+                        foreach ($projects as $name => $project) {
+                            $note .= "\n" . $name . "\n";
+
+                            foreach ($project as $task) {
+                                $note .= "\n* " . $task['name'];
+                                $note .= $task['note'];
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Today Activity Copied Successfully')
+                            ->send();
+                    })
+
             ])
                 ->label('Actions')
                 ->button(),
@@ -136,20 +174,19 @@ class ManageTasks extends ManageRecords
     {
         return [
 
-            // Hidden::make('entry_type')
-            //     ->default(TimeEntry::VIA_FORM),
+            Hidden::make('entry_type')
+                ->default(TimeEntry::VIA_FORM),
 
-            // Hidden::make('task_id')
-            //     ->default($this->record->id),
-
-            // Hidden::make('user_id')
-            //     ->default(auth()->user()->id),
+            Hidden::make('user_id')
+                ->default(auth()->user()->id),
 
             Select::make('user_id')
                 ->label('User')
-                ->relationship('user', 'name')
+                ->relationship('createdUser', 'name')
                 ->required()
                 ->native(false)
+                ->default(auth()->user()->id)
+                ->disabled()
                 ->columnSpanFull(),
 
             Group::make([
@@ -157,13 +194,24 @@ class ManageTasks extends ManageRecords
 
                     Select::make('project_id')
                         ->label('Project')
-                        ->relationship('task.project', 'name')
+                        ->relationship(
+                            'project',
+                            'name',
+                            fn($query) =>
+                            $query->whereNull('deleted_at')
+                                ->where('status', 1)
+                                ->whereHas('users', function ($q) {
+                                    $q->where('user_id', auth()->id());
+                                })
+                        )
+                        ->searchable()
+                        ->preload()
                         ->required()
                         ->native(false)
-                        // ->afterStateHydrated(function (callable $set, callable $get) {
-                        //     $set('project_id', $this->record->project_id);
-                        // })
-                        ,
+                        ->live()
+                        ->afterStateUpdated(function (callable $set, callable $get) {
+                            $set('task_id', null);
+                        }),
 
                     DateTimePicker::make('start_time')
                         ->label('Start Time')
@@ -183,7 +231,6 @@ class ManageTasks extends ManageRecords
                         ->required()
                         ->native(false)
                         ->maxDate(now())
-                        // ->minDate($this->record->start_time)
                         ->live()
                         ->default(now())
                         ->afterStateUpdated(
@@ -192,7 +239,7 @@ class ManageTasks extends ManageRecords
                         ),
 
                     TextInput::make('duration')
-                        ->label('Duration')
+                        ->label('Duration (In Minutes)')
                         ->placeholder('Duration')
                         ->disabled()
                         ->required()
@@ -205,15 +252,27 @@ class ManageTasks extends ManageRecords
 
                     Select::make('task_id')
                         ->label('Task')
-                        ->relationship('task', 'title')
+                        ->options(function (callable $get) {
+                            $projectId = $get('project_id');
+
+                            if (!$projectId) {
+                                return [];
+                            }
+
+                            return Task::where('project_id', $projectId)
+                                ->whereNull('deleted_at')
+                                ->where('status', '!=', 1)
+                                ->pluck('title', 'id')
+                                ->toArray();
+                        })
+                        ->searchable()
+                        ->preload()
                         ->required()
-                        ->native(false)
-                        // ->default($this->record->title)
-                        ->disabled(),
+                        ->native(false),
 
                     Select::make('activity_type_id')
                         ->label('Activity Type')
-                        ->relationship('activityType', 'name')
+                        ->relationship('timeEntries.activityType', 'name')
                         ->required()
                         ->searchable()
                         ->preload()

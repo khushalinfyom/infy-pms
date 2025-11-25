@@ -8,11 +8,11 @@ use App\Filament\Resources\Tasks\Pages\TaskDetails;
 use App\Filament\Resources\Tasks\Widgets\TaskAttachmentTable;
 use App\Filament\Resources\Tasks\Widgets\TaskCommentsTable;
 use App\Filament\Resources\Tasks\Widgets\TaskTimeEntryTable;
-use App\Filament\Resources\Tasks\Widgets\ViewTaskDetails;
 use App\Models\Comment;
 use App\Models\Project;
 use App\Models\Status;
 use App\Models\Task;
+use App\Models\TimeEntry;
 use App\Models\User;
 use BackedEnum;
 use Carbon\Carbon;
@@ -20,9 +20,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
@@ -43,7 +41,10 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Filters\SelectFilter;
 
 class TaskResource extends Resource
 {
@@ -320,6 +321,12 @@ class TaskResource extends Resource
                     return 'No tasks found for "' . $livewire->tableSearch . '".';
                 }
             })
+            ->query(function () {
+                return Task::whereHas('taskAssignee', function ($q) {
+                    $q->where('user_id', auth()->id());
+                })
+                ->where('status', '!=', Task::STATUS_COMPLETED);
+            })
             ->recordTitleAttribute('Task')
             ->columns([
 
@@ -346,7 +353,32 @@ class TaskResource extends Resource
                         })->toArray();
                     }),
             ])
+            ->filters([
+                SelectFilter::make('project_id')
+                    ->label('Project')
+                    ->relationship('project', 'name')
+                    ->native(false)
+                    ->searchable()
+                    ->preload(),
+            ])
+            ->deferFilters(false)
             ->recordActions([
+
+                Action::make('completed')
+                    ->tooltip('Mark as Completed')
+                    ->icon('heroicon-s-check-circle')
+                    ->color('success')
+                    ->iconButton()
+                    ->action(function ($record) {
+                        $record->update([
+                            'status' => Task::STATUS_COMPLETED,
+                        ]);
+                    })
+                    ->visible(function ($record) {
+                        return $record->status != Task::STATUS_COMPLETED;
+                    })
+                    ->successNotificationTitle('Task marked as completed successfully!'),
+
                 Action::make('view')
                     ->tooltip('View')
                     ->icon('heroicon-s-eye')
@@ -546,7 +578,7 @@ class TaskResource extends Resource
                                                 return "<div class='text-center font-bold text-xl'>{$time}</div>";
                                             })
                                             ->formatStateUsing(fn($state) => $state)
-                                            ->html(), 
+                                            ->html(),
 
                                         Fieldset::make('Settings')
                                             ->schema([
@@ -605,17 +637,11 @@ class TaskResource extends Resource
                                                 TextEntry::make('time_tracking')
                                                     ->label('Time Tracking')
                                                     ->inlineLabel()
-                                                    ->formatStateUsing(function ($record) {
-                                                        $totalMinutes = $record->time_tracking ?? 0;
+                                                    ->getStateUsing(function ($record) {
+                                                        $totalMinutes = $record->timeEntries->sum('duration');
                                                         $hours = floor($totalMinutes / 60);
                                                         $minutes = $totalMinutes % 60;
-                                                        $seconds = 0;
-
-                                                        if ($hours == 0) {
-                                                            return sprintf('%02d:%02d m', $minutes, $seconds);
-                                                        }
-
-                                                        return sprintf('%02d:%02d h', $hours, $minutes);
+                                                        return sprintf('%02d:%02d M', $hours, $minutes);
                                                     })
                                                     ->default('00:00 m'),
 
@@ -669,6 +695,26 @@ class TaskResource extends Resource
                             }
                         }),
 
+                    Action::make('taskEntry')
+                        ->label('New Time Entry')
+                        ->tooltip('New Time Entry')
+                        ->icon('heroicon-o-clock')
+                        ->modalWidth('2xl')
+                        ->modalHeading('Create Time Entry')
+                        ->form(fn($record) => self::createTimeEntryForm($record))
+                        ->action(function (array $data) {
+                            if (!isset($data['duration']) || empty($data['duration'])) {
+                                $start = Carbon::parse($data['start_time']);
+                                $end = Carbon::parse($data['end_time']);
+                                $seconds = $start->diffInSeconds($end);
+                                $minutes = round($seconds / 60, 2);
+                                $data['duration'] = $minutes;
+                            }
+
+                            return TimeEntry::create($data);
+                        })
+                        ->successNotificationTitle('Time Entry added successfully!'),
+
                     DeleteAction::make()
                         ->tooltip('Delete')
                         ->modalHeading('Delete Task')
@@ -681,9 +727,6 @@ class TaskResource extends Resource
                     ->icon('heroicon-o-arrow-right-circle')
                     ->url(fn($record) => TaskResource::getUrl('taskdetails', ['record' => $record->id])),
 
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([]),
             ]);
     }
 
@@ -693,5 +736,126 @@ class TaskResource extends Resource
             'index' => ManageTasks::route('/'),
             'taskdetails' => TaskDetails::route('/{record}'),
         ];
+    }
+
+    public static function createTimeEntryForm($record)
+    {
+        return [
+
+            Hidden::make('entry_type')
+                ->default(TimeEntry::VIA_FORM),
+
+            Hidden::make('task_id')
+                ->default($record->id),
+
+            Hidden::make('user_id')
+                ->default(auth()->user()->id),
+
+            Select::make('user_id')
+                ->label('User')
+                ->relationship('createdUser', 'name')
+                ->required()
+                ->native(false)
+                ->default(auth()->user()->id)
+                ->disabled()
+                ->columnSpanFull(),
+
+            Group::make([
+                Group::make([
+
+                    Select::make('project_id')
+                        ->label('Project')
+                        ->relationship('project', 'name')
+                        ->required()
+                        ->native(false)
+                        ->default($record->project_id)
+                        ->disabled(),
+
+                    DateTimePicker::make('start_time')
+                        ->label('Start Time')
+                        ->placeholder('Start Time')
+                        ->required()
+                        ->native(false)
+                        ->maxDate(now())
+                        ->live()
+                        ->afterStateUpdated(
+                            fn($state, callable $set, callable $get) =>
+                            self::updateDuration($get, $set)
+                        ),
+
+                    DateTimePicker::make('end_time')
+                        ->label('End Time')
+                        ->placeholder('End Time')
+                        ->required()
+                        ->native(false)
+                        ->maxDate(now())
+                        ->minDate($record->start_time)
+                        ->live()
+                        ->default(now())
+                        ->afterStateUpdated(
+                            fn($state, callable $set, callable $get) =>
+                            self::updateDuration($get, $set)
+                        ),
+
+                    TextInput::make('duration')
+                        ->label('Duration (In Minutes)')
+                        ->placeholder('Duration')
+                        ->disabled()
+                        ->required()
+                        ->live(),
+
+                ])
+                    ->columns(1),
+
+                Group::make([
+
+                    Select::make('task_id')
+                        ->label('Task')
+                        ->required()
+                        ->native(false)
+                        ->options([
+                            $record->id => $record->title
+                        ])
+                        ->default($record->id)
+                        ->disabled(),
+
+                    Select::make('activity_type_id')
+                        ->label('Activity Type')
+                        ->relationship('timeEntries.activityType', 'name')
+                        ->required()
+                        ->searchable()
+                        ->preload()
+                        ->native(false),
+
+                    Textarea::make('note')
+                        ->label('Note')
+                        ->placeholder('Note')
+                        ->required()
+                        ->maxLength(255),
+
+                ])
+                    ->columns(1),
+
+            ])
+                ->columns(2),
+        ];
+    }
+
+    public static function updateDuration(callable $get, callable $set)
+    {
+        $start = $get('start_time');
+        $end = $get('end_time');
+
+        if ($start && $end) {
+            $startTime = Carbon::parse($start);
+            $endTime = Carbon::parse($end);
+
+            $seconds = $startTime->diffInSeconds($endTime);
+            $minutes = round($seconds / 60, 2);
+
+            $set('duration', $minutes);
+        } else {
+            $set('duration', 0);
+        }
     }
 }

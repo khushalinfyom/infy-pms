@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * App\Models\TimeEntry.
@@ -173,5 +175,14 @@ class TimeEntry extends Model
         }
 
         return 'Via Form';
+    }
+
+
+    public static function getTodayEntries()
+    {
+        return TimeEntry::with('task.project')
+            ->whereDate('start_time', '=', Carbon::now()->format('Y-m-d'))
+            ->where('user_id', '=', Auth::id())
+            ->get();
     }
 }

@@ -123,7 +123,7 @@ class TaskTimeEntryTable extends TableWidget
                         if (!isset($data['duration']) || empty($data['duration'])) {
                             $start = Carbon::parse($data['start_time']);
                             $end = Carbon::parse($data['end_time']);
-                            $seconds = $start->diffInSeconds($end); 
+                            $seconds = $start->diffInSeconds($end);
                             $minutes = round($seconds / 60, 2);
                             $data['duration'] = $minutes;
                         }
@@ -211,7 +211,7 @@ class TaskTimeEntryTable extends TableWidget
                         ),
 
                     TextInput::make('duration')
-                        ->label('Duration')
+                        ->label('Duration (In Minutes)')
                         ->placeholder('Duration')
                         ->disabled()
                         ->required()

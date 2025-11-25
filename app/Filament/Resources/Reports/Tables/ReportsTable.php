@@ -32,9 +32,11 @@ class ReportsTable
                     ->sortable(),
 
                 TextColumn::make('start_date')
+                    ->label('Start Date')
                     ->date(),
 
                 TextColumn::make('end_date')
+                    ->label('End Date')
                     ->date(),
 
                 TextColumn::make('user.name')
@@ -44,7 +46,7 @@ class ReportsTable
             ->actions([
                 ViewAction::make()
                     ->iconButton()
-                    ->tooltip('Edit'),
+                    ->tooltip('View'),
 
                 EditAction::make()
                     ->iconButton()
