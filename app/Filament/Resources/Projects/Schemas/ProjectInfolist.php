@@ -9,6 +9,7 @@ use App\Filament\Resources\Projects\Widgets\ProjectTaskTable;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -19,6 +20,9 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
+use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
+use Filament\Schemas\Components\View;
 
 class ProjectInfolist
 {
@@ -50,9 +54,7 @@ class ProjectInfolist
             ->schema([
                 Section::make()
                     ->schema([
-
                         Group::make([
-
                             TextEntry::make('name')
                                 ->hiddenLabel()
                                 ->html()
@@ -122,7 +124,6 @@ class ProjectInfolist
 
                     Section::make()
                         ->schema([
-
                             IconEntry::make('status')
                                 ->hiddenLabel()
                                 ->icon('phosphor-money-fill')
@@ -169,7 +170,6 @@ class ProjectInfolist
 
                     Section::make()
                         ->schema([
-
                             IconEntry::make('status')
                                 ->hiddenLabel()
                                 ->icon('phosphor-list-bullets-fill')
@@ -203,7 +203,6 @@ class ProjectInfolist
                         foreach ($record->users as $user) {
                             $sections[] = Fieldset::make('')
                                 ->schema([
-
                                     ProjectUserEntry::make("user_{$user->id}")
                                         ->hiddenLabel()
                                         ->user($user),
@@ -224,7 +223,6 @@ class ProjectInfolist
         return Tab::make('activity')
             ->label('Activity')
             ->schema([
-
                 ProjectActivityLogEntry::make('activity_logs')
                     ->state(fn($record) => $record->id)
                     ->hiddenLabel(),
@@ -232,15 +230,14 @@ class ProjectInfolist
     }
 
 
+
     public static function getTasksTab(): Tab
     {
         return Tab::make('tasks')
             ->label('Tasks')
             ->schema([
-
                 Livewire::make(ProjectTaskTable::class)
                     ->columnSpanFull(),
-
             ]);
     }
 
@@ -248,6 +245,31 @@ class ProjectInfolist
     {
         return Tab::make('attachments')
             ->label('Attachments')
-            ->schema([]);
+            ->schema([
+                Section::make()
+                    ->headerActions([
+                        Action::make('upload_attachment')
+                            ->label('Upload Attachment')
+                            ->icon('heroicon-s-plus')
+                            ->modalWidth('lg')
+                            ->form([
+                                FileUpload::make('attachment')
+                                    ->label('Select File')
+                                    ->storeFiles(false)
+                                    ->required()
+                            ])
+                            ->action(function (array $data, $record) {
+                                if (!empty($data['attachment'])) {
+                                    $record->addMedia($data['attachment'])
+                                        ->toMediaCollection(Project::PATH, config('media-library.disk_name'));
+                                }
+                            })
+                    ])
+                    ->schema([
+                        Group::make([
+                            View::make('filament.resources.projects.forms.project-attachments')
+                        ])
+                    ])
+            ]);
     }
 }

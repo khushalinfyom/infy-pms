@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Projects\Pages;
 
 use App\Filament\Resources\Projects\ProjectResource;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ViewProject extends ViewRecord
 {
@@ -24,5 +26,17 @@ class ViewProject extends ViewRecord
     public function getTitle(): string
     {
         return $this->record->name . ' - Project Details';
+    }
+
+    public function deleteAttachment($mediaId)
+    {
+        $media = Media::find($mediaId);
+        if ($media) {
+            $media->delete();
+            Notification::make()
+                ->success()
+                ->title('Attachment deleted successfully.')
+                ->send();
+        }
     }
 }
