@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users;
 
 use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Users\Pages\ManageUsers;
+use App\Filament\Tables\Columns\UserImageColumn;
 use App\Models\Role;
 use App\Models\User;
 use BackedEnum;
@@ -210,7 +211,7 @@ class UserResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Actions')
+            ->recordActionsColumnLabel('Action')
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
                     return 'No users found.';
@@ -221,22 +222,13 @@ class UserResource extends Resource
             ->recordTitleAttribute('User')
             ->columns([
 
-                SpatieMediaLibraryImageColumn::make('image_path')
-                    ->collection(User::IMAGE_PATH)
-                    ->label('Profile')
-                    ->circular()
-                    ->width(40)
-                    ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name),
-
-                TextColumn::make('name')
-                    ->label('Name')
-                    ->searchable()
-                    ->description(function (User $record) {
-                        return $record->email;
-                    }),
+                UserImageColumn::make('profile')
+                    ->label('User')
+                    ->sortable()
+                    ->searchable(['name', 'email']),
 
                 ToggleColumn::make('is_active')
-                    ->label('Is Active')
+                    ->label('Active')
                     ->afterStateUpdated(function () {
                         Notification::make()
                             ->title('User active status updated successfully!')
@@ -244,17 +236,23 @@ class UserResource extends Resource
                             ->send();
                     }),
 
-                TextColumn::make('created_at')
+                TextColumn::make('email_verified_at')
                     ->label('Projects')
                     ->formatStateUsing(function (User $record) {
                         return $record->projects()->count();
                     })
-                    ->badge(),
+                    ->badge()
+                    ->alignCenter(),
 
                 TextColumn::make('task')
-                    ->label('Task Active')
+                    ->label('Task')
                     ->default(0)
-                    ->badge(),
+                    ->badge()
+                    ->alignCenter(),
+
+                TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->dateTime('d M, Y h:i A'),
             ])
             ->filters([
 

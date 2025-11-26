@@ -16,7 +16,7 @@ class ReportsTable
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Actions')
+            ->recordActionsColumnLabel('Action')
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
                     return 'No Reports found.';
@@ -32,9 +32,11 @@ class ReportsTable
                     ->sortable(),
 
                 TextColumn::make('start_date')
+                    ->label('Start Date')
                     ->date(),
 
                 TextColumn::make('end_date')
+                    ->label('End Date')
                     ->date(),
 
                 TextColumn::make('user.name')
@@ -44,7 +46,7 @@ class ReportsTable
             ->actions([
                 ViewAction::make()
                     ->iconButton()
-                    ->tooltip('Edit'),
+                    ->tooltip('View'),
 
                 EditAction::make()
                     ->iconButton()

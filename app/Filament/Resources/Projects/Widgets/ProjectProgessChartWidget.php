@@ -24,11 +24,11 @@ class ProjectProgessChartWidget extends ApexChartWidget
     }
 
     public $colors = [
-        '#5b65d4',
-        '#684395',
-        '#d885e0',
-        '#dc4a60',
-        '#4692df',
+        '#c4c9ffff',
+        '#f5b9fbff',
+        '#e1c9ffff',
+        '#ffb3bfff',
+        '#7db7f1ff',
         '#00d4df',
         '#3bd06d',
         '#32dac2',

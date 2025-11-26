@@ -2,15 +2,11 @@
 
 namespace App\Filament\Resources\Expenses\Tables;
 
+use App\Models\Project;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class ExpensesTable
@@ -18,55 +14,92 @@ class ExpensesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordAction(null)
+            ->paginated([10, 25, 50, 100])
+            ->defaultSort('id', 'desc')
+            ->recordActionsColumnLabel('Action')
+            ->emptyStateHeading(function ($livewire) {
+                if (empty($livewire->tableSearch)) {
+                    return 'No expenses found.';
+                } else {
+                    return 'No expenses found for "' . $livewire->tableSearch . '".';
+                }
+            })
             ->columns([
-                TextColumn::make('amount')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('date')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('project_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('client_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('category')
-                    ->numeric()
-                    ->sortable(),
-                IconColumn::make('billable')
-                    ->boolean(),
+                    ->label('Date')
+                    ->date('d-m-Y')
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('amount')
+                    ->label('Amount')
+                    ->formatStateUsing(function ($state, $record) {
+                        if (! $record->project) {
+                            return $state;
+                        }
+                        $currencyKey = $record->project->currency;
+                        $symbol = Project::getCurrencyClass($currencyKey);
+
+                        return $symbol . ' ' . number_format($state, 2);
+                    })
+                    ->sortable()
+                    ->searchable(),
+
                 TextColumn::make('created_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('deleted_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Created By')
+                    ->formatStateUsing(fn($state, $record) => $record->user?->name ?? 'N/A')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->searchable()
+                    ->placeholder('N/A'),
+
+                TextColumn::make('client.name')
+                    ->label('Client')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->searchable()
+                    ->placeholder('N/A'),
+
+                TextColumn::make('project.name')
+                    ->label('Project')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                TrashedFilter::make(),
+                    ->searchable()
+                    ->placeholder('N/A'),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+
+                ViewAction::make()
+                    ->iconButton()
+                    ->tooltip('View'),
+
+                EditAction::make()
+                    ->iconButton()
+                    ->tooltip('Edit'),
+
+                \App\Filament\Actions\CustomDeleteAction::make()
+                    ->setCommonProperties()
+                    ->iconButton()
+                    ->tooltip('Delete')
+                    ->modalHeading('Delete Expense')
+                    ->before(function ($record) {
+                        $record->update([
+                            'deleted_by' => auth()->id(),
+                        ]);
+                    })
+                    ->successNotificationTitle('Expense deleted successfully!'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    \App\Filament\Actions\CustomDeleteBulkAction::make()
+                        ->setCommonProperties()
+                        ->modalHeading('Delete Expenses')
+                        ->before(function ($records) {
+                            $records->each(function ($record) {
+                                $record->update([
+                                    'deleted_by' => auth()->id(),
+                                ]);
+                            });
+                        })
+                        ->successNotificationTitle('Expenses deleted successfully!'),
                 ]),
             ]);
     }

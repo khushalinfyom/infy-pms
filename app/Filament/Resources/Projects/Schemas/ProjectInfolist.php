@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Projects\Schemas;
 
+use App\Filament\Infolists\Components\ProjectActivityLogEntry;
 use App\Filament\Infolists\Components\ProjectUserEntry;
 use App\Filament\Resources\Projects\Widgets\ProjectProgessChartWidget;
 use App\Filament\Resources\Projects\Widgets\ProjectTaskTable;
@@ -9,7 +10,6 @@ use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Fieldset;
@@ -99,7 +99,7 @@ class ProjectInfolist
                                 ->hiddenLabel()
                                 ->width(60)
                                 ->height(60)
-                                ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->client->name))
+                                ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->client->name) . '&background=random')
                                 ->columns(1),
 
                             TextEntry::make('client_info')
@@ -107,7 +107,8 @@ class ProjectInfolist
                                 ->hiddenLabel()
                                 ->state(function ($record) {
                                     $client = $record->client;
-                                    $text = " <b>{$client->name}</b>\n{$client->email}";
+                                    $text = "<span style='font-size:0.95rem; font-weight:700;'>{$client->name}</span>";
+                                    $text .= "\n{$client->email}";
                                     if ($client->department && $client->department->name) {
                                         $text .= "\n" . $client->department->name;
                                     }
@@ -133,9 +134,14 @@ class ProjectInfolist
 
                             TextEntry::make('price')
                                 ->label('Budget')
-                                ->prefix('$ ')
+                                ->prefix(function ($record) {
+                                    return Project::getCurrencyClass($record->currency) . ' ';
+                                })
                                 ->default(0)
                                 ->columnSpan(2),
+                        ])
+                        ->extraAttributes([
+                            'class' => 'project-price-card',
                         ])
                         ->columns(3),
 
@@ -155,6 +161,9 @@ class ProjectInfolist
                                 ->placeholder('N/A')
                                 ->formatStateUsing(fn($state) => Project::BUDGET_TYPE[$state] ?? 'N/A')
                                 ->columnSpan(2),
+                        ])
+                        ->extraAttributes([
+                            'class' => 'project-budget-type-card',
                         ])
                         ->columns(3),
 
@@ -182,9 +191,12 @@ class ProjectInfolist
                                 })
                                 ->columnSpan(2),
                         ])
+                        ->extraAttributes([
+                            'class' => 'project-created-at-card',
+                        ])
                         ->columns(3),
                 ]),
-                Fieldset::make('Users')
+                Fieldset::make('Assigned Users')
                     ->schema(function ($record) {
                         $sections = [];
 
@@ -212,67 +224,10 @@ class ProjectInfolist
         return Tab::make('activity')
             ->label('Activity')
             ->schema([
-                Section::make('Activity Log')
-                    ->schema([
-                        RepeatableEntry::make('activities')
-                            ->hiddenLabel()
-                            // ->state(
-                            //     fn($record) =>
-                            //     $record->activities()
-                            //         ->orderBy('created_at', 'desc')
-                            //         ->get()
-                            //         ->toArray()
-                            // )
-                            ->schema([
 
-                                IconEntry::make('activity_icon')
-                                    ->hiddenLabel()
-                                    ->state('phosphor-list-bullets-fill')
-                                    ->icon(fn($state) => $state)
-                                    ->extraAttributes([
-                                        'class' => 'project-side-card',
-                                    ])
-                                    ->columnSpan([
-                                        'default' => 2,
-                                        'sm'      => 1,
-                                        'lg'      => 1,
-                                    ]),
-
-
-                                TextEntry::make('log_name')
-                                    ->hiddenLabel()
-                                    ->state(function ($record) {
-                                        $logName = $record->log_name ?? 'N/A';
-                                        $user = $record->causer?->name ?? 'System';
-                                        $description = $record->description ?? 'No description';
-
-                                        return "{$logName} \n <b> {$user} {$description} </b>";
-                                    })
-                                    ->formatStateUsing(fn(string $state) => nl2br($state))
-                                    ->html()
-                                    ->columnSpan([
-                                        'default' => 8,
-                                        'sm'      => 9,
-                                        'lg'      => 10,
-                                    ]),
-
-                                TextEntry::make('created_at')
-                                    ->hiddenLabel()
-                                    ->state(fn($record) => $record->created_at?->diffForHumans())
-                                    ->columnSpan([
-                                        'default' => 2,
-                                        'sm'      => 2,
-                                        'lg'      => 1,
-                                    ]),
-
-                            ])
-                            ->columns([
-                                'default' => 1,
-                                'sm'      => 12,
-                                'lg'      => 12,
-                            ])
-                    ])
-                    ->columnSpanFull(),
+                ProjectActivityLogEntry::make('activity_logs')
+                    ->state(fn($record) => $record->id)
+                    ->hiddenLabel(),
             ]);
     }
 

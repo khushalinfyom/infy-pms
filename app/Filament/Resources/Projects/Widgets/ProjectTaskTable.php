@@ -42,7 +42,7 @@ class ProjectTaskTable extends TableWidget
             ->recordUrl(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Actions')
+            ->recordActionsColumnLabel('Action')
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
                     return 'No tasks found';
@@ -381,21 +381,19 @@ class ProjectTaskTable extends TableWidget
                                             ]),
 
 
-                                        TextEntry::make('task_duration')
+                                        TextEntry::make('duration')
                                             ->label('Task Duration')
-                                            ->formatStateUsing(function ($record) {
-
-                                                $totalMinutes = $record->time_tracking ?? 0;
+                                            ->getStateUsing(function ($record) {
+                                                $totalMinutes = $record->timeEntries->sum('duration');
                                                 $hours = floor($totalMinutes / 60);
                                                 $minutes = $totalMinutes % 60;
-                                                $seconds = 0;
 
-                                                if ($hours == 0) {
-                                                    return sprintf('%02d:%02d m', $minutes, $seconds);
-                                                }
+                                                $time = sprintf('%02d:%02d M', $hours, $minutes);
 
-                                                return sprintf('%02d:%02d h', $hours, $minutes);
-                                            }),
+                                                return "<div class='text-center font-bold text-xl'>{$time}</div>";
+                                            })
+                                            ->formatStateUsing(fn($state) => $state)
+                                            ->html(),
 
                                         Fieldset::make('Settings')
                                             ->schema([
@@ -417,7 +415,8 @@ class ProjectTaskTable extends TableWidget
 
                                                         $date = Carbon::parse($state);
                                                         return $date->format('jS M, Y');
-                                                    }),
+                                                    })
+                                                    ->placeholder('N/A'),
 
                                                 TextEntry::make('status')
                                                     ->label('Status')
@@ -450,20 +449,14 @@ class ProjectTaskTable extends TableWidget
                                                         return Carbon::parse($state)->format('jS M, Y');
                                                     }),
 
-                                                TextEntry::make('time_tracking')
+                                                TextEntry::make('duration')
                                                     ->label('Time Tracking')
                                                     ->inlineLabel()
-                                                    ->formatStateUsing(function ($record) {
-                                                        $totalMinutes = $record->time_tracking ?? 0;
+                                                    ->getStateUsing(function ($record) {
+                                                        $totalMinutes = $record->timeEntries->sum('duration');
                                                         $hours = floor($totalMinutes / 60);
                                                         $minutes = $totalMinutes % 60;
-                                                        $seconds = 0;
-
-                                                        if ($hours == 0) {
-                                                            return sprintf('%02d:%02d m', $minutes, $seconds);
-                                                        }
-
-                                                        return sprintf('%02d:%02d h', $hours, $minutes);
+                                                        return sprintf('%02d:%02d M', $hours, $minutes);
                                                     })
                                                     ->default('00:00 m'),
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Expenses\Pages;
 
 use App\Filament\Resources\Expenses\ExpenseResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -16,10 +17,26 @@ class EditExpense extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make(),
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
-            RestoreAction::make(),
+            Action::make('back')
+                ->label('Back')
+                ->icon('heroicon-s-arrow-left')
+                ->url(ExpenseResource::getUrl('index'))
+                ->color('gray'),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return 'Edit Expense';
+    }
+
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Expense Updated Successfully';
+    }
+
+    protected function getRedirectUrl(): ?string
+    {
+        return $this->getResourceUrl('index');
     }
 }
