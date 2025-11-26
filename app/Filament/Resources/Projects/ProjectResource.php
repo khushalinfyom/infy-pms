@@ -29,6 +29,11 @@ class ProjectResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Project';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_projects');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return ProjectForm::configure($schema);

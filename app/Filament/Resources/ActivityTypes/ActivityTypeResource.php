@@ -28,6 +28,11 @@ class ActivityTypeResource extends Resource
         return 'Settings';
     }
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_activities');
+    }
+
     protected static ?string $recordTitleAttribute = 'ActivityType';
 
     public static function form(Schema $schema): Schema

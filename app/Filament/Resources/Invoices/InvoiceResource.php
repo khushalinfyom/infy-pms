@@ -27,6 +27,11 @@ class InvoiceResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Invoice';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_invoices');
+    }
+
     protected static ?int $navigationSort = 1;
 
     public static function getNavigationGroup(): ?string

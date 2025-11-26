@@ -28,6 +28,11 @@ class TagResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Tag';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_tags');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

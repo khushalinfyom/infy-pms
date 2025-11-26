@@ -18,7 +18,6 @@ use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
@@ -55,6 +54,11 @@ class TaskResource extends Resource
     protected static ?int $navigationSort = AdminPanelSidebar::TASKS->value;
 
     protected static ?string $recordTitleAttribute = 'Task';
+
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_all_tasks');
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -325,7 +329,7 @@ class TaskResource extends Resource
                 return Task::whereHas('taskAssignee', function ($q) {
                     $q->where('user_id', auth()->id());
                 })
-                ->where('status', '!=', Task::STATUS_COMPLETED);
+                    ->where('status', '!=', Task::STATUS_COMPLETED);
             })
             ->recordTitleAttribute('Task')
             ->columns([
@@ -713,6 +717,7 @@ class TaskResource extends Resource
 
                             return TimeEntry::create($data);
                         })
+                        ->visible(authUserHasPermission('manage_time_entries'))
                         ->successNotificationTitle('Time Entry added successfully!'),
 
                     DeleteAction::make()

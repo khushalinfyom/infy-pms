@@ -27,6 +27,11 @@ class ReportResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Report';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_reports');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return ReportForm::configure($schema);

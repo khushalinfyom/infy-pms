@@ -41,6 +41,11 @@ class CalenderResource extends Resource
         return 'Calender';
     }
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_calendar_view');
+    }
+
     public static function table(Table $table): Table
     {
         return $table

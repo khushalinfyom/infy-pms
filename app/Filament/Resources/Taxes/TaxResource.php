@@ -6,15 +6,11 @@ use App\Filament\Resources\Taxes\Pages\ManageTaxes;
 use App\Models\Tax;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -27,6 +23,11 @@ class TaxResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return 'Settings';
+    }
+
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_taxes');
     }
 
     protected static ?string $recordTitleAttribute = 'Tax';

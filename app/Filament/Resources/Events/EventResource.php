@@ -27,6 +27,11 @@ class EventResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Event';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_events');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

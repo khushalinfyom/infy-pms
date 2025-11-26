@@ -123,7 +123,7 @@ function timeElapsedString($datetime, $full = false)
     ];
     foreach ($string as $k => &$v) {
         if ($diff->$k) {
-            $v = $diff->$k.' '.$v.($diff->$k > 1 ? 's' : '');
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
         } else {
             unset($string[$k]);
         }
@@ -133,7 +133,7 @@ function timeElapsedString($datetime, $full = false)
         $string = array_slice($string, 0, 1);
     }
 
-    return $string ? implode(', ', $string).' ago' : 'just now';
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
 }
 
 /**
@@ -162,7 +162,7 @@ function getColor($opacity = 1, $colorCode = null)
     }
 
     $color = substr($colorCode, 0, -1);
-    $color .= ', '.$opacity.')';
+    $color .= ', ' . $opacity . ')';
 
     return $color;
 }
@@ -255,7 +255,7 @@ function getAvatarUrl()
  */
 function getUserImageInitial($userId, $name)
 {
-    return getAvatarUrl()."?name=$name&size=64&rounded=true&color=fff&background=".getRandomColor($userId);
+    return getAvatarUrl() . "?name=$name&size=64&rounded=true&color=fff&background=" . getRandomColor($userId);
 }
 
 /**
@@ -264,14 +264,14 @@ function getUserImageInitial($userId, $name)
  * @param $permissionName
  * @return bool
  */
-function authUserHasPermission($permissionName)
-{
-    if (Auth::user()->can($permissionName)) {
-        return true;
-    }
+// function authUserHasPermission($permissionName)
+// {
+//     if (Auth::user()->can($permissionName)) {
+//         return true;
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
 /**
  * @return array
@@ -425,7 +425,6 @@ function getCurrenciesClass($currency = null)
             return 'fas fa-dollar-sign';
         default:
             return 'fas fa-dollar-sign';
-
     }
 }
 
@@ -519,7 +518,7 @@ function getBadgeColor($index)
 
 function strip_single_html_tags($tag, $string)
 {
-    $string = preg_replace('~</?'.$tag.'[^>]*>~', '', $string);
+    $string = preg_replace('~</?' . $tag . '[^>]*>~', '', $string);
 
     return $string;
 }
@@ -643,12 +642,12 @@ function HTMLToRGB($htmlCode)
     }
 
     if (strlen($htmlCode) == 3) {
-        $htmlCode = $htmlCode[0].$htmlCode[0].$htmlCode[1].$htmlCode[1].$htmlCode[2].$htmlCode[2];
+        $htmlCode = $htmlCode[0] . $htmlCode[0] . $htmlCode[1] . $htmlCode[1] . $htmlCode[2] . $htmlCode[2];
     }
 
-    $r = hexdec($htmlCode[0].$htmlCode[1]);
-    $g = hexdec($htmlCode[2].$htmlCode[3]);
-    $b = hexdec($htmlCode[4].$htmlCode[5]);
+    $r = hexdec($htmlCode[0] . $htmlCode[1]);
+    $g = hexdec($htmlCode[2] . $htmlCode[3]);
+    $b = hexdec($htmlCode[4] . $htmlCode[5]);
 
     return $b + ($g << 0x8) + ($r << 0x10);
 }
@@ -746,4 +745,30 @@ function getCurrentVersion()
     $composerData = json_decode($composerFile, true);
 
     return $composerData['version'];
+}
+
+
+if (! function_exists('checkPermission')) {
+    function checkPermission($permission)
+    {
+        /** @var \App\Models\User */
+        $user = getLoggedInUser();
+        return $user->hasPermissionTo($permission);
+    }
+}
+
+function authUserHasPermission($permissionName)
+{
+    $user = Auth::user();
+    if (!$user) return false;
+
+    foreach ($user->roles as $role) {
+        foreach ($role->permissions as $perm) {
+            if ($perm->name === $permissionName) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

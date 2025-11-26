@@ -39,6 +39,11 @@ class StatusResource extends Resource
         return 'Task Status';
     }
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_status');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

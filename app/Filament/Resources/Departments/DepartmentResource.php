@@ -31,6 +31,11 @@ class DepartmentResource extends Resource
     protected static ?int $navigationSort = AdminPanelSidebar::DEPARTMENTS->value;
 
     protected static ?string $recordTitleAttribute = 'Department';
+    
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('Department');
+    }
 
     public static function form(Schema $schema): Schema
     {

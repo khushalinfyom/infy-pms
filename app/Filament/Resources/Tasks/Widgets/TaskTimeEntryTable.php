@@ -109,6 +109,7 @@ class TaskTimeEntryTable extends TableWidget
 
                         return TimeEntry::create($data);
                     })
+                    ->visible(authUserHasPermission('manage_time_entries'))
                     ->successNotificationTitle('Time Entry created successfully!'),
             ])
             ->recordActions([

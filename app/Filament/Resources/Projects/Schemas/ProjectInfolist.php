@@ -247,6 +247,9 @@ class ProjectInfolist
             ->label('Attachments')
             ->schema([
                 Section::make()
+                    ->extraAttributes([
+                        'class' => 'attachment-section'
+                    ])
                     ->headerActions([
                         Action::make('upload_attachment')
                             ->label('Upload Attachment')

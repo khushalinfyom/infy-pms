@@ -50,7 +50,7 @@
     border-radius: 12px !important;
 }
 
-.fi-sidebar-nav{
+.fi-sidebar-nav {
     padding-block-start: 20px !important;
     gap: 20px !important;
 }
@@ -66,3 +66,8 @@
 .project-created-at-card .fi-icon.fi-size-lg {
     color: #5bad2d !important;
 }
+
+.attachment-section .fi-section-header {
+    justify-content: flex-end !important;
+}
+

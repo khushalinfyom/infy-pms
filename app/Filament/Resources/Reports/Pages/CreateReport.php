@@ -37,6 +37,9 @@ class CreateReport extends CreateRecord
         $report = $this->record;
         $data = $this->form->getRawState();
 
+        $meta = $this->prepareReportMeta($data);
+        $report->update(['meta' => $meta]);
+
         if (!empty($data['department_id'])) {
             $report->filters()->create([
                 'param_type' => Department::class,
@@ -83,5 +86,15 @@ class CreateReport extends CreateRecord
                 ->useLog('Report Created')
                 ->log('Created project report');
         }
+    }
+
+    protected function prepareReportMeta(array $data): array
+    {
+        return [
+            'all_departments' => empty($data['department_id']),
+            'all_clients'     => empty($data['client_id']),
+            'all_projects'    => empty($data['project_ids']),
+            'all_users'       => empty($data['user_ids']),
+        ];
     }
 }

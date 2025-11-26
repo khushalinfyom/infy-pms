@@ -46,6 +46,11 @@ class ClientResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Client';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_clients');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

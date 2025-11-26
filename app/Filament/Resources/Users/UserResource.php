@@ -28,7 +28,6 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -45,6 +44,11 @@ class UserResource extends Resource
     protected static ?int $navigationSort = AdminPanelSidebar::USERS->value;
 
     protected static ?string $recordTitleAttribute = 'User';
+
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_users');
+    }
 
     public static function form(Schema $schema): Schema
     {

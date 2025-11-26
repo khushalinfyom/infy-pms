@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Reports\Tables;
 
+use App\Models\Report;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -23,6 +24,16 @@ class ReportsTable
                 } else {
                     return 'No Reports found for "' . $livewire->tableSearch . '".';
                 }
+            })
+            ->query(function () {
+                $user = auth()->user();
+
+                return Report::query()
+                    ->when(
+                        $user->hasRole('Admin'),
+                        fn($query) => $query,
+                        fn($query) => $query->where('owner_id', $user->id)
+                    );
             })
             ->columns([
 

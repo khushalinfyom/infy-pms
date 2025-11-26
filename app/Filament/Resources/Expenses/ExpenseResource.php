@@ -28,6 +28,11 @@ class ExpenseResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_expenses');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return 'Sales';

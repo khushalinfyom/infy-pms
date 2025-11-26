@@ -26,6 +26,11 @@ class RoleResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Role';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_roles');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return RoleForm::configure($schema);

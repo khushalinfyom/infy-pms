@@ -25,6 +25,11 @@ class ArchivedUserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'User';
 
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('archived_users');
+    }
+
     public static function getNavigationLabel(): string
     {
         return 'Archived Users';

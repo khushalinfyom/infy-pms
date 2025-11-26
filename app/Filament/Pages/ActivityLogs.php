@@ -28,6 +28,11 @@ class ActivityLogs extends Page
         return 'Activity Logs';
     }
 
+    public static function canAccess(): bool
+    {
+        return authUserHasPermission('manage_activity_log');
+    }
+
     public function getTitle(): string | Htmlable
     {
         return 'Activity Logs';

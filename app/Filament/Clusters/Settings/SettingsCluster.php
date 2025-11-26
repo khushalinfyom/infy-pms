@@ -14,4 +14,9 @@ class SettingsCluster extends Cluster
     {
         return 'Settings';
     }
+
+    public static function canAccess(): bool
+    {
+        return authUserHasPermission('manage_settings');
+    }
 }
