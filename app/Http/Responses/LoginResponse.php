@@ -22,10 +22,13 @@ class LoginResponse implements ContractsLoginResponse
         $user = auth()->user();
 
         if ($user) {
-            // $role = $user->roles()->first();
-            // if ($role && $role->name === User::ADMIN) {
-            // }
-            return redirect()->route('filament.admin.pages.dashboard');
+            $role = $user->roles()->first();
+            if ($role && $role->name === User::ADMIN) {
+                return redirect()->route('filament.admin.pages.dashboard');
+            }
+            else {
+                return redirect()->route('filament.client.pages.dashboard');
+            }
         }
 
         return redirect()->route('home');

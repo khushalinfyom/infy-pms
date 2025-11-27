@@ -187,6 +187,7 @@ class CalendarWidget extends FullCalendarWidget
     public function fetchEvents(array $fetchInfo): array
     {
         return TimeEntry::query()
+            ->where('user_id', auth()->id())
             ->get()
             ->map(function ($event) {
 
