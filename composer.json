@@ -12,6 +12,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "leandrocfe/filament-apex-charts": "^4.0",
+        "relaticle/flowforge": "^2.1",
         "saade/filament-fullcalendar": "4.0.0-beta2",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-medialibrary": "^11.17",
