@@ -16,7 +16,7 @@ class CustomEditProfile extends EditProfile
 {
     public static function getLabel(): string
     {
-        return 'Profile Settings';
+        return __('messages.settings.profile_settings');
     }
 
     public function form(Schema $schema): Schema
@@ -30,7 +30,7 @@ class CustomEditProfile extends EditProfile
                         Group::make([
 
                             SpatieMediaLibraryFileUpload::make('image_path')
-                                ->label('Profile')
+                                ->label(__('messages.common.profile'))
                                 ->collection(User::IMAGE_PATH)
                                 ->image()
                                 ->imageEditor(),
@@ -40,13 +40,13 @@ class CustomEditProfile extends EditProfile
                         Group::make([
 
                             TextInput::make('name')
-                                ->label('Name')
-                                ->placeholder('Name')
+                                ->label(__('messages.common.name'))
+                                ->placeholder(__('messages.common.name'))
                                 ->required(),
 
                             TextInput::make('email')
-                                ->label('Email')
-                                ->placeholder('Email')
+                                ->label(__('messages.common.email'))
+                                ->placeholder(__('messages.common.email'))
                                 ->email()
                                 ->unique()
                                 ->columnSpanFull()
@@ -56,14 +56,14 @@ class CustomEditProfile extends EditProfile
                                 ->defaultCountry('IN')
                                 ->separateDialCode(true)
                                 ->countryStatePath('region_code')
-                                ->label('Phone')
+                                ->label(__('messages.common.phone'))
                                 ->rules(function (Get $get) {
                                     return [
                                         'phone:AUTO,' . strtoupper($get('prefix_code')),
                                     ];
                                 })
                                 ->validationMessages([
-                                    'phone' => 'Please enter a valid phone number.',
+                                    'phone' => __('messages.settings.phone_number_validation'),
                                 ]),
 
                         ])->columnSpan(3)->columns(1)
@@ -81,6 +81,6 @@ class CustomEditProfile extends EditProfile
 
     protected function getSavedNotificationTitle(): ?string
     {
-        return 'Profile Updated Successfully';
+        return __('messages.settings.profile_updated_successfully');
     }
 }

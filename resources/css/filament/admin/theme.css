@@ -2,6 +2,7 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+@source '../../../../vendor/bezhansalleh/filament-language-switch/resources/views/**/*.blade.php';
 
 .fi-fo-color-picker-preview {
     margin-right: 11px !important;

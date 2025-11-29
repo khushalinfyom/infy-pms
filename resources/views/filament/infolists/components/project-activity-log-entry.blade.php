@@ -29,7 +29,7 @@
                                 </p>
 
                                 <div class="flex items-center text-xs text-gray-600 dark:text-gray-500 mt-1 space-x-2">
-                                    <span>{{ $activity['causer']['name'] ?? 'Unknown' }}
+                                    <span>{{ $activity['causer']['name'] ?? __('messages.projects.unknown') }}
                                         {{ $activity['description'] ?? '' }}
                                     </span>
                                 </div>
@@ -46,9 +46,9 @@
             @if ($activities->count() === 0)
                 <div class="flex flex-col items-center justify-center py-12 text-center">
                     <x-filament::icon icon="heroicon-o-document-text" class="w-12 h-12 text-gray-400" />
-                    <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No activities found</h3>
+                    <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">{{ __('messages.activity_logs.no_activities_found') }}</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        There are no activity logs to display yet.
+                        {{ __('messages.activity_logs.there_are_no_activity_logs_to_display_yet') }}
                     </p>
                 </div>
             @endif

@@ -16,7 +16,7 @@ class ViewProject extends ViewRecord
     {
         return [
             Action::make('back')
-                ->label('Back')
+                ->label(__('messages.common.back'))
                 ->icon('heroicon-s-arrow-left')
                 ->url(ProjectResource::getUrl('index'))
                 ->color('gray'),
@@ -25,7 +25,7 @@ class ViewProject extends ViewRecord
 
     public function getTitle(): string
     {
-        return $this->record->name . ' - Project Details';
+        return $this->record->name . ' - ' . __('messages.projects.project_details');
     }
 
     public function deleteAttachment($mediaId)
@@ -35,7 +35,7 @@ class ViewProject extends ViewRecord
             $media->delete();
             Notification::make()
                 ->success()
-                ->title('Attachment deleted successfully.')
+                ->title(__('messages.projects.attachment_deleted_successfully'))
                 ->send();
         }
     }

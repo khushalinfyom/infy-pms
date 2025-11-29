@@ -26,17 +26,17 @@ class StatusResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Settings';
+        return __('messages.settings.settings');
     }
 
     public static function getNavigationLabel(): string
     {
-        return 'Task Status';
+        return __('messages.settings.task_status');
     }
 
     public static function getPluralLabel(): ?string
     {
-        return 'Task Status';
+        return __('messages.settings.task_status');
     }
 
     public static function canViewAny(): bool
@@ -56,11 +56,14 @@ class StatusResource extends Resource
                     }),
 
                 TextInput::make('name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->required()
                     ->unique()
                     ->maxLength(170),
 
                 TextInput::make('order')
+                    ->label(__('messages.settings.order'))
                     ->numeric()
                     ->required()
                     ->default(function () {
@@ -78,17 +81,18 @@ class StatusResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No Statuses found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'Statuses']);
                 } else {
-                    return 'No Statuses found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Statuses', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('Status')
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('messages.common.name'))
                     ->searchable()
                     ->sortable(),
 
@@ -96,26 +100,26 @@ class StatusResource extends Resource
             ->recordActions([
 
                 EditAction::make()
-                    ->tooltip('Edit')
+                    ->tooltip(__('messages.common.edit'))
                     ->iconButton()
                     ->modalWidth('md')
-                    ->modalHeading('Edit Status')
-                    ->successNotificationTitle('Status updated successfully!'),
+                    ->modalHeading(__('messages.settings.edit_status'))
+                    ->successNotificationTitle(__('messages.settings.status_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Status')
-                    ->successNotificationTitle('Status deleted successfully!'),
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.settings.delete_status'))
+                    ->successNotificationTitle(__('messages.settings.status_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
 
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Statuses')
-                        ->successNotificationTitle('Statuses deleted successfully!'),
+                        ->modalHeading(__('messages.settings.delete_statuses'))
+                        ->successNotificationTitle(__('messages.settings.statuses_deleted_successfully')),
                 ]),
             ]);
     }

@@ -22,8 +22,8 @@ class ProjectForm
                     ->default(getLoggedInUserId()),
 
                 TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->live()
                     ->unique()
                     ->required()
@@ -39,8 +39,8 @@ class ProjectForm
                     }),
 
                 TextInput::make('prefix')
-                    ->label('Prefix')
-                    ->placeholder('Prefix')
+                    ->label(__('messages.project.prefix'))
+                    ->placeholder(__('messages.project.prefix'))
                     ->maxLength(8)
                     ->reactive()
                     ->unique()
@@ -48,7 +48,7 @@ class ProjectForm
 
 
                 Select::make('client_id')
-                    ->label('Client')
+                    ->label(__('messages.users.client'))
                     ->options(Client::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
@@ -59,12 +59,12 @@ class ProjectForm
                     }),
 
                 ColorPicker::make('color')
-                    ->label('Color')
-                    ->placeholder('Color')
+                    ->label(__('messages.common.color'))
+                    ->placeholder(__('messages.common.color'))
                     ->required(),
 
                 Select::make('users')
-                    ->label('Users')
+                    ->label(__('messages.users.users'))
                     ->relationship('users', 'name')
                     ->multiple()
                     ->preload()

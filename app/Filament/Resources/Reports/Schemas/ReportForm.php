@@ -60,7 +60,6 @@ class ReportForm
                             ->label('Department')
                             ->options(Department::query()->pluck('name', 'id'))
                             ->searchable()
-                            ->required()
                             ->reactive()
                             ->afterStateUpdated(function (callable $set) {
                                 $set('client_id', null);
@@ -81,7 +80,6 @@ class ReportForm
                                     ->pluck('name', 'id')
                             )
                             ->searchable()
-                            ->required()
                             ->reactive()
                             ->afterStateUpdated(function (callable $set) {
                                 $set('project_ids', []);

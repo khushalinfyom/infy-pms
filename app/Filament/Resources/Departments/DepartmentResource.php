@@ -31,10 +31,20 @@ class DepartmentResource extends Resource
     protected static ?int $navigationSort = AdminPanelSidebar::DEPARTMENTS->value;
 
     protected static ?string $recordTitleAttribute = 'Department';
-    
+
     public static function canViewAny(): bool
     {
         return authUserHasPermission('Department');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.departments');
+    }
+
+    public static function getLabel(): ?string
+    {
+        return __('messages.users.departments');
     }
 
     public static function form(Schema $schema): Schema
@@ -43,21 +53,21 @@ class DepartmentResource extends Resource
             ->components([
                 Group::make([
                     TextInput::make('name')
-                        ->label('Name')
-                        ->placeholder('Name')
+                        ->label(__('messages.common.name'))
+                        ->placeholder(__('messages.common.name'))
                         ->unique()
                         ->required()
                         ->columnSpan(3),
 
                     ColorPicker::make('color')
-                        ->label('Color')
-                        ->placeholder('Color')
+                        ->label(__('messages.common.color'))
+                        ->placeholder(__('messages.common.color'))
                         ->required(),
                 ])->columns(4)->columnSpanFull(),
 
                 RichEditor::make('description')
-                    ->label('Description')
-                    ->placeholder('Description')
+                    ->label(__('messages.common.description'))
+                    ->placeholder(__('messages.common.description'))
                     ->columnSpanFull()
                     ->extraAttributes(['style' => 'height: 200px;'])
                     ->toolbarButtons([
@@ -74,10 +84,10 @@ class DepartmentResource extends Resource
         return $schema
             ->components([
                 TextEntry::make('name')
-                    ->label('Name'),
+                    ->label(__('messages.common.name')),
 
                 TextEntry::make('description')
-                    ->label('Description')
+                    ->label(__('messages.common.description'))
                     ->html()
                     ->default('N/A'),
             ])->columns(1);
@@ -89,33 +99,33 @@ class DepartmentResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No departments found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'Departments']);
                 } else {
-                    return 'No departments found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Departments', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('Department')
             ->columns([
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('messages.common.name'))
                     ->searchable(),
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->tooltip('View')
+                    ->tooltip(__('messages.common.view'))
                     ->iconButton()
-                    ->modalHeading('View Department')
+                    ->modalHeading(__('messages.users.view_department'))
                     ->modalWidth('md'),
 
                 EditAction::make()
-                    ->tooltip('Edit')
+                    ->tooltip(__('messages.common.edit'))
                     ->iconButton()
-                    ->modalHeading('Edit Department')
+                    ->modalHeading(__('messages.users.edit_department'))
                     ->modalWidth('xl')
-                    ->successNotificationTitle('Department updated successfully!')
+                    ->successNotificationTitle(__('messages.users.department_updated_successfully'))
                     ->mutateFormDataUsing(function (array $data): array {
                         if (trim(strip_tags($data['description'] ?? '')) === '') {
                             $data['description'] = null;
@@ -137,16 +147,16 @@ class DepartmentResource extends Resource
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Department')
-                    ->successNotificationTitle('Department deleted successfully!'),
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_department'))
+                    ->successNotificationTitle(__('messages.users.department_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Departments')
-                        ->successNotificationTitle('Departments deleted successfully!'),
+                        ->modalHeading(__('messages.users.delete_selected_departments'))
+                        ->successNotificationTitle(__('messages.users.departments_deleted_successfully')),
                 ]),
             ]);
     }
@@ -175,16 +185,16 @@ class DepartmentResource extends Resource
             ->modalWidth('4xl')
             ->label(function () use ($record) {
                 if (isset($record) && $record) {
-                    return 'Edit Department';
+                    return __('messages.users.edit_department');
                 } else {
-                    return 'New Department';
+                    return __('messages.users.new_department');
                 }
             })
             ->modalHeading(function () use ($record) {
                 if (isset($record) && $record) {
-                    return 'Edit Department';
+                    return __('messages.users.edit_department');
                 } else {
-                    return 'Create Department';
+                    return __('messages.users.create_department');
                 }
             })
             ->form([
@@ -192,21 +202,21 @@ class DepartmentResource extends Resource
                 Group::make([
 
                     TextInput::make('name')
-                        ->label('Name')
-                        ->placeholder('Name')
+                        ->label(__('messages.common.name'))
+                        ->placeholder(__('messages.common.name'))
                         ->unique()
                         ->required(),
 
                     ColorPicker::make('color')
-                        ->label('Color')
-                        ->placeholder('Color')
+                        ->label(__('messages.common.color'))
+                        ->placeholder(__('messages.common.color'))
                         ->required(),
 
                 ])
                     ->columns(2),
                 RichEditor::make('description')
-                    ->label('Description')
-                    ->placeholder('Description')
+                    ->label(__('messages.common.description'))
+                    ->placeholder(__('messages.common.description'))
                     ->columnSpanFull()
                     ->extraAttributes(['style' => 'height: 200px;'])
                     ->toolbarButtons([
@@ -235,7 +245,7 @@ class DepartmentResource extends Resource
                         ->log('Department ' . $record->name . ' updated');
 
                     Notification::make()
-                        ->title('Department updated successfully!')
+                        ->title(__('messages.users.department_updated_successfully'))
                         ->success()
                         ->send();
                 } else {
@@ -256,7 +266,7 @@ class DepartmentResource extends Resource
                         ->log('New Department ' . $record->name . ' created');
 
                     Notification::make()
-                        ->title('Department created successfully!')
+                        ->title(__('messages.users.department_created_successfully'))
                         ->success()
                         ->send();
                 }

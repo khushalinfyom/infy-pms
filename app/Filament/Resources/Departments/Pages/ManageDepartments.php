@@ -16,10 +16,10 @@ class ManageDepartments extends ManageRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Department')
-                ->successNotificationTitle('Department created successfully!')
+                ->label(__('messages.users.new_department'))
+                ->successNotificationTitle(__('messages.users.department_created_successfully'))
                 ->createAnother(false)
-                ->modalHeading('Create Department')
+                ->modalHeading(__('messages.users.create_department'))
                 ->modalWidth('xl')
                 ->mutateFormDataUsing(function (array $data): array {
                     if (trim(strip_tags($data['description'] ?? '')) === '') {

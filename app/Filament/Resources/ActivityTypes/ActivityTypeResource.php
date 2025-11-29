@@ -25,7 +25,17 @@ class ActivityTypeResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Settings';
+        return __('messages.settings.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.settings.activity_types');
+    }
+
+    public static function getLabel(): string
+    {
+        return __('messages.settings.activity_types');
     }
 
     public static function canViewAny(): bool
@@ -44,8 +54,8 @@ class ActivityTypeResource extends Resource
                     ->default(auth()->user()->id),
 
                 TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->required()
                     ->unique(),
             ])
@@ -58,43 +68,44 @@ class ActivityTypeResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No activity types found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'Activity Types']);
                 } else {
-                    return 'No activity types found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Activity Types', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('ActivityType')
             ->columns([
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->sortable()
                     ->searchable(),
             ])
             ->recordActions([
 
                 EditAction::make()
-                    ->tooltip('Edit')
+                    ->tooltip(__('messages.common.edit'))
                     ->iconButton()
                     ->modalWidth('md')
-                    ->modalHeading('Edit Activity Type')
-                    ->successNotificationTitle('Activity Type updated successfully!'),
+                    ->modalHeading(__('messages.settings.edit_activity_type'))
+                    ->successNotificationTitle(__('messages.settings.activity_type_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Activity Type')
-                    ->successNotificationTitle('Activity Type deleted successfully!'),
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.settings.delete_activity_type'))
+                    ->successNotificationTitle(__('messages.settings.activity_type_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Activity Types')
-                        ->successNotificationTitle('Activity Types deleted successfully!'),
+                        ->modalHeading(__('messages.settings.delete_activity_type'))
+                        ->successNotificationTitle(__('messages.settings.activity_types_deleted_successfully')),
                 ]),
             ]);
     }

@@ -7,6 +7,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class ReportsTable
@@ -54,6 +55,16 @@ class ReportsTable
                     ->label('Created By')
                     ->placeholder('N/A'),
             ])
+            ->filters([
+                SelectFilter::make('created_by')
+                    ->label('Created By')
+                    ->relationship('user', 'name')
+                    ->placeholder('All Users')
+                    ->native(false)
+                    ->searchable()
+                    ->preload()
+            ])
+            ->deferFilters(false)
             ->actions([
                 ViewAction::make()
                     ->iconButton()

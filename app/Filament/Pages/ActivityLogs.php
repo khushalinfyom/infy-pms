@@ -25,7 +25,7 @@ class ActivityLogs extends Page
 
     public static function getNavigationLabel(): string
     {
-        return 'Activity Logs';
+        return __('messages.activity_logs.activity_logs');
     }
 
     public static function canAccess(): bool
@@ -35,7 +35,7 @@ class ActivityLogs extends Page
 
     public function getTitle(): string | Htmlable
     {
-        return 'Activity Logs';
+        return __('messages.activity_logs.activity_logs');
     }
 
     public function mount(): void

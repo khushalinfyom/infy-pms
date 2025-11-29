@@ -9,7 +9,6 @@ use App\Filament\Resources\Projects\Widgets\ProjectTaskTable;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -50,7 +49,7 @@ class ProjectInfolist
     public static function getSummaryTab(): Tab
     {
         return Tab::make('summary')
-            ->label('Summary')
+            ->label(__('messages.projects.summary'))
             ->schema([
                 Section::make()
                     ->schema([
@@ -75,7 +74,7 @@ class ProjectInfolist
                                 }),
 
                             TextEntry::make('description')
-                                ->label('Project Overview')
+                                ->label(__('messages.projects.project_overview'))
                                 ->placeholder('N/A')
                                 ->html()
                                 ->default(fn() => $project->description ?? 'N/A'),
@@ -92,10 +91,9 @@ class ProjectInfolist
                     ->extraAttributes(['class' => 'h-full']),
 
                 Group::make([
-                    Fieldset::make('Client')
+                    Fieldset::make(__('messages.users.client'))
                         ->schema([
                             SpatieMediaLibraryImageEntry::make('clients')
-                                ->label('Client Photo')
                                 ->collection(Client::IMAGE_PATH)
                                 ->circular()
                                 ->hiddenLabel()
@@ -134,7 +132,7 @@ class ProjectInfolist
                                 ]),
 
                             TextEntry::make('price')
-                                ->label('Budget')
+                                ->label(__('messages.projects.budget'))
                                 ->prefix(function ($record) {
                                     return Project::getCurrencyClass($record->currency) . ' ';
                                 })
@@ -158,7 +156,7 @@ class ProjectInfolist
                                 ]),
 
                             TextEntry::make('budget_type')
-                                ->label('Budget Type')
+                                ->label(__('messages.projects.budget_type'))
                                 ->placeholder('N/A')
                                 ->formatStateUsing(fn($state) => Project::BUDGET_TYPE[$state] ?? 'N/A')
                                 ->columnSpan(2),
@@ -180,14 +178,14 @@ class ProjectInfolist
                                 ]),
 
                             TextEntry::make('created_at')
-                                ->label('Tasks')
+                                ->label(__('messages.projects.tasks'))
                                 ->formatStateUsing(function ($state, $record) {
                                     $total = $record->tasks()->count();
                                     $pending = $record->tasks()
                                         ->where('status', Task::STATUS_PENDING)
                                         ->count();
 
-                                    return "{$pending}/{$total} Pending Tasks";
+                                    return "{$pending}/{$total} " . __('messages.projects.pending_tasks');
                                 })
                                 ->columnSpan(2),
                         ])
@@ -196,7 +194,7 @@ class ProjectInfolist
                         ])
                         ->columns(3),
                 ]),
-                Fieldset::make('Assigned Users')
+                Fieldset::make(__('messages.projects.assigneed_users'))
                     ->schema(function ($record) {
                         $sections = [];
 
@@ -221,7 +219,7 @@ class ProjectInfolist
     public static function getActivityTab(): Tab
     {
         return Tab::make('activity')
-            ->label('Activity')
+            ->label(__('messages.projects.activity'))
             ->schema([
                 ProjectActivityLogEntry::make('activity_logs')
                     ->state(fn($record) => $record->id)
@@ -234,7 +232,7 @@ class ProjectInfolist
     public static function getTasksTab(): Tab
     {
         return Tab::make('tasks')
-            ->label('Tasks')
+            ->label(__('messages.projects.tasks'))
             ->schema([
                 Livewire::make(ProjectTaskTable::class)
                     ->columnSpanFull(),
@@ -244,7 +242,7 @@ class ProjectInfolist
     public static function getAttachmentsTab(): Tab
     {
         return Tab::make('attachments')
-            ->label('Attachments')
+            ->label(__('messages.projects.attachments'))
             ->schema([
                 Section::make()
                     ->extraAttributes([
@@ -252,12 +250,12 @@ class ProjectInfolist
                     ])
                     ->headerActions([
                         Action::make('upload_attachment')
-                            ->label('Upload Attachment')
+                            ->label(__('messages.projects.upload_attachment'))
                             ->icon('heroicon-s-plus')
                             ->modalWidth('lg')
                             ->form([
                                 FileUpload::make('attachment')
-                                    ->label('Select File')
+                                    ->label(__('messages.projects.select_file'))
                                     ->storeFiles(false)
                                     ->required()
                             ])

@@ -10,10 +10,10 @@ class CustomDeleteBulkAction extends DeleteBulkAction
     public function setCommonProperties(string | Closure | null $url = null): static
     {
         return $this
-            ->label('Delete Selected')
-            ->modalSubmitActionLabel('Confirm')
-            ->modalCancelActionLabel('Cancel')
-            ->modalDescription('Are you sure you would like to do this?')
+            ->label(__('messages.common.delete_selected'))
+            ->modalSubmitActionLabel(__('messages.common.confirm'))
+            ->modalCancelActionLabel(__('messages.common.cancel'))
+            ->modalDescription(__('messages.common.are_you_sure_you_would_like_to_do_this'))
             ->successRedirectUrl(function ($table) use ($url) {
                 try {
                     $getRecords = $table->getRecords();

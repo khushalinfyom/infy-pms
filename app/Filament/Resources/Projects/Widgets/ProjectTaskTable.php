@@ -42,19 +42,19 @@ class ProjectTaskTable extends TableWidget
             ->recordUrl(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No tasks found';
+                    return __('messages.common.empty_table_heading', ['table' => 'Tasks']);
                 } else {
-                    return 'No tasks found for "' . $livewire->tableSearch . '"';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Tasks', 'search' => $livewire->tableSearch]);
                 }
             })
             ->query(Task::where('project_id', $this->record->id)->where('status', '!=', 1))
             ->columns([
 
                 TextColumn::make('title')
-                    ->label('Title')
+                    ->label(__('messages.projects.title'))
                     ->searchable(),
 
                 // ImageColumn::make('users')
@@ -85,7 +85,7 @@ class ProjectTaskTable extends TableWidget
                 //     ]),
 
                 TextColumn::make('priority')
-                    ->label('Priority')
+                    ->label(__('messages.projects.priority'))
                     ->formatStateUsing(fn($state) => Task::PRIORITY[$state] ?? $state)
                     ->badge()
                     ->color(fn($state) => match ($state) {
@@ -99,7 +99,7 @@ class ProjectTaskTable extends TableWidget
                     ->default('N/A'),
 
                 TextColumn::make('due_date')
-                    ->label('Due Date')
+                    ->label(__('messages.projects.due_date'))
                     ->state(function ($record) {
                         if (!$record->due_date) {
                             return 'N/A';
@@ -108,11 +108,11 @@ class ProjectTaskTable extends TableWidget
                         $date = Carbon::parse($record->due_date);
 
                         if ($date->isToday()) {
-                            return 'Today';
+                            return __('messages.projects.today');
                         }
 
                         if ($date->isTomorrow()) {
-                            return 'Tomorrow';
+                            return __('messages.projects.tomorrow');
                         }
 
                         return $date->format('d M');
@@ -122,8 +122,8 @@ class ProjectTaskTable extends TableWidget
                 CreateAction::make('create_task')
                     ->model(Task::class)
                     ->icon('heroicon-s-plus')
-                    ->label('New Task')
-                    ->modalHeading('Create Task')
+                    ->label(__('messages.projects.new_task'))
+                    ->modalHeading(__('messages.projects.create_task'))
                     ->modalWidth('2xl')
                     ->form(self::getTaskForm())
                     ->createAnother(false)
@@ -187,13 +187,13 @@ class ProjectTaskTable extends TableWidget
                                 ->log('Created new task ' . $task->title);
                         }
                     })
-                    ->successNotificationTitle('Task Created Successfully'),
+                    ->successNotificationTitle(__('messages.projects.task_created_successfully')),
             ])
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
-                    ->tooltip('View')
-                    ->modalHeading('Task Details')
+                    ->tooltip(__('messages.common.view'))
+                    ->modalHeading(__('messages.projects.task_details'))
                     ->modalWidth('4xl')
                     ->infolist([
                         Group::make()
@@ -208,21 +208,21 @@ class ProjectTaskTable extends TableWidget
                                             ->extraAttributes(['style' => 'font-size: 1.25rem; font-weight: 600;']),
 
                                         TextEntry::make('description')
-                                            ->label('Description')
+                                            ->label(__('messages.common.description'))
                                             ->html()
-                                            ->default('No description added yet.'),
+                                            ->default(__('messages.projects.no_description_added_yet')),
 
-                                        Fieldset::make('Attachments')
+                                        Fieldset::make(__('messages.projects.attachments'))
                                             ->schema([
 
                                                 Action::make('add_attachment')
-                                                    ->label('New Attachment')
+                                                    ->label(__('messages.projects.new_attachment'))
                                                     ->icon('heroicon-s-plus')
-                                                    ->modalHeading('Upload Attachment')
+                                                    ->modalHeading(__('messages.projects.upload_attachment'))
                                                     ->modalWidth('lg')
                                                     ->form([
                                                         SpatieMediaLibraryFileUpload::make('upload_file')
-                                                            ->label('Select File')
+                                                            ->label(__('messages.projects.select_file'))
                                                             ->directory('task-attachments')
                                                             ->preserveFilenames()
                                                             ->maxSize(10240)
@@ -242,7 +242,7 @@ class ProjectTaskTable extends TableWidget
                                                     }),
 
                                                 Repeater::make('attachments')
-                                                    ->label('All Attachments')
+                                                    ->label(__('messages.projects.all_attachments'))
                                                     ->default(function ($record) {
                                                         if (!$record) return [];
 

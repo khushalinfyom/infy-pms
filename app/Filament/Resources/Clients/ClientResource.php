@@ -51,6 +51,16 @@ class ClientResource extends Resource
         return authUserHasPermission('manage_clients');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.clients');
+    }
+
+    public static function getLabel(): ?string
+    {
+        return __('messages.users.clients');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -60,12 +70,12 @@ class ClientResource extends Resource
                     ->default(auth()->user()->id),
 
                 TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->required(),
 
                 Select::make('department_id')
-                    ->label('Department')
+                    ->label(__('messages.users.department'))
                     ->options(Department::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
@@ -75,8 +85,8 @@ class ClientResource extends Resource
                     }),
 
                 TextInput::make('email')
-                    ->label('Email')
-                    ->placeholder('Email')
+                    ->label(__('messages.common.email'))
+                    ->placeholder(__('messages.common.email'))
                     ->email()
                     ->unique()
                     ->columnSpanFull()
@@ -85,13 +95,13 @@ class ClientResource extends Resource
                 ...self::getPasswordFields(),
 
                 TextInput::make('website')
-                    ->label('Website')
-                    ->placeholder('Website')
+                    ->label(__('messages.users.website'))
+                    ->placeholder(__('messages.users.website'))
                     ->url()
                     ->columnSpanFull(),
 
                 SpatieMediaLibraryFileUpload::make('clients')
-                    ->label('Profile')
+                    ->label(__('messages.common.profile'))
                     ->disk(config('app.media_disk'))
                     ->collection('clients')
                     ->columnSpanFull(),
@@ -108,6 +118,7 @@ class ClientResource extends Resource
                         Group::make([
 
                             ClientEntry::make('client')
+                                ->label(__('messages.users.client'))
                                 ->client(fn($record) => $record)
                                 ->columnSpanFull()
                                 ->hiddenLabel(),
@@ -117,12 +128,12 @@ class ClientResource extends Resource
                         Group::make([
 
                             TextEntry::make('department.name')
-                                ->label('Department')
+                                ->label(__('messages.users.department'))
                                 ->badge()
                                 ->color('info'),
 
                             TextEntry::make('website')
-                                ->label('Website')
+                                ->label(__('messages.users.website'))
                                 ->placeholder('N/A')
                                 ->url(fn(Client $record) => filled($record->website) ? $record->website : null)
                                 ->openUrlInNewTab()
@@ -159,7 +170,7 @@ class ClientResource extends Resource
                     Section::make('')
                         ->schema([
                             TextEntry::make('created_at')
-                                ->label('Total Projects')
+                                ->label(__('messages.projects.total_projects'))
                                 ->formatStateUsing(fn(Client $record) => $record->projects->count())
                                 ->extraAttributes([
                                     'style' => '
@@ -177,7 +188,7 @@ class ClientResource extends Resource
                     Section::make('')
                         ->schema([
                             TextEntry::make('project_progress.completedProjects')
-                                ->label('Finished Projects')
+                                ->label(__('messages.projects.finished_projects'))
                                 ->extraAttributes([
                                     'style' => 'color:#226c14;
                                                 font-size:18px;
@@ -191,7 +202,7 @@ class ClientResource extends Resource
                     Section::make('')
                         ->schema([
                             TextEntry::make('project_progress.openProjects')
-                                ->label('Open Projects')
+                                ->label(__('messages.projects.open_projects'))
                                 ->extraAttributes([
                                     'style' => 'color:#3b1d74;
                                                 font-size:18px;
@@ -205,7 +216,7 @@ class ClientResource extends Resource
                     Section::make('')
                         ->schema([
                             TextEntry::make('project_progress.holdProjects')
-                                ->label('Hold Projects')
+                                ->label(__('messages.projects.hold_projects'))
                                 ->extraAttributes([
                                     'style' => 'color:#734120;
                                                 font-size:18px;
@@ -219,7 +230,7 @@ class ClientResource extends Resource
                     Section::make('')
                         ->schema([
                             TextEntry::make('project_progress.archivedProjects')
-                                ->label('Archived Projects')
+                                ->label(__('messages.projects.archived_projects'))
                                 ->extraAttributes([
                                     'style' => 'color:#222223;
                                                 font-size:18px;
@@ -246,31 +257,31 @@ class ClientResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No clients found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'Clients']);
                 } else {
-                    return 'No clients found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Clients', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('Client')
             ->columns([
 
                 ClientImageColumn::make('clients')
-                    ->label('Client')
+                    ->label(__('messages.users.client'))
                     ->view('filament.tables.columns.client-image-column')
                     ->sortable()
                     ->searchable(['name', 'email']),
 
                 TextColumn::make('department.name')
-                    ->label('Department')
+                    ->label(__('messages.users.department'))
                     ->searchable()
                     ->placeholder('N/A'),
             ])
             ->filters([
                 SelectFilter::make('department_id')
-                    ->label('Department')
+                    ->label(__('messages.users.department'))
                     ->options(Department::all()->pluck('name', 'id'))
                     ->native(false)
                     ->searchable()
@@ -280,16 +291,16 @@ class ClientResource extends Resource
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
-                    ->modalHeading('View Client')
+                    ->modalHeading(__('messages.users.view_client'))
                     ->modalWidth('xl')
-                    ->tooltip('View'),
+                    ->tooltip(__('messages.common.view')),
 
                 EditAction::make()
                     ->iconButton()
-                    ->modalHeading('Edit Client')
+                    ->modalHeading(__('messages.users.edit_client'))
                     ->modalWidth('xl')
-                    ->tooltip('Edit')
-                    ->successNotificationTitle('Client updated successfully!')
+                    ->tooltip(__('messages.common.edit'))
+                    ->successNotificationTitle(__('messages.users.client_updated_successfully'))
                     ->mutateFormDataUsing(function (array $data, $record): array {
                         $user = $record->user;
 
@@ -302,7 +313,7 @@ class ClientResource extends Resource
                         if (!$user && !empty($data['active']) && $data['active'] === true) {
                             if (User::where('email', $data['email'])->exists()) {
                                 Notification::make()
-                                    ->title('Email already exists! Use another email.')
+                                    ->title(__('messages.users.email_exists'))
                                     ->danger()
                                     ->send();
 
@@ -337,20 +348,20 @@ class ClientResource extends Resource
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Client')
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_client'))
                     ->before(function ($record) {
                         $record->update([
                             'deleted_by' => auth()->id(),
                         ]);
                     })
-                    ->successNotificationTitle('Client deleted successfully!'),
+                    ->successNotificationTitle(__('messages.users.client_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Clients')
+                        ->modalHeading(__('messages.users.delete_selected_clients'))
                         ->before(function ($records) {
                             foreach ($records as $record) {
                                 $record->update([
@@ -358,7 +369,7 @@ class ClientResource extends Resource
                                 ]);
                             }
                         })
-                        ->successNotificationTitle('Clients deleted successfully!'),
+                        ->successNotificationTitle(__('messages.users.clients_deleted_successfully')),
                 ]),
             ]);
     }
@@ -374,7 +385,7 @@ class ClientResource extends Resource
     {
         return [
             Checkbox::make('active')
-                ->label('Want to create client panel ?')
+                ->label(__('messages.users.want_to_create_client_panel'))
                 ->columnSpanFull()
                 ->live()
                 ->visible(
@@ -383,7 +394,7 @@ class ClientResource extends Resource
                 ),
 
             Checkbox::make('change_password')
-                ->label('Want to change password ?')
+                ->label(__('messages.users.want_to_change_password'))
                 ->columnSpanFull()
                 ->live()
                 ->visible(
@@ -394,15 +405,15 @@ class ClientResource extends Resource
             TextInput::make('password')
                 ->label(function (string $operation, Get $get) {
                     if ($operation === 'edit' && $get('user_id')) {
-                        return 'New Password';
+                        return __('messages.users.new_password');
                     }
-                    return 'Password';
+                    return __('messages.users.password');
                 })
                 ->placeholder(function (string $operation, Get $get) {
                     if ($operation === 'edit' && $get('user_id')) {
-                        return 'Enter New Password';
+                        return __('messages.users.new_password');
                     }
-                    return 'Enter Password';
+                    return __('messages.users.password');
                 })
                 ->password()
                 ->minLength(8)
@@ -440,8 +451,8 @@ class ClientResource extends Resource
                 }),
 
             TextInput::make('confirm_password')
-                ->label('Confirm Password')
-                ->placeholder('Confirm Password')
+                ->label(__('messages.users.confirm_password'))
+                ->placeholder(__('messages.users.confirm_password'))
                 ->password()
                 ->same('password')
                 ->required(function (string $operation, Get $get) {
@@ -496,34 +507,34 @@ class ClientResource extends Resource
             ->modalWidth('md')
             ->label(function () use ($record) {
                 if (isset($record) && $record) {
-                    return 'Edit Client';
+                    return __('messages.users.edit_client');
                 } else {
-                    return 'New Client';
+                    return __('messages.users.new_client');
                 }
             })
             ->modalHeading(function () use ($record) {
                 if (isset($record) && $record) {
-                    return 'Edit Client';
+                    return __('messages.users.edit_client');
                 } else {
-                    return 'Create Client';
+                    return __('messages.users.create_client');
                 }
             })
             ->form([
                 TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->required(),
 
                 TextInput::make('email')
-                    ->label('Email')
-                    ->placeholder('Email')
+                    ->label(__('messages.common.email'))
+                    ->placeholder(__('messages.common.email'))
                     ->email()
                     ->unique(Client::class, 'email')
                     ->columnSpanFull()
                     ->required(),
 
                 Select::make('department_id')
-                    ->label('Department')
+                    ->label(__('messages.users.department'))
                     ->options(Department::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
@@ -537,7 +548,7 @@ class ClientResource extends Resource
                         'email' => $data['email'],
                     ]);
                     Notification::make()
-                        ->title('Client updated successfully!')
+                        ->title(__('messages.users.client_updated_successfully'))
                         ->success()
                         ->send();
                 } else {
@@ -559,7 +570,7 @@ class ClientResource extends Resource
                         ->log('New Client ' . $record->name . ' created');
 
                     Notification::make()
-                        ->title('Client created successfully!')
+                        ->title(__('messages.users.client_created_successfully'))
                         ->success()
                         ->send();
                 }

@@ -32,12 +32,12 @@ class GoogleRecaptcha extends Page
 
     public static function getNavigationLabel(): string
     {
-        return 'Google ReCAPTCHA';
+        return __('messages.settings.google_recaptcha');
     }
 
     public function getHeading(): string|Htmlable
     {
-        return 'Google ReCAPTCHA';
+        return __('messages.settings.google_recaptcha');
     }
 
     public ?array $data = [];
@@ -73,7 +73,7 @@ class GoogleRecaptcha extends Page
     {
         return [
             Action::make('save')
-                ->label('Save')
+                ->label(__('messages.common.save'))
                 ->submit('save')
                 ->action('save'),
         ];
@@ -87,21 +87,20 @@ class GoogleRecaptcha extends Page
                 Section::make([
 
                     Toggle::make('show_recaptcha')
-                        ->label('Show ReCAPTCHA')
+                        ->label(__('messages.common.show_recaptcha'))
                         ->live(),
 
                     TextInput::make('google_recaptcha_site_key')
-                        ->label('Site Key')
-                        ->placeholder('Site Key')
+                        ->label(__('messages.common.site_key'))
+                        ->placeholder(__('messages.common.site_key'))
                         ->required()
                         ->visible(fn(Get $get) => $get('show_recaptcha') == true),
 
                     TextInput::make('google_recaptcha_secret_key')
-                        ->label('Secret Key')
-                        ->placeholder('Secret Key')
+                        ->label(__('messages.common.secret_key'))
+                        ->placeholder(__('messages.common.secret_key'))
                         ->required()
                         ->visible(fn(Get $get) => $get('show_recaptcha') == true),
-
 
                 ])->columns(1)
             ])
@@ -131,7 +130,7 @@ class GoogleRecaptcha extends Page
 
             Notification::make()
                 ->success()
-                ->title('Google ReCAPTCHA updated successfully.')
+                ->title(__('messages.settings.google_recaptcha_updated_successfully'))
                 ->send();
         } catch (Exception $exception) {
             Notification::make()

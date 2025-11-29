@@ -11,11 +11,11 @@ class CustomDeleteAction extends DeleteAction
     {
         return $this
             ->iconButton()
-            ->label('Delete')
-            ->tooltip('Delete')
-            ->modalCancelActionLabel('Cancel')
-            ->modalSubmitActionLabel('Confirm')
-            ->modalDescription('Are you sure you would like to do this?')
+            ->label(__('messages.common.delete'))
+            ->tooltip(__('messages.common.delete'))
+            ->modalCancelActionLabel(__('messages.common.cancel'))
+            ->modalSubmitActionLabel(__('messages.common.confirm'))
+            ->modalDescription(__('messages.common.are_you_sure_you_would_like_to_do_this'))
             ->successRedirectUrl(function ($table, $action) use ($url) {
                 $action->getLivewire()->deselectAllTableRecords();
                 try {

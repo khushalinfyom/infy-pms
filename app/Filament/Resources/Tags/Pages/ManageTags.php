@@ -15,11 +15,11 @@ class ManageTags extends ManageRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Tag')
-                ->successNotificationTitle('Tag created successfully!')
+                ->label(__('messages.settings.new_tag'))
+                ->successNotificationTitle(__('messages.settings.tag_created_successfully'))
                 ->createAnother(false)
                 ->modalWidth('md')
-                ->modalHeading('Create Tag'),
+                ->modalHeading(__('messages.settings.create_tag')),
         ];
     }
 }

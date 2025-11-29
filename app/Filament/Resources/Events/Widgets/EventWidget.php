@@ -50,13 +50,15 @@ class EventWidget extends FullCalendarWidget
                 ->mountUsing(function (Event $record, Schema $form) {
                     $form->fill($record->toArray());
                 })
+                ->visible(auth()->user()->hasRole('Admin'))
                 ->successNotificationTitle('Event updated successfully!'),
 
             DeleteAction::make()
                 ->record(fn($livewire) => $livewire->getRecord())
                 ->modalHeading('Delete Event')
                 ->modalSubheading('Are you sure you want to delete this event?')
-                ->successNotificationTitle('Event deleted successfully!'),
+                ->successNotificationTitle('Event deleted successfully!')
+                ->visible(auth()->user()->hasRole('Admin')),
         ];
     }
 
@@ -94,7 +96,8 @@ class EventWidget extends FullCalendarWidget
                         ->columnSpanFull(),
                 ])
                     ->columns(2),
-            ]);
+            ])
+            ->visible(auth()->user()->hasRole('Admin'));
     }
 
     public function getFormSchema(): array

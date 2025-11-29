@@ -5,7 +5,7 @@
     />
 
     <div class="flex flex-col gap-1">
-        <span class="font-semibold text-gray-900">{{ $record->name }}</span>
+        <span class="font-semibold">{{ $record->name }}</span>
         <span class="text-gray-500 text-sm">{{ $record->email }}</span>
     </div>
 </div>

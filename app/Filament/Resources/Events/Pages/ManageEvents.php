@@ -22,7 +22,8 @@ class ManageEvents extends ManageRecords
                 ->successNotificationTitle('Event created successfully!')
                 ->after(function () {
                     $this->redirect($this->getResource()::getUrl('index'));
-                }),
+                })
+                ->visible(auth()->user()->hasRole('Admin')),
         ];
     }
 

@@ -14,11 +14,18 @@ class CustomResetPassword extends ResetPassword
         return $schema
             ->components([
                 $this->getEmailFormComponent()
-                    ->label(__('messages.user.email_address'))->placeholder(__('messages.user.email_address')),
+                    ->label(__('messages.common.email_address'))
+                    ->placeholder(__('messages.common.email_address')),
+
                 $this->getPasswordFormComponent()
-                    ->label(__('messages.user.password'))->placeholder(__('messages.user.password'))->extraAttributes(['class' => 'password-field']),
+                    ->label(__('messages.users.password'))
+                    ->placeholder(__('messages.users.password'))
+                    ->extraAttributes(['class' => 'password-field']),
+
                 $this->getPasswordConfirmationFormComponent()
-                    ->label(__('messages.user.confirm_password'))->placeholder(__('messages.user.confirm_password'))->extraAttributes(['class' => 'password-field']),
+                    ->label(__('messages.users.confirm_password'))
+                    ->placeholder(__('messages.users.confirm_password'))
+                    ->extraAttributes(['class' => 'password-field']),
             ]);
     }
 
@@ -26,7 +33,7 @@ class CustomResetPassword extends ResetPassword
     {
         return [
             $this->getResetPasswordFormAction()
-                ->label(__('messages.home.reset_password'))
+                ->label(__('messages.users.reset_password'))
                 ->extraAttributes(['class' => 'w-full flex items-center justify-center space-x-3 form-submit']),
         ];
     }
