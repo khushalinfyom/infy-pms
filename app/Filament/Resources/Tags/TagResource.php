@@ -23,7 +23,17 @@ class TagResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Settings';
+        return __('messages.settings.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.settings.tags');
+    }
+
+    public static function getLabel(): ?string
+    {
+        return __('messages.settings.tags');
     }
 
     protected static ?string $recordTitleAttribute = 'Tag';
@@ -42,8 +52,8 @@ class TagResource extends Resource
                     ->default(auth()->user()->id),
 
                 TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->required()
                     ->unique(),
             ])
@@ -56,43 +66,43 @@ class TagResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No tags found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'Tags']);
                 } else {
-                    return 'No tags found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Tags', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('Tag')
             ->columns([
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('messages.common.name'))
                     ->sortable()
                     ->searchable(),
             ])
             ->recordActions([
 
                 EditAction::make()
-                    ->tooltip('Edit')
+                    ->tooltip(__('messages.common.edit'))
                     ->iconButton()
                     ->modalWidth('md')
-                    ->modalHeading('Edit Tag')
-                    ->successNotificationTitle('Tag updated successfully!'),
+                    ->modalHeading(__('messages.settings.edit_tag'))
+                    ->successNotificationTitle(__('messages.settings.tag_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Tag')
-                    ->successNotificationTitle('Tag deleted successfully!'),
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.settings.delete_tag'))
+                    ->successNotificationTitle(__('messages.settings.tag_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Tags')
-                        ->successNotificationTitle('Tags deleted successfully!'),
+                        ->modalHeading(__('messages.settings.delete_tags'))
+                        ->successNotificationTitle(__('messages.settings.tags_deleted_successfully')),
                 ]),
             ]);
     }

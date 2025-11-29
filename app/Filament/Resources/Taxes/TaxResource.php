@@ -22,7 +22,17 @@ class TaxResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Settings';
+        return __('messages.settings.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.settings.taxes');
+    }
+
+    public static function getLabel(): ?string
+    {
+        return __('messages.settings.taxes');
     }
 
     public static function canViewAny(): bool
@@ -38,13 +48,13 @@ class TaxResource extends Resource
             ->components([
 
                 TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->required(),
 
                 TextInput::make('tax')
-                    ->label('Tax')
-                    ->placeholder('Tax')
+                    ->label(__('messages.settings.tax'))
+                    ->placeholder(__('messages.settings.tax'))
                     ->numeric()
                     ->required(),
             ])
@@ -57,49 +67,49 @@ class TaxResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No taxes found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'Taxes']);
                 } else {
-                    return 'No taxes found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Taxes', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('Tax')
             ->columns([
 
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('messages.common.name'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('tax')
-                    ->label('Tax')
+                    ->label(__('messages.settings.tax'))
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => $state . ' %'),
+                    ->formatStateUsing(fn($state) => $state . ' %'),
             ])
             ->recordActions([
 
                 EditAction::make()
-                    ->tooltip('Edit')
+                    ->tooltip(__('messages.common.edit'))
                     ->iconButton()
                     ->modalWidth('md')
-                    ->modalHeading('Edit Tax')
-                    ->successNotificationTitle('Tax updated successfully!'),
+                    ->modalHeading(__('messages.settings.edit_tax'))
+                    ->successNotificationTitle(__('messages.settings.tax_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Tax')
-                    ->successNotificationTitle('Tax deleted successfully!'),
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.settings.delete_tax'))
+                    ->successNotificationTitle(__('messages.settings.tax_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Taxes')
-                        ->successNotificationTitle('Taxes deleted successfully!'),
+                        ->modalHeading(__('messages.settings.delete_taxes'))
+                        ->successNotificationTitle(__('messages.settings.taxes_deleted_successfully')),
                 ]),
             ]);
     }

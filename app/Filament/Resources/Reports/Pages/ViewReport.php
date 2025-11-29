@@ -23,6 +23,13 @@ class ViewReport extends Page
     protected function getHeaderActions(): array
     {
         return [
+
+            Action::make('create_invoice')
+                ->label('Create Invoice')
+                ->icon('heroicon-s-document-text')
+                ->color('success')
+                ->url(ReportResource::getUrl('createInvoice', ['record' => $this->record->id])),
+
             Action::make('back')
                 ->label('Back')
                 ->icon('heroicon-s-arrow-left')

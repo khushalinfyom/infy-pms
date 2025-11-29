@@ -3,8 +3,6 @@
 namespace App\Filament\Resources\Projects;
 
 use App\Enums\AdminPanelSidebar;
-use App\Filament\Resources\Projects\Pages\CreateProject;
-use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\Schemas\ProjectForm;
@@ -16,8 +14,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProjectResource extends Resource
 {
@@ -32,6 +28,11 @@ class ProjectResource extends Resource
     public static function canViewAny(): bool
     {
         return authUserHasPermission('manage_projects');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.projects.projects');
     }
 
     public static function form(Schema $schema): Schema

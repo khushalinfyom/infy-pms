@@ -12,11 +12,16 @@ class SettingsCluster extends Cluster
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Settings';
+        return __('messages.settings.settings');
     }
 
     public static function canAccess(): bool
     {
         return authUserHasPermission('manage_settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.settings.settings');
     }
 }

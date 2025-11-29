@@ -20,15 +20,15 @@ class ManageClients extends ManageRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Client')
+                ->label(__('messages.users.new_client'))
                 ->createAnother(false)
-                ->modalHeading('Create Client')
+                ->modalHeading(__('messages.users.create_client'))
                 ->modalWidth('xl')
                 ->action(function (array $data) {
 
                     if (User::where('email', $data['email'])->exists()) {
                         Notification::make()
-                            ->title('Email already exists! Use another email.')
+                            ->title(__('messages.users.email_exists'))
                             ->danger()
                             ->send();
 
@@ -66,7 +66,7 @@ class ManageClients extends ManageRecords
                         ->useLog('New Client Created')
                         ->log('New Client ' . $client->name . ' created');
                 })
-                ->successNotificationTitle('Client created successfully!'),
+                ->successNotificationTitle(__('messages.users.client_created_successfully')),
         ];
     }
 }

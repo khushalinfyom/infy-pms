@@ -37,12 +37,12 @@ class InvoiceTemplate extends Page
 
     public static function getNavigationLabel(): string
     {
-        return 'Invoice Template';
+        return __('messages.settings.invoice_template');
     }
 
     public function getHeading(): string|Htmlable
     {
-        return 'Invoice Template';
+        return __('messages.settings.invoice_template');
     }
 
     public ?array $data = [];
@@ -77,7 +77,7 @@ class InvoiceTemplate extends Page
     {
         return [
             Action::make('save')
-                ->label('Save')
+                ->label(__('messages.common.save'))
                 ->submit('save')
                 ->action('save'),
         ];
@@ -95,7 +95,7 @@ class InvoiceTemplate extends Page
 
                             Select::make('default_invoice_template')
                                 ->options(Setting::INVOICE__TEMPLATE_ARRAY)
-                                ->label('Invoice Template')
+                                ->label(__('messages.settings.invoice_template'))
                                 ->native(false)
                                 ->extraAttributes([
                                     'style' => 'width: 300px;',
@@ -113,8 +113,8 @@ class InvoiceTemplate extends Page
                                 ->searchable(),
 
                             ColorPicker::make('default_invoice_color')
-                                ->label('Invoice Color')
-                                ->placeholder('Invoice Color')
+                                ->label(__('messages.settings.invoice_color'))
+                                ->placeholder(__('messages.settings.invoice_color'))
                                 ->required()
                                 ->live(),
                         ])
@@ -163,7 +163,7 @@ class InvoiceTemplate extends Page
 
             Notification::make()
                 ->success()
-                ->title('Invoice Template updated successfully.')
+                ->title(__('messages.settings.invoice_template_updated_successfully'))
                 ->send();
         } catch (Exception $exception) {
             Notification::make()

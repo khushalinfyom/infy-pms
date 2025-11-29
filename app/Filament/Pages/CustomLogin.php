@@ -27,9 +27,18 @@ class CustomLogin extends Login
     {
         return $schema
             ->components([
-                $this->getEmailFormComponent()->label('Email Address')->placeholder('Email Address'),
-                $this->getPasswordFormComponent()->label('Password')->placeholder('Password')->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3"> {{ "Forgot password?" }}</x-filament::link>')) : null)->extraAttributes(['class' => 'password-field']),
-                $this->getRememberFormComponent()->label('Remember Me'),
+                $this->getEmailFormComponent()
+                    ->label(__('messages.common.email_address'))
+                    ->placeholder(__('messages.common.email_address')),
+
+                $this->getPasswordFormComponent()
+                    ->label(__('messages.users.password'))
+                    ->placeholder(__('messages.users.password'))
+                    ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3"> {{ "Forgot password?" }}</x-filament::link>')) : null)
+                    ->extraAttributes(['class' => 'password-field']),
+
+                $this->getRememberFormComponent()
+                    ->label(__('messages.users.remember_me')),
             ]);
     }
 
@@ -38,7 +47,7 @@ class CustomLogin extends Login
         return [
             $this->getAuthenticateFormAction()
                 ->extraAttributes(['class' => 'w-full flex items-center justify-center space-x-3 form-submit'])
-                ->label('Log In'),
+                ->label(__('messages.users.login')),
         ];
     }
 
@@ -75,7 +84,7 @@ class CustomLogin extends Login
             if ($user) {
                 if ($user->email_verified_at == null) {
                     Notification::make()
-                        ->title('Email Not Verified')
+                        ->title(__('messages.common.email_not_verified'))
                         ->danger()
                         ->send();
 
@@ -83,7 +92,7 @@ class CustomLogin extends Login
                 }
                 if ($user->is_active == 0) {
                     Notification::make()
-                        ->title('Account not Activated')
+                        ->title(__('messages.users.account_not_activated'))
                         ->danger()
                         ->send();
 
