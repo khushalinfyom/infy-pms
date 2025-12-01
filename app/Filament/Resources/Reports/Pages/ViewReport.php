@@ -25,13 +25,13 @@ class ViewReport extends Page
         return [
 
             Action::make('create_invoice')
-                ->label('Create Invoice')
+                ->label(__('messages.users.create_invoice'))
                 ->icon('heroicon-s-document-text')
                 ->color('success')
                 ->url(ReportResource::getUrl('createInvoice', ['record' => $this->record->id])),
 
             Action::make('back')
-                ->label('Back')
+                ->label(__('messages.common.back'))
                 ->icon('heroicon-s-arrow-left')
                 ->url(ReportResource::getUrl('index'))
                 ->color('gray'),

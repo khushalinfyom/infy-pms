@@ -12,9 +12,14 @@ class CreateRole extends CreateRecord
 
     protected static bool $canCreateAnother = false;
 
+    public function getTitle(): string
+    {
+        return __('messages.users.create_role');
+    }
+
     protected function getCreatedNotificationTitle(): ?string
     {
-        return 'Role Created Successfully';
+        return __('messages.users.role_created_successfully');
     }
 
     protected function getRedirectUrl(): string

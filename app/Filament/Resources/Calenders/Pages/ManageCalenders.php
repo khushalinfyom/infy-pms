@@ -20,6 +20,6 @@ class ManageCalenders extends ManageRecords
 
     public function getTitle(): string | Htmlable
     {
-        return 'Calender';
+        return __('messages.users.calender');
     }
 }

@@ -31,6 +31,11 @@ class RoleResource extends Resource
         return authUserHasPermission('manage_roles');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.roles');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return RoleForm::configure($schema);

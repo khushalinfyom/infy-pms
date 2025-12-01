@@ -19,7 +19,7 @@ class EditReport extends EditRecord
     {
         return [
             Action::make('back')
-                ->label('Back')
+                ->label(__('messages.common.back'))
                 ->icon('heroicon-s-arrow-left')
                 ->url(ReportResource::getUrl('index'))
                 ->color('gray'),
@@ -28,12 +28,12 @@ class EditReport extends EditRecord
 
     public function getTitle(): string
     {
-        return 'Edit Report';
+        return __('messages.users.edit_report');
     }
 
     protected function getSavedNotificationTitle(): ?string
     {
-        return 'Report Updated Successfully';
+        return __('messages.users.report_updated_successfully');
     }
 
     protected function getRedirectUrl(): ?string

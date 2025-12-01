@@ -33,6 +33,11 @@ class ReportResource extends Resource
         return authUserHasPermission('manage_reports');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.reports');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return ReportForm::configure($schema);

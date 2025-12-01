@@ -50,6 +50,16 @@ class UserResource extends Resource
         return authUserHasPermission('manage_users');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.users');
+    }
+
+    public static function getLabel(): ?string
+    {
+        return __('messages.users.users');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -59,35 +69,35 @@ class UserResource extends Resource
                     ->default(auth()->user()->id),
 
                 TextInput::make('name')
-                    ->label('Name')
-                    ->placeholder('Name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
                     ->required(),
 
                 PhoneInput::make('phone')
                     ->defaultCountry('IN')
                     ->separateDialCode(true)
                     ->countryStatePath('region_code')
-                    ->label('Phone')
+                    ->label(__('messages.common.phone'))
                     ->rules(function (Get $get) {
                         return [
                             'phone:AUTO,' . strtoupper($get('prefix_code')),
                         ];
                     })
                     ->validationMessages([
-                        'phone' => 'Please enter a valid phone number.',
+                        'phone' => __('messages.settings.phone_number_validation'),
                     ]),
 
                 TextInput::make('email')
-                    ->label('Email')
-                    ->placeholder('Email')
+                    ->label(__('messages.common.email'))
+                    ->placeholder(__('messages.common.email'))
                     ->email()
                     ->unique()
                     ->columnSpanFull()
                     ->required(),
 
                 TextInput::make('password')
-                    ->label('New Password')
-                    ->placeholder('New Password')
+                    ->label(__('messages.users.new_password'))
+                    ->placeholder(__('messages.users.new_password'))
                     ->password()
                     ->minLength(8)
                     ->revealable()
@@ -96,8 +106,8 @@ class UserResource extends Resource
                     }),
 
                 TextInput::make('password_confirmation')
-                    ->label('Confirm Password')
-                    ->placeholder('Confirm Password')
+                    ->label(__('messages.users.confirm_password'))
+                    ->placeholder(__('messages.users.confirm_password'))
                     ->password()
                     ->revealable()
                     ->same('password')
@@ -106,7 +116,7 @@ class UserResource extends Resource
                     }),
 
                 Select::make('projects')
-                    ->label('Projects')
+                    ->label(__('messages.projects.projects'))
                     ->multiple()
                     ->relationship('projects', 'name')
                     ->preload()
@@ -114,7 +124,7 @@ class UserResource extends Resource
                     ->columnSpanFull(),
 
                 Select::make('role_id')
-                    ->label('Role')
+                    ->label(__('messages.users.role'))
                     ->options(Role::pluck('name', 'id'))
                     ->searchable()
                     ->preload()
@@ -126,18 +136,18 @@ class UserResource extends Resource
                     }),
 
                 TextInput::make('salary')
-                    ->label('Salary')
+                    ->label(__('messages.users.salary'))
                     ->numeric()
-                    ->placeholder('Salary'),
+                    ->placeholder(__('messages.users.salary')),
 
                 SpatieMediaLibraryFileUpload::make('image_path')
-                    ->label('Profile')
+                    ->label(__('messages.common.profile'))
                     ->collection(User::IMAGE_PATH)
                     ->image()
                     ->imageEditor(),
 
                 Toggle::make('is_active')
-                    ->label('Status')
+                    ->label(__('messages.common.status'))
                     ->inline(false)
                     ->default(true),
 
@@ -153,7 +163,7 @@ class UserResource extends Resource
                 Group::make([
 
                     SpatieMediaLibraryImageEntry::make('image_path')
-                        ->label('Profile')
+                        ->label(__('messages.common.profile'))
                         ->collection(User::IMAGE_PATH)
                         ->circular()
                         ->width(90)
@@ -163,14 +173,15 @@ class UserResource extends Resource
                     Group::make([
 
                         TextEntry::make('name')
-                            ->label('Name')
+                            ->label(__('messages.common.name'))
                             ->hiddenLabel(),
 
                         TextEntry::make('email')
-                            ->label('Email')
+                            ->label(__('messages.common.email'))
                             ->hiddenLabel(),
 
                         TextEntry::make('phone')
+                            ->label(__('messages.common.phone'))
                             ->placeholder('N/A')
                             ->inlineLabel()
                             ->formatStateUsing(fn($record) => getPhoneNumberFormate($record->phone ?? '', $record->region_code ?? null)),
@@ -182,24 +193,24 @@ class UserResource extends Resource
                     ->columnSpanFull(),
 
                 TextEntry::make('status')
-                    ->label('Status')
+                    ->label(__('messages.common.status'))
                     ->getStateUsing(fn($record) => $record->is_active ? 'Active' : 'Inactive'),
 
                 TextEntry::make('salary')
-                    ->label('Salary')
+                    ->label(__('messages.users.salary'))
                     ->placeholder('N/A'),
 
                 TextEntry::make('role_name')
-                    ->label('Role')
+                    ->label(__('messages.users.role'))
                     ->getStateUsing(fn($record) => $record->roles->first()?->name ?? 'N/A'),
 
                 TextEntry::make('pending_task')
-                    ->label('Pending Tasks')
+                    ->label(__('messages.projects.pending_tasks'))
                     ->placeholder('N/A')
                     ->default(0),
 
                 TextEntry::make('projects')
-                    ->label('Projects')
+                    ->label(__('messages.projects.projects'))
                     ->html()
                     ->getStateUsing(fn($record) => $record->projects->pluck('name')->implode('<br>'))
                     ->placeholder('N/A')
@@ -215,33 +226,33 @@ class UserResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No users found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'users']);
                 } else {
-                    return 'No users found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'users', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('User')
             ->columns([
 
                 UserImageColumn::make('profile')
-                    ->label('User')
+                    ->label(__('messages.users.user'))
                     ->sortable()
                     ->searchable(['name', 'email']),
 
                 ToggleColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('messages.users.active'))
                     ->afterStateUpdated(function () {
                         Notification::make()
-                            ->title('User active status updated successfully!')
+                            ->title(__('messages.users.active_status_updated_successfully'))
                             ->success()
                             ->send();
                     }),
 
                 TextColumn::make('email_verified_at')
-                    ->label('Projects')
+                    ->label(__('messages.projects.projects'))
                     ->formatStateUsing(function (User $record) {
                         return $record->projects()->count();
                     })
@@ -249,19 +260,19 @@ class UserResource extends Resource
                     ->alignCenter(),
 
                 TextColumn::make('task')
-                    ->label('Task')
+                    ->label(__('messages.projects.task'))
                     ->default(0)
                     ->badge()
                     ->alignCenter(),
 
                 TextColumn::make('created_at')
-                    ->label('Created At')
+                    ->label(__('messages.projects.created_at'))
                     ->dateTime('d M, Y h:i A'),
             ])
             ->filters([
 
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label(__('messages.common.status'))
                     ->options(User::STATUS)
                     ->native(false)
                     ->default(User::ACTIVE)
@@ -273,7 +284,6 @@ class UserResource extends Resource
                             $query->where('is_active', false)->whereNull('deleted_at');
                         } elseif ($status == User::ARCHIVED) {
                             $query->whereNotNull('deleted_at');
-                            // dd($query->get());
                         }
                         return $query;
                     }),
@@ -285,51 +295,51 @@ class UserResource extends Resource
             ->recordActions([
 
                 ViewAction::make()
-                    ->tooltip('View')
+                    ->tooltip(__('messages.common.view'))
                     ->iconButton()
                     ->modalWidth('md')
-                    ->modalHeading('View User'),
+                    ->modalHeading(__('messages.users.view_user')),
 
                 EditAction::make()
-                    ->tooltip('Edit')
+                    ->tooltip(__('messages.common.edit'))
                     ->iconButton()
                     ->modalWidth('md')
-                    ->modalHeading('Edit User')
-                    ->successNotificationTitle('User updated successfully!'),
+                    ->modalHeading(__('messages.users.edit_user'))
+                    ->successNotificationTitle(__('messages.users.user_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete User')
-                    ->successNotificationTitle('User deleted successfully!'),
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_user'))
+                    ->successNotificationTitle(__('messages.users.user_deleted_successfully')),
 
                 ForceDeleteAction::make()
-                    ->tooltip('Force Delete')
+                    ->tooltip(__('messages.users.force_delete'))
                     ->iconButton()
-                    ->modalHeading('Force Delete User')
-                    ->successNotificationTitle('User force deleted successfully!'),
+                    ->modalHeading(__('messages.users.force_delete_user'))
+                    ->successNotificationTitle(__('messages.users.user_force_deleted_successfully')),
 
                 RestoreAction::make()
-                    ->tooltip('Restore')
+                    ->tooltip(__('messages.users.restore'))
                     ->iconButton()
-                    ->modalHeading('Restore User')
-                    ->successNotificationTitle('User restored successfully!'),
+                    ->modalHeading(__('messages.users.restore_user'))
+                    ->successNotificationTitle(__('messages.users.user_restored_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Users')
-                        ->successNotificationTitle('Users deleted successfully!'),
+                        ->modalHeading(__('messages.users.delete_selected_users'))
+                        ->successNotificationTitle(__('messages.users.users_deleted_successfully')),
 
                     ForceDeleteBulkAction::make()
-                        ->modalHeading('Force Delete Users')
-                        ->successNotificationTitle('Users force deleted successfully!'),
+                        ->modalHeading(__('messages.users.force_delete_users'))
+                        ->successNotificationTitle(__('messages.users.users_force_deleted_successfully')),
 
                     RestoreBulkAction::make()
-                        ->modalHeading('Restore Users')
-                        ->successNotificationTitle('Users restored successfully!'),
+                        ->modalHeading(__('messages.users.restore_users'))
+                        ->successNotificationTitle(__('messages.users.users_restored_successfully')),
                 ]),
             ]);
     }

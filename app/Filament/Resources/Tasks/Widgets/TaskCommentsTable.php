@@ -27,55 +27,56 @@ class TaskCommentsTable extends TableWidget
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No Comments found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'comments']);
                 } else {
-                    return 'No Comments found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'comments', 'search' => $livewire->tableSearch]);
                 }
             })
             ->query(fn(): Builder => Comment::query()->where('task_id', $this->record->id))
             ->columns([
                 TextColumn::make('comment')
-                    ->label('Comment')
+                    ->label(__('messages.projects.comment'))
                     ->html()
                     ->wrap(),
 
                 TextColumn::make('created_by')
-                    ->label('Created By')
+                    ->label(__('messages.projects.created_by'))
                     ->getStateUsing(fn($record) => $record->createdUser->name),
 
                 TextColumn::make('created_at')
-                    ->label('Created On')
+                    ->label(__('messages.projects.created_on'))
                     ->getStateUsing(fn($record) => Carbon::parse($record->created_at)->diffForHumans()),
             ])
             ->headerActions([
                 CreateAction::make('create_comment')
                     ->model(Comment::class)
                     ->icon('heroicon-s-plus')
-                    ->label('New Comment')
+                    ->label(__('messages.projects.new_comment'))
                     ->modalWidth('lg')
-                    ->modalHeading('Create Comment')
+                    ->modalHeading(__('messages.projects.create_comment'))
                     ->form($this->createCommentForm())
                     ->createAnother(false)
-                    ->successNotificationTitle('Comment created successfully!'),
+                    ->successNotificationTitle(__('messages.projects.comment_created_successfully')),
             ])
             ->recordActions([
                 EditAction::make('edit')
                     ->label('Edit')
                     ->iconButton()
+                    ->tooltip(__('messages.common.edit'))
                     ->modalWidth('md')
-                    ->modalHeading('Edit Comment')
+                    ->modalHeading(__('messages.projects.edit_comment'))
                     ->form($this->createCommentForm())
-                    ->successNotificationTitle('Comment updated successfully!'),
+                    ->successNotificationTitle(__('messages.projects.comment_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Comment')
-                    ->successNotificationTitle('Comment deleted successfully!'),
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.projects.delete_comment'))
+                    ->successNotificationTitle(__('messages.projects.comment_deleted_successfully')),
             ]);
     }
 
@@ -89,8 +90,8 @@ class TaskCommentsTable extends TableWidget
                 ->default(auth()->user()->id),
 
             RichEditor::make('comment')
-                ->label('Comment')
-                ->placeholder('Comment')
+                ->label(__('messages.projects.comment'))
+                ->placeholder(__('messages.projects.comment'))
                 ->columnSpanFull()
                 ->extraAttributes(['style' => 'min-height: 200px;'])
                 ->toolbarButtons([

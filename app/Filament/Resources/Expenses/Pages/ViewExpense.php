@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Expenses\Pages;
 
 use App\Filament\Resources\Expenses\ExpenseResource;
 use Filament\Actions\Action;
-use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewExpense extends ViewRecord
@@ -15,7 +14,7 @@ class ViewExpense extends ViewRecord
     {
         return [
             Action::make('back')
-                ->label('Back')
+                ->label(__('messages.common.back'))
                 ->icon('heroicon-s-arrow-left')
                 ->url(ExpenseResource::getUrl('index'))
                 ->color('gray'),
@@ -24,6 +23,6 @@ class ViewExpense extends ViewRecord
 
     public function getTitle(): string
     {
-        return 'View Expense';
+        return __('messages.users.view_expense');
     }
 }

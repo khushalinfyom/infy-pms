@@ -33,20 +33,20 @@ class ReportForm
                         Group::make([
 
                             TextInput::make('name')
-                                ->label('Name')
-                                ->placeholder('Name')
+                                ->label(__('messages.common.name'))
+                                ->placeholder(__('messages.common.name'))
                                 ->required(),
 
                             DatePicker::make('start_date')
-                                ->label('Start Date')
-                                ->placeholder('Start Date')
+                                ->label(__('messages.settings.start_date'))
+                                ->placeholder(__('messages.settings.start_date'))
                                 ->native(false)
                                 ->maxDate(today())
                                 ->required(),
 
                             DatePicker::make('end_date')
-                                ->label('End Date')
-                                ->placeholder('End Date')
+                                ->label(__('messages.settings.end_date'))
+                                ->placeholder(__('messages.settings.end_date'))
                                 ->native(false)
                                 ->maxDate(today())
                                 ->required()
@@ -57,7 +57,7 @@ class ReportForm
                             ->columnSpanFull(),
 
                         Select::make('department_id')
-                            ->label('Department')
+                            ->label(__('messages.users.department'))
                             ->options(Department::query()->pluck('name', 'id'))
                             ->searchable()
                             ->reactive()
@@ -72,7 +72,7 @@ class ReportForm
                             ),
 
                         Select::make('client_id')
-                            ->label('Client')
+                            ->label(__('messages.users.client'))
                             ->options(
                                 fn(callable $get) =>
                                 Client::query()
@@ -91,7 +91,7 @@ class ReportForm
                             ),
 
                         Select::make('project_ids')
-                            ->label('Projects')
+                            ->label(__('messages.projects.projects'))
                             ->multiple()
                             ->searchable()
                             ->options(
@@ -108,7 +108,7 @@ class ReportForm
                             ->reactive(),
 
                         Select::make('user_ids')
-                            ->label('Users')
+                            ->label(__('messages.users.users'))
                             ->multiple()
                             ->searchable()
                             ->options(function (callable $get) {
@@ -129,7 +129,7 @@ class ReportForm
                             ),
 
                         Select::make('tag_ids')
-                            ->label('Tags')
+                            ->label(__('messages.settings.tags'))
                             ->multiple()
                             ->searchable()
                             ->options(Tag::query()->pluck('name', 'id'))
@@ -139,11 +139,11 @@ class ReportForm
                             ),
 
                         Radio::make('report_type')
-                            ->label('Report Type')
+                            ->label(__('messages.users.report_type'))
                             ->default(Report::DYNAMIC_REPORT)
                             ->options([
-                                Report::DYNAMIC_REPORT => 'Dynamic',
-                                Report::STATIC_REPORT => 'Static',
+                                Report::DYNAMIC_REPORT => __('messages.users.dynamic'),
+                                Report::STATIC_REPORT => __('messages.users.static'),
                             ])
                             ->required()
                             ->inline(),

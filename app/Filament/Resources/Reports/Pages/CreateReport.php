@@ -19,12 +19,12 @@ class CreateReport extends CreateRecord
 
     public function getTitle(): string
     {
-        return 'Create Report';
+        return __('messages.users.create_report');
     }
 
     protected function getCreatedNotificationTitle(): ?string
     {
-        return 'Report Created Successfully';
+        return __('messages.users.report_created_successfully');
     }
 
     protected function getRedirectUrl(): string
@@ -99,34 +99,6 @@ class CreateReport extends CreateRecord
                 ]);
             }
         }
-
-        // if (!empty($data['department_id'])) {
-        //     $report->filters()->create([
-        //         'param_type' => Department::class,
-        //         'param_id' => $data['department_id'],
-        //     ]);
-        // }
-
-        // if (!empty($data['client_id'])) {
-        //     $report->filters()->create([
-        //         'param_type' => Client::class,
-        //         'param_id' => $data['client_id'],
-        //     ]);
-        // }
-
-        // foreach ($data['project_ids'] ?? [] as $projectId) {
-        //     $report->filters()->create([
-        //         'param_type' => Project::class,
-        //         'param_id' => $projectId,
-        //     ]);
-        // }
-
-        // foreach ($data['user_ids'] ?? [] as $userId) {
-        //     $report->filters()->create([
-        //         'param_type' => User::class,
-        //         'param_id' => $userId,
-        //     ]);
-        // }
 
         foreach ($data['tag_ids'] ?? [] as $tagId) {
             $report->filters()->create([

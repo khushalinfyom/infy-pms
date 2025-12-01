@@ -18,67 +18,73 @@ class InvoicesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordAction(null)
+            ->paginated([10, 25, 50, 100])
+            ->defaultSort('id', 'desc')
+            ->recordActionsColumnLabel(__('messages.common.action'))
+            ->emptyStateHeading(function ($livewire) {
+                if (empty($livewire->tableSearch)) {
+                    return __('messages.common.empty_table_heading', ['table' => 'invoices']);
+                } else {
+                    return __('messages.common.empty_table_search_heading', ['table' => 'invoices', 'search' => $livewire->tableSearch]);
+                }
+            })
             ->columns([
-                TextColumn::make('name')
-                    ->searchable(),
+
                 TextColumn::make('invoice_number')
+                    ->label('Invoice Number')
+                    ->formatStateUsing(function ($state, $record) {
+                        return 'INV-' . $record->invoice_number;
+                    })
                     ->searchable(),
-                TextColumn::make('issue_date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('due_date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('total_hour')
+
+                TextColumn::make('name')
+                    ->label('Name')
                     ->searchable(),
-                TextColumn::make('discount')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('tax_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('status')
-                    ->numeric()
-                    ->sortable(),
+
+                TextColumn::make('invoiceProjects.name')
+                    ->label('Project')
+                    ->wrap()
+                    ->placeholder('N/A'),
+
                 TextColumn::make('amount')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('sub_total')
-                    ->numeric()
-                    ->sortable(),
-                IconColumn::make('is_default')
-                    ->boolean(),
-                TextColumn::make('created_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('discount_type')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Amount'),
+
+                TextColumn::make('due_date')
+                    ->label('Due Date')
+                    ->date()
+                    ->placeholder('N/A'),
             ])
             ->filters([
-                TrashedFilter::make(),
+                // TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ViewAction::make()
+                    ->tooltip(__('messages.common.view'))
+                    ->iconButton()
+                    ->modalHeading(__('messages.users.view_department'))
+                    ->modalWidth('md'),
+
+                EditAction::make()
+                    ->tooltip(__('messages.common.edit'))
+                    ->iconButton()
+                    ->modalHeading(__('messages.users.edit_department'))
+                    ->modalWidth('xl')
+                    ->successNotificationTitle(__('messages.users.department_updated_successfully')),
+
+                \App\Filament\Actions\CustomDeleteAction::make()
+                    ->setCommonProperties()
+                    ->iconButton()
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_department'))
+                    ->successNotificationTitle(__('messages.users.department_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    \App\Filament\Actions\CustomDeleteBulkAction::make()
+                        ->setCommonProperties()
+                        ->modalHeading(__('messages.users.delete_selected_departments'))
+                        ->successNotificationTitle(__('messages.users.departments_deleted_successfully')),
                 ]),
             ]);
     }

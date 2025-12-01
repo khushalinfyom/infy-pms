@@ -20,11 +20,11 @@ class ExpenseInfolist
                     ->schema([
 
                         TextEntry::make('date')
-                            ->label('Date')
+                            ->label(__('messages.settings.date'))
                             ->date('jS M, Y'),
 
                         TextEntry::make('amount')
-                            ->label('Amount')
+                            ->label(__('messages.settings.amount'))
                             ->numeric()
                             ->formatStateUsing(function ($state, $record) {
                                 if (! $record->project) {
@@ -37,37 +37,37 @@ class ExpenseInfolist
                             }),
 
                         TextEntry::make('category')
-                            ->label('Category')
+                            ->label(__('messages.settings.category'))
                             ->formatStateUsing(function ($state, $record) {
                                 return Expense::CATEGORY[$state] ?? $state;
                             }),
 
                         TextEntry::make('client.name')
-                            ->label('Client'),
+                            ->label(__('messages.users.client')),
 
                         TextEntry::make('project.name')
-                            ->label('Project'),
+                            ->label(__('messages.projects.project')),
 
                         TextEntry::make('created_by')
-                            ->label('Created By')
+                            ->label(__('messages.projects.created_by'))
                             ->formatStateUsing(function ($state, $record) {
                                 return $record->user->name;
                             }),
 
                         TextEntry::make('billable')
-                            ->label('Finance')
+                            ->label(__('messages.settings.finance'))
                             ->formatStateUsing(function ($state, $record) {
-                                return $state ? 'Billable' : 'Non-Billable';
+                                return $state ? __('messages.settings.billable') : __('messages.settings.non_billable');
                             })
                             ->badge(),
 
                         TextEntry::make('description')
-                            ->label('Description')
+                            ->label(__('messages.common.description'))
                             ->html()
                             ->columnSpanFull(),
 
                         SpatieMediaLibraryImageEntry::make('expense_attachments')
-                            ->label('Attachments')
+                            ->label(__('messages.projects.attachments'))
                             ->columnSpanFull()
                             ->disk(config('app.media_disk'))
                             ->collection(Expense::ATTACHMENT_PATH)

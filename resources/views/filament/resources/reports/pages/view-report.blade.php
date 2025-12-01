@@ -162,7 +162,7 @@
     <div x-data="{ open: false }" class="flex items-center justify-end w-full gap-1">
 
         <div class="font-bold text-xl">
-            Note: Cost is calculated based on salary.
+            {{ __('messages.users.report_note') }}
         </div>
 
         <div class="relative" @mouseenter="open = true" @mouseleave="open = false">
@@ -172,10 +172,7 @@
                 class="absolute right-0 mb-1 mt-2
                    w-max max-w-xs p-2 text-sm bg-gray-800 text-white
                    rounded shadow-lg z-50">
-                DaySalary = User Salary / WorkingDayOfMonth (Setting);
-                HourSalary = DaySalary / WorkingHourOfDay (Setting);
-                MinuteSalary = HourSalary / 60;
-                Cost = round(MinuteSalary * Task minutes);
+                {{ __('messages.users.report_note_hint') }}
             </div>
         </div>
 
@@ -280,7 +277,7 @@
                         <div>
                             {{ formatDuration($departmentTotalMinutes) }}
                             ({{ number_format($departmentPercentage, 2) }} %)
-                            – [Cost: {{ number_format($departmentCost, 2) }}]
+                            – [{{ __('messages.users.cost') }}: {{ number_format($departmentCost, 2) }}]
                         </div>
 
                         <div class="relative" @mouseenter="open = true" @mouseleave="open = false">
@@ -288,7 +285,7 @@
 
                             <div x-show="open" x-transition
                                 class="absolute right-0 mb-1 bottom-5 w-max max-w-xs p-2 text-sm bg-gray-800 text-white rounded shadow-lg z-50">
-                                The cost of all users will be counted and its total will be shown here.
+                                {{ __('messages.users.department_hint') }}
                             </div>
                         </div>
                     </div>
@@ -390,7 +387,7 @@
                                 <div class="text-right">
                                     {{ formatDuration($clientTotalMinutes) }}
                                     ({{ number_format($clientPercentage, 2) }} %)
-                                    – [Cost: {{ number_format($clientCost, 2) }}]
+                                    – [{{ __('messages.users.cost') }}: {{ number_format($clientCost, 2) }}]
                                 </div>
 
                             </div>
@@ -441,7 +438,7 @@
                                             <div class="text-right">
                                                 {{ formatDuration($totalMinutes) }}
                                                 ({{ number_format($projectPercentage, 2) }} %)
-                                                – [Cost: {{ number_format($projectCost, 2) }}]
+                                                – [{{ __('messages.users.cost') }}: {{ number_format($projectCost, 2) }}]
                                             </div>
 
                                         </div>
@@ -514,7 +511,7 @@
                                                         <div class="text-right">
                                                             {{ formatDuration($totalMinutes) }}
                                                             ({{ number_format($userPercentage, 2) }} %)
-                                                            – [Cost: {{ number_format($userCost, 2) }}]
+                                                            – [{{ __('messages.users.cost') }}: {{ number_format($userCost, 2) }}]
                                                         </div>
 
                                                     </div>
@@ -570,10 +567,11 @@
 
         @if (!$hasData)
             <div class="text-center text-gray-500 font-semibold text-lg">
-                No record available.
+                {{ __('messages.users.no_record_found') }}
             </div>
         @endif
 
     </div>
 
 </x-filament-panels::page>
+

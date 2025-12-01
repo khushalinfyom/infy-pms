@@ -18,20 +18,20 @@ class RoleInfolist
                     ->schema([
 
                         Group::make()
-                        ->schema([
+                            ->schema([
 
-                            TextEntry::make('name')
-                                ->label('Name')
-                                ->inlineLabel(),
+                                TextEntry::make('name')
+                                    ->label(__('messages.common.name'))
+                                    ->inlineLabel(),
 
-                            TextEntry::make('description')
-                                ->label('Description')
-                                ->html(),
+                                TextEntry::make('description')
+                                    ->label(__('messages.common.description'))
+                                    ->html(),
 
-                        ]),
+                            ]),
 
                         TextEntry::make('permissions')
-                            ->label('Permissions')
+                            ->label(__('messages.users.permissions'))
                             ->getStateUsing(fn($record) => $record->permissions->pluck('display_name'))
                             ->badge()
                             ->extraAttributes(['style' => 'display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.875rem;']),
