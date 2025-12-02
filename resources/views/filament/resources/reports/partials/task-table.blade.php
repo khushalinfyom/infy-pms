@@ -23,20 +23,20 @@
                         class="transition-colors duration-150 hover:bg-blue-50 dark:hover:bg-gray-800/50 {{ $index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800' }}">
 
                         <td class="px-6 py-4">
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                            <span class="text-md font-medium text-gray-900 dark:text-white">
                                 {{ $row['task'] }} ( {{ $row['project'] }} )
                             </span>
                         </td>
                         <td class="px-6 py-4">
                             <span
-                                class="inline-flex items-center rounded-md bg-green-100 px-3 py-1 text-sm font-semibold text-green-800 dark:bg-green-900 dark:text-green-200">
+                                class="inline-flex items-center rounded-md px-3 py-1 text-md font-semibold">
                                 {{ $row['duration'] }}
                             </span>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
                                 <span
-                                    class="inline-flex items-center rounded-md bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    class="inline-flex items-center rounded-md px-3 py-1 text-md font-semibold">
                                     {{ $row['currency_symbol'] }} {{ number_format($row['amount'], 2) }}
                                 </span>
                             </div>

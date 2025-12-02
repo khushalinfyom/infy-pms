@@ -2,15 +2,11 @@
 
 namespace App\Filament\Resources\Invoices\Tables;
 
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use App\Models\Invoice;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class InvoicesTable
@@ -33,7 +29,7 @@ class InvoicesTable
 
                 TextColumn::make('invoice_number')
                     ->label('Invoice Number')
-                    ->formatStateUsing(function ($state, $record) {
+                    ->formatStateUsing(function ($record) {
                         return 'INV-' . $record->invoice_number;
                     })
                     ->searchable(),
@@ -45,10 +41,25 @@ class InvoicesTable
                 TextColumn::make('invoiceProjects.name')
                     ->label('Project')
                     ->wrap()
-                    ->placeholder('N/A'),
+                    ->placeholder('N/A')
+                    ->searchable(),
 
                 TextColumn::make('amount')
-                    ->label('Amount'),
+                    ->label('Amount')
+                    ->prefix('$ ')
+                    ->searchable(),
+
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->formatStateUsing(function ($record) {
+                        return Invoice::STATUS[$record->status];
+                    })
+                    ->badge()
+                    ->colors([
+                        'warning' => Invoice::STATUS_DRAFT,
+                        'info' => Invoice::STATUS_SENT,
+                        'success' => Invoice::STATUS_PAID,
+                    ]),
 
                 TextColumn::make('due_date')
                     ->label('Due Date')
@@ -56,36 +67,39 @@ class InvoicesTable
                     ->placeholder('N/A'),
             ])
             ->filters([
-                // TrashedFilter::make(),
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        '' => 'ALL',
+                        Invoice::STATUS_SENT => 'SENT',
+                        Invoice::STATUS_DRAFT => 'DRAFT',
+                        Invoice::STATUS_PAID => 'PAID',
+                    ])
+                    ->default(Invoice::STATUS_SENT)
+                    ->native(false),
             ])
+            ->deferFilters(false)
             ->recordActions([
                 ViewAction::make()
                     ->tooltip(__('messages.common.view'))
                     ->iconButton()
-                    ->modalHeading(__('messages.users.view_department'))
+                    ->modalHeading(__('messages.users.view_invoice'))
                     ->modalWidth('md'),
 
                 EditAction::make()
                     ->tooltip(__('messages.common.edit'))
                     ->iconButton()
-                    ->modalHeading(__('messages.users.edit_department'))
+                    ->modalHeading(__('messages.users.edit_invoice'))
                     ->modalWidth('xl')
-                    ->successNotificationTitle(__('messages.users.department_updated_successfully')),
+                    ->hidden(fn($record) => $record->status === Invoice::STATUS_PAID)
+                    ->successNotificationTitle(__('messages.users.invoice_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
                     ->tooltip(__('messages.common.delete'))
-                    ->modalHeading(__('messages.users.delete_department'))
-                    ->successNotificationTitle(__('messages.users.department_deleted_successfully')),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    \App\Filament\Actions\CustomDeleteBulkAction::make()
-                        ->setCommonProperties()
-                        ->modalHeading(__('messages.users.delete_selected_departments'))
-                        ->successNotificationTitle(__('messages.users.departments_deleted_successfully')),
-                ]),
+                    ->modalHeading(__('messages.users.delete_invoice'))
+                    ->successNotificationTitle(__('messages.users.invoice_deleted_successfully')),
             ]);
     }
 }

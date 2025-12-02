@@ -772,3 +772,44 @@ function authUserHasPermission($permissionName)
 
     return false;
 }
+
+function decimalHoursToHHMM($value, $isMinutes = false)
+{
+    if ($value === null || $value === '') {
+        return '00:00';
+    }
+
+    if ($isMinutes) {
+        $totalMinutes = (int) round($value);
+    } else {
+        $val = (float) str_replace(',', '', $value);
+
+        $hours = floor($val);
+        $fraction = $val - $hours;
+        $minutesFromFraction = (int) round($fraction * 60);
+
+        $totalMinutes = $hours * 60 + $minutesFromFraction;
+    }
+
+    if ($totalMinutes < 0) {
+        $totalMinutes = 0;
+    }
+
+    $hours = intdiv($totalMinutes, 60);
+    $minutes = $totalMinutes % 60;
+
+    return sprintf('%02d:%02d', $hours, $minutes);
+}
+
+function currencyEntityForInvoice($invoice = null)
+{
+    if ($invoice) {
+        $code = getCurrencyIconForInvoicePDF($invoice);
+    } else {
+        $code = getCurrencyIcon(getCurrentCurrency() ? getCurrentCurrency() : 1);
+    }
+
+    $code = (int) $code;
+
+    return '&#' . $code . ';';
+}
