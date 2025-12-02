@@ -2,24 +2,21 @@
     <div>
         <div>
             <!-- Top bar -->
-            <div class="flex items-center gap-4 mb-4">
+            <div class="flex items-center gap-4 mb-4 flex-wrap justify-between">
                 <!-- Left: search -->
-                <div class="flex items-center gap-2 flex-1">
-                    <div class="text-sm font-semibold">Search</div>
+                <div class="flex items-center gap-2 flex-1 min-w-60 max-w-xl">
                     <div class="flex items-center bg-white rounded-md shadow px-3 py-2 gap-2 w-full">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z" />
-                        </svg>
+                        @svg('phosphor-magnifying-glass', ['class' => 'sm:w-5 sm:h-5 w-4 h-4  mr-2'])
                         <input id="searchInput" placeholder="Search tasks by title..."
                             class="w-full outline-none text-sm" />
-                        <button id="clearSearch" class="text-xs text-slate-500 hover:text-slate-700">Clear</button>
                     </div>
                 </div>
 
                 <!-- Right: filters and create button -->
-                <div class="flex items-center gap-3">
-                    {{ $this->filterForm }}
+                <div class="flex items-center gap-3 flex-wrap">
+                    <div class="md:min-w-[500px] min-w-[300px]">
+                        {{ $this->filterForm }}
+                    </div>
                     {{ $this->createTaskAction }}
                 </div>
             </div>
@@ -123,7 +120,7 @@
 
             .avatar-stack {
                 display: flex;
-                gap: -8px;
+                align-items: center;
             }
 
             .avatar {
@@ -145,11 +142,10 @@
             }
 
             .col-scroll {
-                max-height: 62vh;
+                max-height: 65vh;
                 overflow: auto;
             }
 
-            /* Ensure proper spacing and sizing for Kanban board */
             #board-container {
                 min-height: 500px;
             }
@@ -178,12 +174,74 @@
             .kanban-column {
                 min-width: 330px;
                 width: 330px;
+                background-color: #f8f9fe;
             }
 
             /* Remove horizontal scroll from columns */
             .col-scroll {
                 overflow-x: hidden;
                 overflow-y: auto;
+            }
+
+            .task-number {
+                position: relative;
+            }
+
+            .task-number::before {
+                content: "";
+                display: inline-block;
+                position: absolute;
+                top: 0px;
+                left: -9px;
+                width: 4px;
+                height: 100%;
+                border-radius: 0 13px 10px 0;
+                background-color: #6b7280;
+            }
+
+            /* GLOBAL SCROLLBAR STYLE (applies to whole page) */
+            ::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                /* slate-100 */
+                border-radius: 10px;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                /* slate-300 */
+                border-radius: 10px;
+                border: 2px solid #f1f5f9;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+                /* slate-400 */
+            }
+
+            /* MAKE SCROLLBAR OVERLAY ON HOVER (optional) */
+            .scrollbar-hover:hover::-webkit-scrollbar-thumb {
+                background: #64748b;
+            }
+
+            /* SHORTER ROUNDED THIN SCROLLBAR FOR COLUMNS */
+            .col-scroll::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .col-scroll::-webkit-scrollbar-thumb {
+                background: #d1d5db;
+                /* gray-300 */
+                border-radius: 999px;
+            }
+
+            .col-scroll::-webkit-scrollbar-thumb:hover {
+                background: #9ca3af;
+                /* gray-400 */
             }
         </style>
     @endpush
@@ -192,116 +250,303 @@
         <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
         <script>
-            // Global variable to track if board is initialized
-            let isBoardInitialized = false;
+            document.addEventListener('livewire:navigated', () => {
+                window.kanbanWire = Livewire.find('{{ $this->getId() }}');
+                if (!window.kanbanWire) {
+                    console.warn("KanbanWire not found yet...");
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeBoard();
+            });
+
+            const tasksData = @json($this->tasks);
+            const statusesData = @json($this->statuses);
+            let usersData = @json($this->users);
             let kanbanState = {
                 columns: [],
                 tasks: [],
-                currentProjectId: null
             };
 
-            // Function to initialize or reinitialize the board
-            function initOrReinitBoard() {
-                if (!isBoardInitialized) {
-                    initializeBoard();
-                    isBoardInitialized = true;
-                } else {
-                    // Reinitialize with new data
-                    refreshBoardData();
-                }
-            }
+            function getColumnDesign(col) {
+                const tasksInCol = kanbanState.tasks.filter(t => t.column == col.id);
 
-            // Initialize the board when Livewire updates
-            document.addEventListener('DOMContentLoaded', function() {
-                // Use a more reliable way to detect when Livewire has finished rendering
-                setTimeout(initOrReinitBoard, 100);
-            });
+                const colEl = document.createElement('div');
+                colEl.className = 'rounded-md shadow p-3 flex flex-col kanban-column';
+                colEl.dataset.col = col.id;
 
-            // Listen for Livewire update events
-            document.addEventListener('livewire:updated', function() {
-                setTimeout(function() {
-                    refreshBoardData();
-                }, 100);
-            });
+                colEl.innerHTML = `
+    <div class="flex items-center justify-between mb-2">
+        <div>
+            <div class="flex items-center gap-2">
+                <div class="text-sm font-semibold">${col.title}</div>
+                <div id="count-${col.id}" class="text-xs text-slate-500">(${tasksInCol.length})</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">+</button>
+            <button class="text-slate-400 hover:text-slate-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-width="1.5" d="M6 12h12M6 6h12M6 18h12" />
+                </svg>
+            </button>
+        </div>
+    </div>
 
-            // Listen for filter changes and update the board
-            function attachFilterListeners() {
-                // Listen for changes on any select elements that might be filters
-                const filterSelects = document.querySelectorAll('select');
-                filterSelects.forEach(select => {
-                    select.addEventListener('change', function() {
-                        // Small delay to ensure Livewire has processed the change
-                        setTimeout(function() {
-                            refreshBoardData();
-                        }, 150);
+    <div class="col-scroll mb-2">
+        <div id="list-${col.id}" class="space-y-2 px-1 min-h-[50px]"></div>
+    </div>
+
+    <div class="pt-2">
+        <button class="w-full text-sm border rounded-md px-3 py-2 bg-slate-50 hover:bg-slate-100">+ Add Task</button>
+    </div>
+    `;
+
+                const listEl = colEl.querySelector(`#list-${col.id}`);
+                tasksInCol.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className =
+                        'task bg-white rounded-md pt-3 pb-2 pr-3 pl-2 border border-slate-200 cursor-grab';
+                    card.dataset.id = task.id;
+
+                    card.innerHTML = getCardDesign(task);
+
+                    card.querySelector('[data-add-user]')?.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openAssignPopover(task.id, e.currentTarget);
                     });
+
+                    card.querySelector('[data-calendar]')?.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openDuePopover(task.id, e.currentTarget);
+                    });
+
+                    card.addEventListener('click', () => openTaskEditModal(task.id));
+
+                    listEl.appendChild(card);
                 });
 
-                // Also listen for changes on any input elements that might be filters
-                const filterInputs = document.querySelectorAll('input');
-                filterInputs.forEach(input => {
-                    if (input.type === 'text' || input.type === 'search') {
-                        // For text inputs, use input event with debounce
-                        let timeout;
-                        input.addEventListener('input', function() {
-                            clearTimeout(timeout);
-                            timeout = setTimeout(function() {
-                                refreshBoardData();
-                            }, 300);
-                        });
-                    } else {
-                        // For other input types (checkboxes, radio buttons, etc.)
-                        input.addEventListener('change', function() {
-                            setTimeout(function() {
-                                refreshBoardData();
-                            }, 150);
-                        });
+                return colEl;
+            }
+
+            function getCardDesign(task) {
+                // Avatar calculation inside this function
+                let avatarHtml = '';
+
+                const assigned = task.fullAssignees || [];
+                if (assigned.length === 0) {
+                    avatarHtml = `
+        <div data-add-user="${task.id}"
+             class="avatar bg-slate-300 text-white cursor-pointer flex items-center justify-center
+                    w-10 h-10 rounded-full border-2 border-white shadow">
+             <span class="text-xs">NA</span>
+        </div>`;
+                } else {
+                    const user = assigned[0];
+                    const img = user.img_avatar || user.image_path || null;
+                    avatarHtml = `
+        <div data-add-user="${task.id}" class="cursor-pointer relative">
+            ${img ? `<img src="${img}" title="${user.name}" class="w-7 h-7 rounded-full object-cover shadow" />` : `<div class="avatar bg-slate-500 text-white">${user.name.split(" ").map(p => p[0]).join("").toUpperCase()}</div>`}
+            ${assigned.length > 1 ? `<div class="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[8px] px-1 py-0.5 rounded-full flex items-center justify-center shadow">+${assigned.length - 1}</div>` : ''}
+        </div>`;
+                }
+
+                return `
+    <div class="flex items-start justify-between gap-2">
+        <div class="flex-1">
+            <div class="flex items-start gap-2">
+                <div class="task-number text-xs text-slate-500 rounded-sm bg-slate-100 px-2 py-1">
+                    ${task.number || ''}
+                </div>
+                <div class="text-sm font-medium">${escapeHtml(task.title)}</div>
+            </div>
+
+            <div class="mt-2 text-xs text-slate-500">
+                ${task.projectName 
+                    ? `<span class="inline-block px-2 py-1 bg-slate-100 rounded">${escapeHtml(task.projectName)}</span>` 
+                    : ''}
+            </div>
+        </div>
+    </div>
+
+    <hr class="mt-3 mb-2 border-slate-200" />
+
+    <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+            <div class="avatar-stack relative">${avatarHtml}</div>
+            <div class="text-xs">
+                <div class="flex items-center gap-2 border border-slate-200 rounded-full p-1 cursor-pointer calendar-btn"
+                    data-calendar="${task.id}">
+                        @svg('phosphor-calendar-dots', ['class' => 'w-4 h-4'])
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+            }
+
+            //#f8f9fe
+
+            // Helper function for escaping HTML
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            // Helper function for formatting due dates
+            function formatDue(dateStr) {
+                if (!dateStr) return '';
+                const d = new Date(dateStr + 'T00:00:00');
+                return d.toLocaleDateString();
+            }
+
+            function avatarFor(userId) {
+                // Find full user object from tasksData (where full user information exists)
+                let userObj = null;
+                for (let t of kanbanState.tasks) {
+                    if (t.assigned && t.assigned.length && t.assigned.includes(userId)) {
+                        const index = t.assigned.indexOf(userId);
+                        if (t.fullAssignees && t.fullAssignees[index]) {
+                            userObj = t.fullAssignees[index];
+                        }
+                    }
+                }
+
+                // Fallback: find in tasksData original
+                if (!userObj) {
+                    const fromRaw = tasksData.find(t => (t.task_assignee || []).find(a => a.id === userId));
+                    if (fromRaw) {
+                        userObj = fromRaw.task_assignee.find(a => a.id === userId);
+                    }
+                }
+
+                const name = userObj?.name || "User";
+                const img = userObj?.img_avatar || userObj?.image_path || null;
+
+                if (img) {
+                    return `
+            <img src="${img}" 
+                 title="${name}"
+                 class="avatar rounded-full w-8 h-8 object-cover border-2 border-white shadow" />
+        `;
+                }
+
+                // fallback initials
+                const initials = name.split(" ").map(p => p[0]).join("").toUpperCase();
+                return `
+        <div class="avatar bg-slate-500 text-white" title="${name}">
+            ${initials}
+        </div>
+    `;
+            }
+
+            // Helper function for initializing sortables
+            function initSortables() {
+                // destroy previous
+                if (window.sortInstances) {
+                    window.sortInstances.forEach(s => s.destroy && s.destroy());
+                }
+                window.sortInstances = [];
+
+                kanbanState.columns.forEach(col => {
+                    const list = document.querySelector(`#list-${col.id}`);
+                    if (!list) return;
+                    const s = new Sortable(list, {
+                        group: 'kanban-group',
+                        animation: 180,
+                        ghostClass: 'card-dragging',
+                        onEnd: function(evt) {
+                            const el = evt.item;
+                            const id = el.dataset.id;
+                            const newCol = evt.to.closest('[data-col]').dataset.col;
+                            const newIndex = Array.from(evt.to.children).indexOf(el);
+                            const t = kanbanState.tasks.find(x => x.id == id);
+                            if (!t) return;
+                            t.column = newCol;
+                            const colTasks = kanbanState.tasks.filter(x => x.column == newCol && x.id !=
+                                id);
+                            colTasks.splice(newIndex, 0, t);
+                            const others = kanbanState.tasks.filter(x => x.column != newCol);
+                            kanbanState.tasks = others.concat(colTasks);
+                            window.kanbanWire.call('taskMoved', id, newCol, newIndex);
+                        }
+                    });
+                    window.sortInstances.push(s);
+                });
+            }
+
+            // Helper function for updating counts
+            function updateAllCounts() {
+                kanbanState.columns.forEach(c => {
+                    const countEl = document.getElementById('count-' + c.id);
+                    if (countEl) {
+                        countEl.textContent = `(${kanbanState.tasks.filter(t => t.column == c.id).length})`;
                     }
                 });
+            }
 
-                // Listen for clicks on filter buttons
-                const filterButtons = document.querySelectorAll('button');
-                filterButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        // Small delay to ensure Livewire has processed the change
-                        setTimeout(function() {
-                            refreshBoardData();
-                        }, 150);
-                    });
+            // Client-side filtering function
+            function applyClientFilters() {
+                const searchInput = document.getElementById('searchInput');
+                const q = searchInput ? (searchInput.value || '').toLowerCase() : '';
+
+                // Apply client-side search filter only (other filters are handled by backend)
+                kanbanState.tasks.forEach(t => {
+                    const el = document.querySelector(`[data-id="${t.id}"]`);
+                    // If DOM not yet rendered, skip - renderBoard will enforce filters on next render
+                    if (!el) return;
+
+                    let visible = true;
+                    if (q && !t.title.toLowerCase().includes(q)) visible = false;
+                    el.style.display = visible ? '' : 'none';
                 });
             }
 
-            // Attach filter listeners after a short delay to ensure DOM is ready
-            setTimeout(attachFilterListeners, 500);
+            // Add event listener for search input
+            document.addEventListener('DOMContentLoaded', function() {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', applyClientFilters);
+                }
+            });
+
+            // Global render function
+            function renderBoard() {
+                const boardEl = document.getElementById('board');
+                if (!boardEl) return;
+                boardEl.innerHTML = '';
+                kanbanState.columns.forEach(col => {
+                    const colEl = getColumnDesign(col);
+                    boardEl.appendChild(colEl);
+                });
+                // re-init sortables after render
+                initSortables();
+                updateAllCounts();
+                applyClientFilters();
+            }
 
             function initializeBoard() {
-                /* ---------- Data from Backend ---------- */
-                const tasksData = @json($this->tasks);
-                const statusesData = @json($this->statuses);
-                const usersData = @json($this->users);
-                const projectsData = @json($this->projects);
-                const currentProjectId = @json($this->project_id);
-
                 /* ---------- State ---------- */
                 kanbanState = {
                     columns: statusesData.map(status => ({
-                        id: status.id,
+                        id: status.status,
                         title: status.name
                     })),
                     tasks: tasksData.map(task => ({
                         id: task.id,
-                        number: task.task_number ? task.project.prefix + '-' + task.task_number : '',
+                        number: task.task_number ? task.task_number : '',
                         title: task.title,
                         column: task.status,
                         project: task.project_id,
                         projectName: task.project ? task.project.name : '',
                         tags: task.tags || [],
-                        assigned: task.taskAssignee ? task.taskAssignee.map(a => a.id) : [],
-                        assignedNames: task.taskAssignee ? task.taskAssignee.map(a => a.name) : [],
+                        assigned: task.task_assignee ? task.task_assignee.map(a => a.id) : [],
+                        assignedNames: task.task_assignee ? task.task_assignee.map(a => a.name) : [],
+                        fullAssignees: task.task_assignee || [],
                         due: task.due_date || null,
                         priority: task.priority || null
                     })),
-                    currentProjectId: currentProjectId
                 };
 
                 /* ---------- Utilities ---------- */
@@ -309,186 +554,9 @@
                     return prefix + '-' + Math.random().toString(36).slice(2, 9);
                 }
 
-                function formatDue(dateStr) {
-                    if (!dateStr) return '';
-                    const d = new Date(dateStr + 'T00:00:00');
-                    return d.toLocaleDateString();
-                }
-
                 function getUserInitials(name) {
                     if (!name) return 'U';
                     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-                }
-
-                function avatarFor(userId) {
-                    const user = Object.entries(usersData).find(([id, name]) => parseInt(id) === userId);
-                    const userName = user ? user[1] : 'Unknown';
-                    const initials = getUserInitials(userName);
-
-                    // Simple color generation based on user ID
-                    const colors = ['bg-rose-500', 'bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-cyan-500'];
-                    const colorIndex = userId % colors.length;
-                    const color = colors[colorIndex] || 'bg-slate-400';
-
-                    return `<div class="avatar ${color}" title="${userName}">${initials}</div>`;
-                }
-
-                /* ---------- Rendering ---------- */
-                const boardEl = document.getElementById('board');
-
-                function renderBoard() {
-                    if (!boardEl) return;
-
-                    // Show loading indicator if no project selected
-                    if (!kanbanState.currentProjectId) {
-                        boardEl.innerHTML = '<div class="kanban-loading">Please select a project to view tasks</div>';
-                        return;
-                    }
-
-                    // Show loading indicator while loading tasks
-                    if (kanbanState.tasks.length === 0) {
-                        boardEl.innerHTML = '<div class="kanban-loading">No tasks found for this project</div>';
-                        return;
-                    }
-
-                    boardEl.innerHTML = '';
-                    kanbanState.columns.forEach(col => {
-                        const tasksInCol = kanbanState.tasks.filter(t => t.column == col.id);
-                        const colEl = document.createElement('div');
-                        colEl.className = 'bg-white rounded-md shadow p-3 flex flex-col kanban-column';
-                        colEl.dataset.col = col.id;
-                        colEl.innerHTML = `
-      <div class="flex items-center justify-between mb-2">
-        <div>
-          <div class="flex items-center gap-2">
-            <div class="text-sm font-semibold">${col.title}</div>
-            <div id="count-${col.id}" class="text-xs text-slate-500">(${tasksInCol.length})</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button wire:click="addTaskInStatus(${col.id})" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">+</button>
-          <button class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="1.5" d="M6 12h12M6 6h12M6 18h12" /></svg></button>
-        </div>
-      </div>
-
-      <div class="col-scroll mb-2">
-        <div id="list-${col.id}" class="space-y-2 px-1 min-h-[50px]"></div>
-      </div>
-
-      <div class="mt-auto pt-2">
-        <button data-addtask="${col.id}" class="w-full text-sm border rounded-md px-3 py-2 bg-slate-50 hover:bg-slate-100">+ Add Task</button>
-      </div>
-    `;
-                        boardEl.appendChild(colEl);
-
-                        // fill tasks
-                        const listEl = colEl.querySelector(`#list-${col.id}`);
-                        tasksInCol.forEach(task => {
-                            const card = document.createElement('div');
-                            card.className =
-                                'task bg-white rounded-md shadow-sm p-3 border border-slate-100 cursor-grab';
-                            card.dataset.id = task.id;
-                            card.innerHTML = `
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex-1">
-            <div class="flex items-start gap-2">
-              <div class="text-xs text-slate-500 rounded-sm bg-slate-100 px-2 py-1">${task.number || ''}</div>
-              <div class="text-sm font-medium">${escapeHtml(task.title)}</div>
-            </div>
-            <div class="mt-2 text-xs text-slate-500">
-              ${task.projectName ? `<span class="inline-block px-2 py-1 bg-slate-100 rounded">${escapeHtml(task.projectName)}</span>` : ''}
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-3 flex items-center justify-between gap-2">
-          <div class="avatar-stack">
-            ${(task.assigned || []).slice(0, 3).map(uid => avatarFor(uid)).join('')}
-            <button data-add-user="${task.id}" class="ml-2 text-xs text-slate-500 border rounded-full w-8 h-8 flex items-center justify-center">+</button>
-          </div>
-          <div class="text-xs">
-            ${task.due ? `<div class="text-xs text-rose-600">Due: ${formatDue(task.due)}</div>` : `<button data-add-due="${task.id}" class="text-xs px-2 py-1 border rounded-md text-slate-500">Add due</button>`}
-          </div>
-        </div>
-      `;
-                            // click to open quick edit (assign/due)
-                            card.querySelector('[data-add-user]')?.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                openAssignPopover(task.id, e.currentTarget);
-                            });
-                            card.querySelector('[data-add-due]')?.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                openDuePopover(task.id, e.currentTarget);
-                            });
-                            card.addEventListener('click', () => openTaskEditModal(task.id));
-                            listEl.appendChild(card);
-                        });
-                    });
-
-                    // re-init sortables after render
-                    initSortables();
-                    updateAllCounts();
-                    applyClientFilters(); // Apply client-side filters after rendering
-                }
-
-                /* ---------- helpers ---------- */
-                function escapeHtml(str) {
-                    if (!str) return '';
-                    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                }
-
-                function updateAllCounts() {
-                    kanbanState.columns.forEach(c => {
-                        const countEl = document.getElementById('count-' + c.id);
-                        if (countEl) {
-                            countEl.textContent = `(${kanbanState.tasks.filter(t => t.column == c.id).length})`;
-                        }
-                    });
-                }
-
-                /* ---------- Sortable init ---------- */
-                let sortInstances = [];
-
-                function initSortables() {
-                    // destroy previous
-                    sortInstances.forEach(s => s.destroy && s.destroy());
-                    sortInstances = [];
-
-                    kanbanState.columns.forEach(col => {
-                        const list = document.querySelector(`#list-${col.id}`);
-                        if (!list) return;
-                        const s = new Sortable(list, {
-                            group: 'kanban-group',
-                            animation: 180,
-                            ghostClass: 'card-dragging',
-                            onEnd: function(evt) {
-                                // find moved task id
-                                const el = evt.item;
-                                const id = el.dataset.id;
-                                const newCol = evt.to.closest('[data-col]').dataset.col;
-                                const newIndex = Array.from(evt.to.children).indexOf(el);
-                                // update model: set column and reposition within column (we'll keep order but not persist index per-column)
-                                const t = kanbanState.tasks.find(x => x.id == id);
-                                if (!t) return;
-                                t.column = newCol;
-                                // reorder tasks within state.tasks so render order can be stable (put moved task near same relative position)
-                                // remove and re-insert before a task at newIndex within that column
-                                // build list of tasks in new column excluding moved
-                                const colTasks = kanbanState.tasks.filter(x => x.column == newCol && x.id !=
-                                    id);
-                                colTasks.splice(newIndex, 0, t);
-                                // rebuild tasks array: tasks not in new column + tasks in that column (with new order)
-                                const others = kanbanState.tasks.filter(x => x.column != newCol);
-                                // preserve columns ordering for others
-                                kanbanState.tasks = others.concat(colTasks);
-                                renderBoard();
-
-                                // TODO: Save to backend
-                                // saveTaskStatus(id, newCol);
-                            }
-                        });
-                        sortInstances.push(s);
-                    });
                 }
 
                 /* ---------- Add / Edit tasks ---------- */
@@ -550,46 +618,10 @@
                     // saveTask(title, project, assignee, column, due);
                 });
 
-                function openTaskCreateModal(defaultCol) {
-                    editingTaskId = null;
-                    document.getElementById('modalTitle').textContent = 'Create Task';
-                    modalTitleInput.value = '';
-                    // Keep current project selection
-                    modalProject.value = kanbanState.currentProjectId || '';
-                    modalAssignee.value = '';
-                    modalColumn.value = defaultCol || kanbanState.columns[0]?.id || '';
-                    modalDue.value = '';
-                    modalOverlay.classList.remove('hidden');
-                    modalTitleInput.focus();
-                }
-
-                function openTaskEditModal(taskId) {
-                    const t = kanbanState.tasks.find(x => x.id == taskId);
-                    if (!t) return;
-                    editingTaskId = taskId;
-                    document.getElementById('modalTitle').textContent = 'Edit Task';
-                    modalTitleInput.value = t.title;
-                    modalProject.value = t.project || kanbanState.currentProjectId || '';
-                    modalAssignee.value = '';
-                    modalColumn.value = t.column;
-                    modalDue.value = t.due || '';
-                    modalOverlay.classList.remove('hidden');
-                    modalTitleInput.focus();
-                }
-
                 function closeModal() {
                     editingTaskId = null;
                     modalOverlay.classList.add('hidden');
                 }
-
-                /* ---------- Quick add & column add buttons ---------- */
-                document.addEventListener('click', (e) => {
-                    const add = e.target.closest('[data-addtask]');
-                    if (add) {
-                        const col = add.dataset.addtask;
-                        openTaskCreateModal(col);
-                    }
-                });
 
                 /* ---------- Inline popovers for assign/due ---------- */
                 const inlinePopover = document.getElementById('inlinePopover');
@@ -659,39 +691,8 @@
                         // saveTaskDueDate(taskId, null);
                     };
                 }
-
-                /* ---------- Client-side Filtering ---------- */
-                const searchInput = document.getElementById('searchInput');
-
-                // Add event listeners for client-side search
-                if (searchInput) {
-                    searchInput.addEventListener('input', applyClientFilters);
-                }
-
-                const clearSearchBtn = document.getElementById('clearSearch');
-                if (clearSearchBtn) {
-                    clearSearchBtn.addEventListener('click', () => {
-                        if (searchInput) {
-                            searchInput.value = '';
-                            applyClientFilters();
-                        }
-                    });
-                }
-
-                function applyClientFilters() {
-                    const q = searchInput ? (searchInput.value || '').toLowerCase() : '';
-
-                    // Apply client-side search filter only (other filters are handled by backend)
-                    kanbanState.tasks.forEach(t => {
-                        const el = document.querySelector(`[data-id="${t.id}"]`);
-                        // If DOM not yet rendered, skip - renderBoard will enforce filters on next render
-                        if (!el) return;
-
-                        let visible = true;
-                        if (q && !t.title.toLowerCase().includes(q)) visible = false;
-                        el.style.display = visible ? '' : 'none';
-                    });
-                }
+                window.openAssignPopover = openAssignPopover;
+                window.openDuePopover = openDuePopover;
 
                 /* ---------- Misc: Close inline popover if clicking elsewhere ---------- */
                 document.addEventListener('click', function(e) {
@@ -700,23 +701,20 @@
                     }
                 });
 
-                /* ---------- Refresh data function ---------- */
-                window.refreshBoardData = function() {
-                    try {
-                        // Update data from backend
-                        const newTasksData = @json($this->tasks);
-                        const newStatusesData = @json($this->statuses);
-                        const newCurrentProjectId = @json($this->project_id);
+                /* ---------- initial rendering ---------- */
+                renderBoard();
+            }
 
-                        // Update state
-                        kanbanState.columns = newStatusesData.map(status => ({
-                            id: status.id,
-                            title: status.name
-                        }));
-
+            // Refresh data function
+            function refreshKanban(data) {
+                try {
+                    // Check if data is valid and has tasks
+                    if (data && Array.isArray(data.tasks)) {
+                        const newTasksData = data.tasks;
+                        usersData = data.users || {};
                         kanbanState.tasks = newTasksData.map(task => ({
                             id: task.id,
-                            number: task.task_number ? task.project.prefix + '-' + task.task_number : '',
+                            number: task.task_number ? task.task_number : '',
                             title: task.title,
                             column: task.status,
                             project: task.project_id,
@@ -727,221 +725,16 @@
                             due: task.due_date || null,
                             priority: task.priority || null
                         }));
-
-                        kanbanState.currentProjectId = newCurrentProjectId;
-
                         // Re-render board
                         renderBoard();
-                    } catch (error) {
-                        console.error('Error refreshing board data:', error);
-                    }
-                }
-
-                /* ---------- initial rendering ---------- */
-                renderBoard();
-            }
-
-            // Make refresh function globally accessible
-            window.refreshBoardData = function() {
-                try {
-                    // Update data from backend by re-evaluating the PHP variables
-                    // This ensures we get the latest data after filter changes
-                    const newTasksData = @json($this->tasks);
-                    const newStatusesData = @json($this->statuses);
-                    const newCurrentProjectId = @json($this->project_id);
-                    const newUsersData = @json($this->users);
-                    const newProjectsData = @json($this->projects);
-
-                    // Update state
-                    kanbanState.columns = newStatusesData.map(status => ({
-                        id: status.id,
-                        title: status.name
-                    }));
-
-                    kanbanState.tasks = newTasksData.map(task => ({
-                        id: task.id,
-                        number: task.task_number ? task.project.prefix + '-' + task.task_number : '',
-                        title: task.title,
-                        column: task.status,
-                        project: task.project_id,
-                        projectName: task.project ? task.project.name : '',
-                        tags: task.tags || [],
-                        assigned: task.taskAssignee ? task.taskAssignee.map(a => a.id) : [],
-                        assignedNames: task.taskAssignee ? task.taskAssignee.map(a => a.name) : [],
-                        due: task.due_date || null,
-                        priority: task.priority || null
-                    }));
-
-                    kanbanState.currentProjectId = newCurrentProjectId;
-
-                    // Update the users and projects data as well
-                    usersData = newUsersData;
-                    projectsData = newProjectsData;
-
-                    // Re-render board
-                    const boardEl = document.getElementById('board');
-                    if (boardEl) {
-                        // Show loading indicator if no project selected
-                        if (!kanbanState.currentProjectId) {
-                            boardEl.innerHTML = '<div class="kanban-loading">Please select a project to view tasks</div>';
-                            return;
-                        }
-
-                        // Show loading indicator while loading tasks
-                        if (kanbanState.tasks.length === 0) {
-                            boardEl.innerHTML = '<div class="kanban-loading">No tasks found for this project</div>';
-                            return;
-                        }
-
-                        boardEl.innerHTML = '';
-                        kanbanState.columns.forEach(col => {
-                            const tasksInCol = kanbanState.tasks.filter(t => t.column == col.id);
-                            const colEl = document.createElement('div');
-                            colEl.className = 'bg-white rounded-md shadow p-3 flex flex-col kanban-column';
-                            colEl.dataset.col = col.id;
-                            colEl.innerHTML = `
-      <div class="flex items-center justify-between mb-2">
-        <div>
-          <div class="flex items-center gap-2">
-            <div class="text-sm font-semibold">${col.title}</div>
-            <div id="count-${col.id}" class="text-xs text-slate-500">(${tasksInCol.length})</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button data-quick-add="${col.id}" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">+</button>
-          <button class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="1.5" d="M6 12h12M6 6h12M6 18h12" /></svg></button>
-        </div>
-      </div>
-
-      <div class="col-scroll mb-2">
-        <div id="list-${col.id}" class="space-y-2 px-1 min-h-[50px]"></div>
-      </div>
-
-      <div class="mt-auto pt-2">
-        <button data-addtask="${col.id}" class="w-full text-sm border rounded-md px-3 py-2 bg-slate-50 hover:bg-slate-100">+ Add Task</button>
-      </div>
-    `;
-                            boardEl.appendChild(colEl);
-
-                            // fill tasks
-                            const listEl = colEl.querySelector(`#list-${col.id}`);
-                            tasksInCol.forEach(task => {
-                                const card = document.createElement('div');
-                                card.className =
-                                    'task bg-white rounded-md shadow-sm p-3 border border-slate-100 cursor-grab';
-                                card.dataset.id = task.id;
-                                card.innerHTML = `
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex-1">
-            <div class="flex items-start gap-2">
-              <div class="text-xs text-slate-500 rounded-sm bg-slate-100 px-2 py-1">${task.number || ''}</div>
-              <div class="text-sm font-medium">${escapeHtml(task.title)}</div>
-            </div>
-            <div class="mt-2 text-xs text-slate-500">
-              ${task.projectName ? `<span class="inline-block px-2 py-1 bg-slate-100 rounded">${escapeHtml(task.projectName)}</span>` : ''}
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-3 flex items-center justify-between gap-2">
-          <div class="avatar-stack">
-            ${(task.assigned || []).slice(0, 3).map(uid => avatarFor(uid)).join('')}
-            <button data-add-user="${task.id}" class="ml-2 text-xs text-slate-500 border rounded-full w-8 h-8 flex items-center justify-center">+</button>
-          </div>
-          <div class="text-xs">
-            ${task.due ? `<div class="text-xs text-rose-600">Due: ${formatDue(task.due)}</div>` : `<button data-add-due="${task.id}" class="text-xs px-2 py-1 border rounded-md text-slate-500">Add due</button>`}
-          </div>
-        </div>
-      `;
-                                // click to open quick edit (assign/due)
-                                card.querySelector('[data-add-user]')?.addEventListener('click', (e) => {
-                                    e.stopPropagation();
-                                    openAssignPopover(task.id, e.currentTarget);
-                                });
-                                card.querySelector('[data-add-due]')?.addEventListener('click', (e) => {
-                                    e.stopPropagation();
-                                    openDuePopover(task.id, e.currentTarget);
-                                });
-                                card.addEventListener('click', () => openTaskEditModal(task.id));
-                                listEl.appendChild(card);
-                            });
-                        });
-
-                        // re-init sortables after render
-                        initSortables();
-                        updateAllCounts();
-                        applyClientFilters(); // Apply client-side filters after rendering
+                    } else {
+                        console.warn('Invalid data received for refreshKanban:', data);
+                        // Still re-render to clear the board if needed
+                        renderBoard();
                     }
                 } catch (error) {
                     console.error('Error refreshing board data:', error);
                 }
-            };
-
-            // Helper functions that need to be accessible
-            function initSortables() {
-                // destroy previous
-                if (window.sortInstances) {
-                    window.sortInstances.forEach(s => s.destroy && s.destroy());
-                }
-                window.sortInstances = [];
-
-                kanbanState.columns.forEach(col => {
-                    const list = document.querySelector(`#list-${col.id}`);
-                    if (!list) return;
-                    const s = new Sortable(list, {
-                        group: 'kanban-group',
-                        animation: 180,
-                        ghostClass: 'card-dragging',
-                        onEnd: function(evt) {
-                            // find moved task id
-                            const el = evt.item;
-                            const id = el.dataset.id;
-                            const newCol = evt.to.closest('[data-col]').dataset.col;
-                            const newIndex = Array.from(evt.to.children).indexOf(el);
-                            // update model: set column and reposition within column (we'll keep order but not persist index per-column)
-                            const t = kanbanState.tasks.find(x => x.id == id);
-                            if (!t) return;
-                            t.column = newCol;
-                            // reorder tasks within state.tasks so render order can be stable (put moved task near same relative position)
-                            // remove and re-insert before a task at newIndex within that column
-                            // build list of tasks in new column excluding moved
-                            const colTasks = kanbanState.tasks.filter(x => x.column == newCol && x.id !=
-                                id);
-                            colTasks.splice(newIndex, 0, t);
-                            // rebuild tasks array: tasks not in new column + tasks in that column (with new order)
-                            const others = kanbanState.tasks.filter(x => x.column != newCol);
-                            // preserve columns ordering for others
-                            kanbanState.tasks = others.concat(colTasks);
-
-                            // Re-render board
-                            window.refreshBoardData();
-
-                            // TODO: Save to backend
-                            // saveTaskStatus(id, newCol);
-                        }
-                    });
-                    window.sortInstances.push(s);
-                });
-            }
-
-            function updateAllCounts() {
-                kanbanState.columns.forEach(c => {
-                    const countEl = document.getElementById('count-' + c.id);
-                    if (countEl) {
-                        countEl.textContent = `(${kanbanState.tasks.filter(t => t.column == c.id).length})`;
-                    }
-                });
-            }
-
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            }
-
-            function formatDue(dateStr) {
-                if (!dateStr) return '';
-                const d = new Date(dateStr + 'T00:00:00');
-                return d.toLocaleDateString();
             }
         </script>
     @endpush
