@@ -7,6 +7,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class ReportsTable
@@ -17,12 +18,12 @@ class ReportsTable
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No Reports found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'reports']);
                 } else {
-                    return 'No Reports found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'reports', 'search' => $livewire->tableSearch]);
                 }
             })
             ->query(function () {
@@ -38,44 +39,54 @@ class ReportsTable
             ->columns([
 
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('messages.common.name'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('start_date')
-                    ->label('Start Date')
+                    ->label(__('messages.settings.start_date'))
                     ->date(),
 
                 TextColumn::make('end_date')
-                    ->label('End Date')
+                    ->label(__('messages.settings.end_date'))
                     ->date(),
 
                 TextColumn::make('user.name')
-                    ->label('Created By')
+                    ->label(__('messages.projects.created_by'))
                     ->placeholder('N/A'),
             ])
+            ->filters([
+                SelectFilter::make('created_by')
+                    ->label(__('messages.projects.created_by'))
+                    ->relationship('user', 'name')
+                    ->placeholder(__('messages.users.all_users'))
+                    ->native(false)
+                    ->searchable()
+                    ->preload()
+            ])
+            ->deferFilters(false)
             ->actions([
                 ViewAction::make()
                     ->iconButton()
-                    ->tooltip('View'),
+                    ->tooltip(__('messages.common.view')),
 
                 EditAction::make()
                     ->iconButton()
-                    ->tooltip('Edit'),
+                    ->tooltip(__('messages.common.edit')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Report')
-                    ->successNotificationTitle('Report deleted successfully!')
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_report'))
+                    ->successNotificationTitle(__('messages.users.report_deleted_successfully')),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Reports')
-                        ->successNotificationTitle('Reports deleted successfully!')
+                        ->modalHeading(__('messages.users.delete_selected_reports'))
+                        ->successNotificationTitle(__('messages.users.reports_deleted_successfully')),
                 ]),
             ]);
     }

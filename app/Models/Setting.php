@@ -125,7 +125,7 @@ class Setting extends Model implements HasMedia
     public function getLogoUrlAttribute()
     {
         /** @var Media $media */
-        $media = $this->getMedia(self::PATH)->first();
+        $media = $this->getMedia(self::APP_LOGO)->first();
         if (! empty($media)) {
             return $media->getFullUrl();
         }

@@ -42,7 +42,7 @@ class CalendarWidget extends FullCalendarWidget
     {
         return EditAction::make()
             ->modalWidth('xl')
-            ->modalHeading('Edit Time Entry')
+            ->modalHeading(__('messages.projects.edit_time_entry'))
             ->record(fn($livewire) => $livewire->getRecord())
             ->form($this->getFormSchema())
             ->mutateFormDataUsing(function (array $data, $record) {
@@ -58,7 +58,7 @@ class CalendarWidget extends FullCalendarWidget
 
                 return $data;
             })
-            ->successNotificationTitle('Time Entry updated successfully!');
+            ->successNotificationTitle(__('messages.projects.time_entry_updated_successfully'));
     }
 
     public function getFormSchema(): array
@@ -75,7 +75,7 @@ class CalendarWidget extends FullCalendarWidget
                 ->default(auth()->user()->id),
 
             Select::make('user_id')
-                ->label('User')
+                ->label(__('messages.users.user'))
                 ->relationship('user', 'name')
                 ->required()
                 ->native(false)
@@ -87,7 +87,7 @@ class CalendarWidget extends FullCalendarWidget
                 Group::make([
 
                     Select::make('project_id')
-                        ->label('Project')
+                        ->label(__('messages.projects.project'))
                         ->options([
                             $this->record->task->project_id => $this->record->task->project->name,
                         ])
@@ -104,8 +104,8 @@ class CalendarWidget extends FullCalendarWidget
                         }),
 
                     DateTimePicker::make('start_time')
-                        ->label('Start Time')
-                        ->placeholder('Start Time')
+                        ->label(__('messages.settings.start_time'))
+                        ->placeholder(__('messages.settings.start_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -116,8 +116,8 @@ class CalendarWidget extends FullCalendarWidget
                         ),
 
                     DateTimePicker::make('end_time')
-                        ->label('End Time')
-                        ->placeholder('End Time')
+                        ->label(__('messages.settings.end_time'))
+                        ->placeholder(__('messages.settings.end_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -130,8 +130,8 @@ class CalendarWidget extends FullCalendarWidget
                         ),
 
                     TextInput::make('duration')
-                        ->label('Duration (In Minutes)')
-                        ->placeholder('Duration')
+                        ->label(__('messages.settings.duration_in_minutes'))
+                        ->placeholder(__('messages.settings.duration'))
                         ->disabled()
                         ->required()
                         ->live(),
@@ -142,7 +142,7 @@ class CalendarWidget extends FullCalendarWidget
                 Group::make([
 
                     Select::make('task_id')
-                        ->label('Task')
+                        ->label(__('messages.projects.task'))
                         ->required()
                         ->native(false)
                         ->options(function (callable $get) {
@@ -163,7 +163,7 @@ class CalendarWidget extends FullCalendarWidget
                         ->default($this->record->id),
 
                     Select::make('activity_type_id')
-                        ->label('Activity Type')
+                        ->label(__('messages.settings.activity_type'))
                         ->relationship('activityType', 'name')
                         ->required()
                         ->searchable()
@@ -171,8 +171,8 @@ class CalendarWidget extends FullCalendarWidget
                         ->native(false),
 
                     Textarea::make('note')
-                        ->label('Note')
-                        ->placeholder('Note')
+                        ->label(__('messages.settings.note'))
+                        ->placeholder(__('messages.settings.note'))
                         ->required()
                         ->maxLength(255),
 
@@ -187,6 +187,7 @@ class CalendarWidget extends FullCalendarWidget
     public function fetchEvents(array $fetchInfo): array
     {
         return TimeEntry::query()
+            ->where('user_id', auth()->id())
             ->get()
             ->map(function ($event) {
 

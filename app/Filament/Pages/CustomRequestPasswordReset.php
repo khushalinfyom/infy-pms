@@ -21,8 +21,8 @@ class CustomRequestPasswordReset extends RequestPasswordReset
         return $schema
             ->components([
                 $this->getEmailFormComponent()
-                    ->label('Email Address')
-                    ->placeholder('Email Address'),
+                    ->label(__('messages.common.email_address'))
+                    ->placeholder(__('messages.common.email_address')),
             ]);
     }
 
@@ -30,7 +30,7 @@ class CustomRequestPasswordReset extends RequestPasswordReset
     {
         return [
             $this->getRequestFormAction()
-                ->label('Send Mail')
+                ->label(__('messages.users.send_mail'))
                 ->extraAttributes(['class' => 'w-full flex items-center justify-center space-x-3 form-submit']),
         ];
     }

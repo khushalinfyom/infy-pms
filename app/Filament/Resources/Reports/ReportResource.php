@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Reports;
 
 use App\Enums\AdminPanelSidebar;
+use App\Filament\Resources\Reports\Pages\CreateInvoice;
 use App\Filament\Resources\Reports\Pages\CreateReport;
 use App\Filament\Resources\Reports\Pages\EditReport;
 use App\Filament\Resources\Reports\Pages\ListReports;
@@ -32,6 +33,11 @@ class ReportResource extends Resource
         return authUserHasPermission('manage_reports');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.reports');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return ReportForm::configure($schema);
@@ -54,6 +60,7 @@ class ReportResource extends Resource
             'create' => CreateReport::route('/create'),
             'view' => ViewReport::route('/{record}'),
             'edit' => EditReport::route('/{record}/edit'),
+            'createInvoice' => CreateInvoice::route('/{record}/createInvoice'),
         ];
     }
 }

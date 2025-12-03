@@ -42,19 +42,19 @@ class ProjectTaskTable extends TableWidget
             ->recordUrl(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No tasks found';
+                    return __('messages.common.empty_table_heading', ['table' => 'Tasks']);
                 } else {
-                    return 'No tasks found for "' . $livewire->tableSearch . '"';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'Tasks', 'search' => $livewire->tableSearch]);
                 }
             })
             ->query(Task::where('project_id', $this->record->id)->where('status', '!=', 1))
             ->columns([
 
                 TextColumn::make('title')
-                    ->label('Title')
+                    ->label(__('messages.projects.title'))
                     ->searchable(),
 
                 // ImageColumn::make('users')
@@ -85,7 +85,7 @@ class ProjectTaskTable extends TableWidget
                 //     ]),
 
                 TextColumn::make('priority')
-                    ->label('Priority')
+                    ->label(__('messages.projects.priority'))
                     ->formatStateUsing(fn($state) => Task::PRIORITY[$state] ?? $state)
                     ->badge()
                     ->color(fn($state) => match ($state) {
@@ -99,7 +99,7 @@ class ProjectTaskTable extends TableWidget
                     ->default('N/A'),
 
                 TextColumn::make('due_date')
-                    ->label('Due Date')
+                    ->label(__('messages.projects.due_date'))
                     ->state(function ($record) {
                         if (!$record->due_date) {
                             return 'N/A';
@@ -108,11 +108,11 @@ class ProjectTaskTable extends TableWidget
                         $date = Carbon::parse($record->due_date);
 
                         if ($date->isToday()) {
-                            return 'Today';
+                            return __('messages.projects.today');
                         }
 
                         if ($date->isTomorrow()) {
-                            return 'Tomorrow';
+                            return __('messages.projects.tomorrow');
                         }
 
                         return $date->format('d M');
@@ -122,8 +122,8 @@ class ProjectTaskTable extends TableWidget
                 CreateAction::make('create_task')
                     ->model(Task::class)
                     ->icon('heroicon-s-plus')
-                    ->label('New Task')
-                    ->modalHeading('Create Task')
+                    ->label(__('messages.projects.new_task'))
+                    ->modalHeading(__('messages.projects.create_task'))
                     ->modalWidth('2xl')
                     ->form(self::getTaskForm())
                     ->createAnother(false)
@@ -187,13 +187,13 @@ class ProjectTaskTable extends TableWidget
                                 ->log('Created new task ' . $task->title);
                         }
                     })
-                    ->successNotificationTitle('Task Created Successfully'),
+                    ->successNotificationTitle(__('messages.projects.task_created_successfully')),
             ])
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
-                    ->tooltip('View')
-                    ->modalHeading('Task Details')
+                    ->tooltip(__('messages.common.view'))
+                    ->modalHeading(__('messages.projects.task_details'))
                     ->modalWidth('4xl')
                     ->infolist([
                         Group::make()
@@ -208,21 +208,21 @@ class ProjectTaskTable extends TableWidget
                                             ->extraAttributes(['style' => 'font-size: 1.25rem; font-weight: 600;']),
 
                                         TextEntry::make('description')
-                                            ->label('Description')
+                                            ->label(__('messages.common.description'))
                                             ->html()
-                                            ->default('No description added yet.'),
+                                            ->default(__('messages.projects.no_description_added_yet')),
 
-                                        Fieldset::make('Attachments')
+                                        Fieldset::make(__('messages.projects.attachments'))
                                             ->schema([
 
                                                 Action::make('add_attachment')
-                                                    ->label('New Attachment')
+                                                    ->label(__('messages.projects.new_attachment'))
                                                     ->icon('heroicon-s-plus')
-                                                    ->modalHeading('Upload Attachment')
+                                                    ->modalHeading(__('messages.projects.upload_attachment'))
                                                     ->modalWidth('lg')
                                                     ->form([
                                                         SpatieMediaLibraryFileUpload::make('upload_file')
-                                                            ->label('Select File')
+                                                            ->label(__('messages.projects.select_file'))
                                                             ->directory('task-attachments')
                                                             ->preserveFilenames()
                                                             ->maxSize(10240)
@@ -242,7 +242,7 @@ class ProjectTaskTable extends TableWidget
                                                     }),
 
                                                 Repeater::make('attachments')
-                                                    ->label('All Attachments')
+                                                    ->label(__('messages.projects.all_attachments'))
                                                     ->default(function ($record) {
                                                         if (!$record) return [];
 
@@ -276,20 +276,20 @@ class ProjectTaskTable extends TableWidget
                                             ])
                                             ->columns(1),
 
-                                        Fieldset::make('Comments')
+                                        Fieldset::make(__('messages.projects.comments'))
                                             ->schema([
 
                                                 Action::make('add_comment')
-                                                    ->label('New Comment')
+                                                    ->label(__('messages.projects.new_comment'))
                                                     ->icon('heroicon-s-plus')
-                                                    ->modalHeading('Create Comment')
+                                                    ->modalHeading(__('messages.projects.create_comment'))
                                                     ->modalWidth('xl')
                                                     ->form([
                                                         RichEditor::make('new_comment')
-                                                            ->label('Comment')
+                                                            ->label(__('messages.projects.comment'))
                                                             ->required()
                                                             ->columnSpanFull()
-                                                            ->placeholder('Add comment...')
+                                                            ->placeholder(__('messages.projects.comment'))
                                                             ->extraAttributes(['style' => 'min-height: 200px;'])
                                                             ->toolbarButtons([
                                                                 ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
@@ -310,13 +310,13 @@ class ProjectTaskTable extends TableWidget
                                                     }),
 
                                                 Repeater::make('comment')
-                                                    ->label('Comments')
+                                                    ->label(__('messages.projects.comments'))
                                                     ->default(function ($record) {
                                                         if (!$record) return [];
 
                                                         return $record->comments->map(function ($item) {
                                                             return [
-                                                                'user_name'  => $item->createdUser->name ?? 'Unknown User',
+                                                                'user_name'  => $item->createdUser->name ?? __('messages.projects.unknown_user'),
                                                                 'avatar'     => $item->user_avatar,
                                                                 'comment'    => $item->comment,
                                                                 'created_at' => $item->created_at->diffForHumans(),
@@ -355,7 +355,7 @@ class ProjectTaskTable extends TableWidget
                                     ->schema([
 
                                         ImageEntry::make('task_assignees')
-                                            ->label('Assignee')
+                                            ->label(__('messages.projects.assignee'))
                                             ->default(function ($record) {
 
                                                 if (!$record) return [];
@@ -382,7 +382,7 @@ class ProjectTaskTable extends TableWidget
 
 
                                         TextEntry::make('duration')
-                                            ->label('Task Duration')
+                                            ->label(__('messages.projects.task_duration'))
                                             ->getStateUsing(function ($record) {
                                                 $totalMinutes = $record->timeEntries->sum('duration');
                                                 $hours = floor($totalMinutes / 60);
@@ -395,18 +395,18 @@ class ProjectTaskTable extends TableWidget
                                             ->formatStateUsing(fn($state) => $state)
                                             ->html(),
 
-                                        Fieldset::make('Settings')
+                                        Fieldset::make(__('messages.settings.settings'))
                                             ->schema([
 
                                                 TextEntry::make('created_at')
-                                                    ->label('Start At')
+                                                    ->label( __('messages.projects.start_at'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         return Carbon::parse($state)->format('jS M, Y');
                                                     }),
 
                                                 TextEntry::make('due_date')
-                                                    ->label('Due Date')
+                                                    ->label(__('messages.projects.due_date'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         if (!$state) {
@@ -419,12 +419,12 @@ class ProjectTaskTable extends TableWidget
                                                     ->placeholder('N/A'),
 
                                                 TextEntry::make('status')
-                                                    ->label('Status')
+                                                    ->label(__('messages.common.status'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(fn($state) => Status::where('status', $state)->value('name') ?? $state),
 
                                                 TextEntry::make('priority')
-                                                    ->label('Priority')
+                                                    ->label(__('messages.projects.priority'))
                                                     ->inlineLabel()
                                                     ->default('N/A')
                                                     ->formatStateUsing(fn($state) => Task::PRIORITY[$state] ?? $state),
@@ -432,25 +432,25 @@ class ProjectTaskTable extends TableWidget
                                             ])
                                             ->columns(1),
 
-                                        Fieldset::make('Information')
+                                        Fieldset::make(__('messages.projects.information'))
                                             ->schema([
 
                                                 TextEntry::make('created_by')
-                                                    ->label('Created By')
+                                                    ->label(__('messages.projects.created_by'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         return User::find($state)->name;
                                                     }),
 
                                                 TextEntry::make('created_at')
-                                                    ->label('Created On')
+                                                    ->label(__('messages.projects.created_on'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         return Carbon::parse($state)->format('jS M, Y');
                                                     }),
 
                                                 TextEntry::make('duration')
-                                                    ->label('Time Tracking')
+                                                    ->label(__('messages.projects.time_tracking'))
                                                     ->inlineLabel()
                                                     ->getStateUsing(function ($record) {
                                                         $totalMinutes = $record->timeEntries->sum('duration');
@@ -461,9 +461,8 @@ class ProjectTaskTable extends TableWidget
                                                     ->default('00:00 m'),
 
                                                 TextEntry::make('project.name')
-                                                    ->label('Project')
+                                                    ->label(__('messages.projects.project'))
                                                     ->inlineLabel(),
-
 
                                             ])
                                             ->columns(1),
@@ -479,8 +478,8 @@ class ProjectTaskTable extends TableWidget
                 EditAction::make('edit_task')
                     ->model(Task::class)
                     ->iconButton()
-                    ->tooltip('Edit')
-                    ->modalHeading('Edit Task')
+                    ->tooltip(__('messages.common.edit'))
+                    ->modalHeading(__('messages.projects.edit_task'))
                     ->modalWidth('2xl')
                     ->form(self::getTaskForm())
                     ->mutateFormDataUsing(function (array $data): array {
@@ -524,7 +523,7 @@ class ProjectTaskTable extends TableWidget
                             $task->tags()->sync($data['tags']);
                         }
                     })
-                    ->successNotificationTitle('Task Updated Successfully')
+                    ->successNotificationTitle(__('messages.projects.task_updated_successfully'))
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -539,8 +538,8 @@ class ProjectTaskTable extends TableWidget
             Group::make()
                 ->schema([
                     TextInput::make('title')
-                        ->label('Title')
-                        ->placeholder('Title')
+                        ->label(__('messages.projects.title'))
+                        ->placeholder(__('messages.projects.title'))
                         ->required(),
 
                     Hidden::make('project_id')
@@ -549,12 +548,12 @@ class ProjectTaskTable extends TableWidget
                         }),
 
                     Select::make('priority')
-                        ->label('Priority')
+                        ->label(__('messages.projects.priority'))
                         ->options(Task::PRIORITY)
                         ->searchable(),
 
                     Select::make('taskAssignee')
-                        ->label('Assignee')
+                        ->label(__('messages.projects.assignee'))
                         ->multiple()
                         ->options(function (callable $get) {
                             $projectId = $get('project_id');
@@ -582,15 +581,15 @@ class ProjectTaskTable extends TableWidget
                         }),
 
                     DatePicker::make('due_date')
-                        ->label('Due Date')
-                        ->placeholder('SelectDue Date')
+                        ->label(__('messages.projects.due_date'))
+                        ->placeholder(__('messages.projects.due_date'))
                         ->native(false)
                         ->minDate(now()),
 
                     TextInput::make('estimate_time')
-                        ->label('Estimate Time')
+                        ->label(__('messages.projects.estimate_time'))
                         ->reactive()
-                        ->placeholder('Enter estimate')
+                        ->placeholder(__('messages.projects.estimate_time'))
                         ->default(0)
                         ->afterStateHydrated(function ($set, $get) {
                             if (! $get('estimate_time_type')) {
@@ -606,7 +605,7 @@ class ProjectTaskTable extends TableWidget
                         ->suffixAction(
                             Action::make('set_hours')
                                 ->button()
-                                ->label('In Hours')
+                                ->label(__('messages.projects.in_hours'))
                                 ->size('xs')
                                 ->color(fn($get) => $get('estimate_time_type') === Task::IN_HOURS ? 'primary' : 'secondary')
                                 ->action(function ($set) {
@@ -617,7 +616,7 @@ class ProjectTaskTable extends TableWidget
                         ->suffixAction(
                             Action::make('set_days')
                                 ->button()
-                                ->label('In Days')
+                                ->label(__('messages.projects.in_days'))
                                 ->size('xs')
                                 ->color(fn($get) => $get('estimate_time_type') === Task::IN_DAYS ? 'primary' : 'secondary')
                                 ->action(function ($set) {
@@ -627,7 +626,7 @@ class ProjectTaskTable extends TableWidget
                         ),
 
                     Select::make('tags')
-                        ->label('Tags')
+                        ->label(__('messages.settings.tags'))
                         ->multiple()
                         ->relationship('tags', 'name')
                         ->preload()
@@ -635,7 +634,7 @@ class ProjectTaskTable extends TableWidget
                         ->native(false),
 
                     Select::make('status')
-                        ->label('Status')
+                        ->label(__('messages.common.status'))
                         ->options(Status::all()->pluck('name', 'status'))
                         ->searchable()
                         ->visible(function (?string $operation) {
@@ -643,8 +642,8 @@ class ProjectTaskTable extends TableWidget
                         }),
 
                     RichEditor::make('description')
-                        ->label('Description')
-                        ->placeholder('Description')
+                        ->label(__('messages.common.description'))
+                        ->placeholder(__('messages.common.description'))
                         ->columnSpanFull()
                         ->extraAttributes(['style' => 'min-height: 200px;'])
                         ->toolbarButtons([

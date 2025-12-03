@@ -44,12 +44,17 @@ class ListProjects extends Page implements HasForms
 
     protected array $perPageOptions = [5, 10, 20, 50, 100, 'all'];
 
+    public function getTitle(): string
+    {
+        return __('messages.projects.projects');
+    }
+
     protected function getFormSchema(): array
     {
         return [
             TextInput::make('search')
                 ->hiddenLabel()
-                ->placeholder('Search projects...')
+                ->placeholder(__('messages.projects.search_projects'))
                 ->live(debounce: 500)
                 ->afterStateUpdated(function ($state) {
                     $this->search = $state;
@@ -59,7 +64,7 @@ class ListProjects extends Page implements HasForms
             Select::make('status')
                 ->hiddenLabel()
                 ->options(Project::STATUS)
-                ->placeholder('All Statuses')
+                ->placeholder(__('messages.projects.all_statuses'))
                 ->native(false)
                 ->extraAttributes([
                     'style' => 'min-width: 180px'
@@ -73,7 +78,7 @@ class ListProjects extends Page implements HasForms
             Select::make('client_id')
                 ->hiddenLabel()
                 ->options(Client::pluck('name', 'id'))
-                ->placeholder('All Clients')
+                ->placeholder(__('messages.projects.all_clients'))
                 ->native(false)
                 ->searchable()
                 ->extraAttributes([
@@ -92,10 +97,10 @@ class ListProjects extends Page implements HasForms
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Project')
+                ->label(__('messages.projects.new_project'))
                 ->modalWidth('2xl')
                 ->createAnother(false)
-                ->successNotificationTitle('Project created successfully!')
+                ->successNotificationTitle(__('messages.projects.project_created_successfully'))
                 ->form(fn($form) => ProjectResource::form($form))
                 ->after(function ($record, array $data) {
                     $userIds = $data['users'] ?? $record->users()->pluck('users.id')->toArray();
@@ -219,7 +224,7 @@ class ListProjects extends Page implements HasForms
                                     ActionGroup::make([
 
                                         Action::make('view' . $project->id)
-                                            ->label('View')
+                                            ->label(__('messages.common.view'))
                                             ->icon('heroicon-s-eye')
                                             ->url(fn() => ProjectResource::getUrl('view', ['record' => $project->id])),
 
@@ -286,11 +291,11 @@ class ListProjects extends Page implements HasForms
                                         ->badge()
                                         ->default(function () use ($project) {
                                             $statuses = [
-                                                0 => 'All',
-                                                1 => 'Ongoing',
-                                                2 => 'Finished',
-                                                3 => 'On Hold',
-                                                4 => 'Archived',
+                                                0 => __('messages.status.all'),
+                                                1 => __('messages.status.ongoing'),
+                                                2 => __('messages.status.finished'),
+                                                3 => __('messages.status.on_hold'),
+                                                4 => __('messages.status.archived'),
                                             ];
 
                                             $statusValue = $project->status ?? null;
@@ -347,14 +352,14 @@ class ListProjects extends Page implements HasForms
                                         ->iconButton()
                                         ->icon('heroicon-s-plus')
                                         ->color('info')
-                                        ->modalHeading("Edit Assignee")
+                                        ->modalHeading(__('messages.projects.edit_assignees'))
                                         ->modalWidth('md')
                                         ->fillForm(fn() => [
                                             'users' => $project->users->pluck('id')->toArray(),
                                         ])
                                         ->form([
                                             Select::make('users')
-                                                ->label('Users')
+                                                ->label(__('messages.users.users'))
                                                 ->multiple()
                                                 ->preload()
                                                 ->searchable()
@@ -414,7 +419,7 @@ class ListProjects extends Page implements HasForms
                                                 ->log('Assigned ' . $project->name . ' to ' . implode(', ', $project->users()->pluck('name')->toArray()));
                                         })
                                         ->after(fn() => redirect(request()->header('Referer')))
-                                        ->successNotificationTitle('Assignee updated successfully!')
+                                        ->successNotificationTitle(__('messages.projects.assignee_updated_successfully'))
                                         ->extraAttributes([
                                             'style' => 'display: flex; justify-content: center; align-items: center; border: 1px solid #5689fd; border-radius: 50%; padding: 0.5rem; margin: 2px 0px 2px -17px;',
                                         ])
@@ -463,9 +468,9 @@ class ListProjects extends Page implements HasForms
     public static function getEditForm(Project $project): Action
     {
         return Action::make('Edit' . $project->id)
-            ->label('Edit')
+            ->label(__('messages.common.edit'))
             ->icon('heroicon-s-pencil')
-            ->modalHeading("Edit Project")
+            ->modalHeading(__('messages.projects.edit_project'))
             ->modalWidth('3xl')
             ->color('info')
             ->fillForm(function () use ($project) {
@@ -486,8 +491,8 @@ class ListProjects extends Page implements HasForms
                 Group::make([
 
                     TextInput::make('name')
-                        ->label('Name')
-                        ->placeholder('Name')
+                        ->label(__('messages.common.name'))
+                        ->placeholder(__('messages.common.name'))
                         ->live()
                         ->unique()
                         ->required()
@@ -503,15 +508,15 @@ class ListProjects extends Page implements HasForms
                         }),
 
                     TextInput::make('prefix')
-                        ->label('Prefix')
-                        ->placeholder('Prefix')
+                        ->label(__('messages.projects.prefix'))
+                        ->placeholder(__('messages.projects.prefix'))
                         ->maxLength(8)
                         ->reactive()
                         ->unique()
                         ->required(),
 
                     Select::make('user_ids')
-                        ->label('Users')
+                        ->label(__('messages.users.users'))
                         ->multiple()
                         ->options(User::pluck('name', 'id'))
                         ->searchable()
@@ -519,7 +524,7 @@ class ListProjects extends Page implements HasForms
 
 
                     Select::make('client_id')
-                        ->label('Client')
+                        ->label(__('messages.users.client'))
                         ->options(Client::all()->pluck('name', 'id'))
                         ->preload()
                         ->searchable()
@@ -527,22 +532,21 @@ class ListProjects extends Page implements HasForms
 
                     TextInput::make('price')
                         ->numeric()
-                        ->placeholder('Budget')
-                        ->label('Budget')
+                        ->placeholder(__('messages.projects.budget'))
+                        ->label(__('messages.projects.budget'))
                         ->required(),
 
                     Select::make('budget_type')
-                        ->label('Budget Type')
+                        ->label(__('messages.projects.budget_type'))
                         ->options(Project::BUDGET_TYPE)
                         ->native(false)
-                        ->hintIcon(Heroicon::QuestionMarkCircle, tooltip: 'Hourly: Amount for task in the invoice will be counted as per hourly rate. eg.02:00 H * 20 rate/Hr
-                                                                           Fix Rate: Invoice total amount will be taken as per fixed rate. no hourly calculation of tasks.')
+                        ->hintIcon(Heroicon::QuestionMarkCircle, tooltip: __('messages.projects.budget_type_tooltip'))
                         ->required(),
 
                     Group::make([
 
                         Select::make('currency')
-                            ->label('Currency')
+                            ->label(__('messages.projects.currency'))
                             ->options(function () {
                                 return collect(Project::CURRENCY)->mapWithKeys(function ($name, $key) {
                                     return [$key => Project::getCurrencyClass($key) . ' ' . $name];
@@ -554,22 +558,22 @@ class ListProjects extends Page implements HasForms
                             ->required(),
 
                         Select::make('status')
-                            ->label('Status')
+                            ->label(__('messages.common.status'))
                             ->options(Project::STATUS)
                             ->native(false)
                             ->required(),
 
                         ColorPicker::make('color')
-                            ->label('Color')
-                            ->placeholder('Color'),
+                            ->label(__('messages.common.color'))
+                            ->placeholder(__('messages.common.color')),
 
                     ])
                         ->columnSpanFull()
                         ->columns(3),
 
                     RichEditor::make('description')
-                        ->label('Description')
-                        ->placeholder('Description')
+                        ->label(__('messages.common.description'))
+                        ->placeholder(__('messages.common.description'))
                         ->columnSpanFull()
                         ->extraAttributes(['style' => 'min-height: 200px;'])
                         ->toolbarButtons([
@@ -673,13 +677,13 @@ class ListProjects extends Page implements HasForms
                     ->useLog('Project Updated')
                     ->log('Updated Project');
             })
-            ->successNotificationTitle('Project updated successfully!');
+            ->successNotificationTitle(__('messages.projects.project_updated_successfully'));
     }
 
     public static function getDeleteAction(Project $project): Action
     {
         return Action::make('Delete' . $project->id)
-            ->label('Delete')
+            ->label(__('messages.common.delete'))
             ->icon('heroicon-s-trash')
             ->color('danger')
             ->requiresConfirmation()
@@ -689,6 +693,6 @@ class ListProjects extends Page implements HasForms
             ->after(function ($livewire) {
                 $livewire->dispatch('refresh');
             })
-            ->successNotificationTitle('Project deleted successfully!');
+            ->successNotificationTitle(__('messages.projects.project_deleted_successfully'));
     }
 }

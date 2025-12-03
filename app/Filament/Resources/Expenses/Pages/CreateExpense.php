@@ -13,7 +13,12 @@ class CreateExpense extends CreateRecord
 
     protected function getCreatedNotificationTitle(): ?string
     {
-        return 'Expense Created Successfully';
+        return __('messages.users.expense_created_successfully');
+    }
+
+    public function getTitle(): string
+    {
+        return __('messages.users.create_expense');
     }
 
     protected function getRedirectUrl(): string

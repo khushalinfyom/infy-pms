@@ -28,8 +28,8 @@ class ExpenseForm
                             ->default(auth()->user()->id),
 
                         RichEditor::make('description')
-                            ->label('Description')
-                            ->placeholder('Description')
+                            ->label(__('messages.common.description'))
+                            ->placeholder(__('messages.common.description'))
                             ->columnSpanFull()
                             ->extraAttributes(['style' => 'height: 200px;'])
                             ->toolbarButtons([
@@ -42,27 +42,27 @@ class ExpenseForm
                         Group::make([
 
                             DatePicker::make('date')
-                                ->label('Date')
-                                ->placeholder('Date')
+                                ->label(__('messages.settings.date'))
+                                ->placeholder(__('messages.settings.date'))
                                 ->native(false)
                                 ->maxDate(now())
                                 ->required(),
 
                             TextInput::make('amount')
-                                ->label('Amount')
-                                ->placeholder('Amount')
+                                ->label(__('messages.settings.amount'))
+                                ->placeholder(__('messages.settings.amount'))
                                 ->required()
                                 ->numeric(),
 
                             Select::make('category')
-                                ->label('Category')
+                                ->label(__('messages.settings.category'))
                                 ->options(Expense::CATEGORY)
                                 ->searchable()
                                 ->preload()
                                 ->native(false),
 
                             Select::make('client_id')
-                                ->label('Client')
+                                ->label(__('messages.users.client'))
                                 ->relationship('client', 'name')
                                 ->searchable()
                                 ->preload()
@@ -74,7 +74,7 @@ class ExpenseForm
                                 }),
 
                             Select::make('project_id')
-                                ->label('Project')
+                                ->label(__('messages.projects.project'))
                                 ->options(function (callable $get) {
                                     $clientId = $get('client_id');
 
@@ -90,7 +90,7 @@ class ExpenseForm
                                 ->required(),
 
                             Checkbox::make('billable')
-                                ->label('Billable')
+                                ->label(__('messages.settings.billable'))
                                 ->default(false),
 
                         ])
@@ -98,7 +98,7 @@ class ExpenseForm
                             ->columns(3),
 
                         SpatieMediaLibraryFileUpload::make('expense_attachments')
-                            ->label('Attachments')
+                            ->label(__('messages.projects.attachments'))
                             ->disk(config('app.media_disk'))
                             ->collection(Expense::ATTACHMENT_PATH)
                             ->multiple(),

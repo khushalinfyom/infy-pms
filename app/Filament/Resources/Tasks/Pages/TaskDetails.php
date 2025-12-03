@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Tasks\Pages;
 
 use App\Filament\Resources\Tasks\TaskResource;
 use Filament\Actions\Action;
-use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class TaskDetails extends ViewRecord
@@ -15,7 +14,7 @@ class TaskDetails extends ViewRecord
     {
         return [
             Action::make('back')
-                ->label('Back')
+                ->label(__('messages.common.back'))
                 ->icon('heroicon-s-arrow-left')
                 ->url(TaskResource::getUrl('index'))
                 ->color('gray'),

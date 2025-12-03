@@ -73,7 +73,7 @@ class ProjectProgessChartWidget extends ApexChartWidget
             $count    = $row->total;
 
             $status = Status::find($statusId);
-            $statusName = $status ? $status->name : 'Unknown Status';
+            $statusName = $status ? $status->name : __('messages.projects.unknown_status');
 
             $labels[] = $statusName;
             $series[] = $count;
@@ -82,7 +82,7 @@ class ProjectProgessChartWidget extends ApexChartWidget
         }
 
         if (empty($labels)) {
-            $labels = ['No Tasks Found'];
+            $labels = [__('messages.projects.no_task_found')];
             $series = [100];
             $colors = ['#ddd'];
         }

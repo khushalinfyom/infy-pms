@@ -19,11 +19,11 @@ class ManageUsers extends ManageRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New User')
-                ->successNotificationTitle('User created successfully!')
+                ->label(__('messages.users.new_user'))
+                ->successNotificationTitle(__('messages.users.user_created_successfully'))
                 ->createAnother(false)
                 ->modalWidth('lg')
-                ->modalHeading('Create User')
+                ->modalHeading(__('messages.users.create_user'))
                 ->mutateFormDataUsing(function (array $data): array {
                     $data['email_verified_at'] = Carbon::now();
                     $data['is_email_verified'] = 1;

@@ -15,7 +15,7 @@ class EditRole extends EditRecord
     {
         return [
             Action::make('back')
-                ->label('Back')
+                ->label(__('messages.common.back'))
                 ->icon('heroicon-s-arrow-left')
                 ->url(RoleResource::getUrl('index'))
                 ->color('gray'),
@@ -24,12 +24,12 @@ class EditRole extends EditRecord
 
     public function getTitle(): string
     {
-        return 'Edit Role';
+        return __('messages.users.edit_role');
     }
 
     protected function getSavedNotificationTitle(): ?string
     {
-        return 'Role Updated Successfully';
+        return __('messages.users.role_updated_successfully');
     }
 
     protected function getRedirectUrl(): ?string

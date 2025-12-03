@@ -32,12 +32,12 @@ class ArchivedUserResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return 'Archived Users';
+        return __('messages.users.archived_users');
     }
 
     public static function getModelLabel(): string
     {
-        return 'Archived Users';
+        return __('messages.users.archived_users');
     }
 
     public static function table(Table $table): Table
@@ -50,12 +50,12 @@ class ArchivedUserResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No users found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'users']);
                 } else {
-                    return 'No users found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'users', 'search' => $livewire->tableSearch]);
                 }
             })
             ->recordTitleAttribute('User')
@@ -63,13 +63,13 @@ class ArchivedUserResource extends Resource
 
                 SpatieMediaLibraryImageColumn::make('image_path')
                     ->collection(User::IMAGE_PATH)
-                    ->label('Profile')
+                    ->label(__('messages.common.profile'))
                     ->circular()
                     ->width(40)
                     ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name),
 
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('messages.common.name'))
                     ->searchable()
                     ->description(function (User $record) {
                         return $record->email;
@@ -77,23 +77,23 @@ class ArchivedUserResource extends Resource
             ])
             ->recordActions([
                 ForceDeleteAction::make()
-                    ->label('Delete Permanently')
+                    ->tooltip(__('messages.users.delete_permanently'))
                     ->color('danger')
                     ->iconButton()
                     ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
-                    ->modalHeading('Permanently delete user')
-                    ->modalDescription('This action cannot be undone. The user record will be permanently deleted.')
-                    ->successNotificationTitle('User permanently deleted!'),
+                    ->modalHeading(__('messages.users.permanently_delete_user'))
+                    ->successNotificationTitle(__('messages.users.user_permanently_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     ForceDeleteBulkAction::make()
-                        ->label('Delete Permanently')
+                        ->tooltip(__('messages.users.delete_permanently'))
                         ->color('danger')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation()
-                        ->successNotificationTitle('Users permanently deleted!'),
+                        ->modalHeading(__('messages.users.permanently_delete_users'))
+                        ->successNotificationTitle(__('messages.users.users_permanently_deleted_successfully')),
                 ]),
             ]);
     }

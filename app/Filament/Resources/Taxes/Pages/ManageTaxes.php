@@ -15,11 +15,11 @@ class ManageTaxes extends ManageRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Tax')
-                ->successNotificationTitle('Tax created successfully!')
+                ->label(__('messages.settings.create_tax'))
+                ->successNotificationTitle(__('messages.settings.tax_created_successfully'))
                 ->createAnother(false)
                 ->modalWidth('md')
-                ->modalHeading('Create Tax'),
+                ->modalHeading(__('messages.settings.create_tax')),
         ];
     }
 }

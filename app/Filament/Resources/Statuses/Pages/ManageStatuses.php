@@ -15,11 +15,11 @@ class ManageStatuses extends ManageRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Status')
+                ->label(__('messages.settings.new_status'))
                 ->modalWidth('lg')
                 ->createAnother(false)
-                ->modalHeading('Create Status')
-                ->successNotificationTitle('Status created successfully!'),
+                ->modalHeading(__('messages.settings.create_status'))
+                ->successNotificationTitle(__('messages.settings.status_created_successfully')),
         ];
     }
 }

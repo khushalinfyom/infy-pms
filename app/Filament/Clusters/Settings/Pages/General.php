@@ -40,12 +40,12 @@ class General extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return 'General Settings';
+        return __('messages.settings.general_settings');
     }
 
     public function getHeading(): string|Htmlable
     {
-        return 'General Settings';
+        return __('messages.settings.general_settings');
     }
 
     public ?array $data = [];
@@ -87,7 +87,7 @@ class General extends Page implements HasForms
     {
         return [
             Action::make('save')
-                ->label('Save')
+                ->label(__('messages.common.save'))
                 ->submit('save')
                 ->action('save'),
         ];
@@ -103,25 +103,25 @@ class General extends Page implements HasForms
                     Group::make()
                         ->schema([
                             TextInput::make('app_name')
-                                ->label('App Name')
-                                ->placeholder('App Name')
+                                ->label(__('messages.settings.app_name'))
+                                ->placeholder(__('messages.settings.app_name'))
                                 ->required(),
 
                             TextInput::make('company_name')
-                                ->label('Company Name')
-                                ->placeholder('Company Name')
+                                ->label(__('messages.settings.company_name'))
+                                ->placeholder(__('messages.settings.company_name'))
                                 ->required(),
 
                             TextInput::make('company_email')
-                                ->label('Company Email')
-                                ->placeholder('Company Email')
+                                ->label(__('messages.settings.company_email'))
+                                ->placeholder(__('messages.settings.company_email'))
                                 ->required(),
 
                             PhoneInput::make('company_phone')
                                 ->defaultCountry('IN')
                                 ->separateDialCode(true)
                                 ->countryStatePath('company_region_code')
-                                ->label('Company Phone')
+                                ->label(__('messages.settings.company_phone'))
                                 ->required()
                                 ->rules(function (Get $get) {
                                     return [
@@ -130,7 +130,7 @@ class General extends Page implements HasForms
                                     ];
                                 })
                                 ->validationMessages([
-                                    'phone' => 'The phone number is not valid for the selected country.',
+                                    'phone' => __('messages.settings.phone_number_validation'),
                                 ]),
 
                         ])
@@ -141,21 +141,21 @@ class General extends Page implements HasForms
                         ->schema([
 
                             TextInput::make('working_days_of_month')
-                                ->label('Working Days of Month')
-                                ->placeholder('Working Days of Month')
+                                ->label(__('messages.settings.working_days_of_month'))
+                                ->placeholder(__('messages.settings.working_days_of_month'))
                                 ->numeric()
                                 ->minValue(1)
                                 ->required(),
 
                             TextInput::make('working_hours_of_day')
-                                ->label('Working Hours of Day')
-                                ->placeholder('Working Hours of Day')
+                                ->label(__('messages.settings.working_hours_of_day'))
+                                ->placeholder(__('messages.settings.working_hours_of_day'))
                                 ->numeric()
                                 ->minValue(1)
                                 ->required(),
 
                             Select::make('default_task_status')
-                                ->label('Status')
+                                ->label(__('messages.common.status'))
                                 ->options(Status::all()->pluck('name', 'id'))
                                 ->searchable(),
                         ])
@@ -163,8 +163,8 @@ class General extends Page implements HasForms
                         ->columnSpanFull(),
 
                     TextInput::make('company_address')
-                        ->label('Company Address')
-                        ->placeholder('Company Address')
+                        ->label(__('messages.settings.company_address'))
+                        ->placeholder(__('messages.settings.company_address'))
                         ->required()
                         ->columnSpanFull()
                         ->extraAttributes(['style' => 'min-height: 100px;']),
@@ -172,12 +172,12 @@ class General extends Page implements HasForms
                     Group::make([
 
                         SpatieMediaLibraryFileUpload::make('app_logo')
-                            ->label('App Logo')
+                            ->label(__('messages.settings.app_logo'))
                             ->disk(config('app.media_disk'))
                             ->collection(Setting::APP_LOGO),
 
                         SpatieMediaLibraryFileUpload::make('app_favicon')
-                            ->label('App Favicon')
+                            ->label(__('messages.settings.app_favicon'))
                             ->disk(config('app.media_disk'))
                             ->collection(Setting::APP_FAVICON),
 
@@ -220,7 +220,7 @@ class General extends Page implements HasForms
 
             Notification::make()
                 ->success()
-                ->title('General Settings updated successfully.')
+                ->title(__('messages.settings.general_setting_updated_successfully'))
                 ->send();
         } catch (Exception $exception) {
             Notification::make()

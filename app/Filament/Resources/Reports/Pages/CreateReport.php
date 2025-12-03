@@ -19,12 +19,12 @@ class CreateReport extends CreateRecord
 
     public function getTitle(): string
     {
-        return 'Create Report';
+        return __('messages.users.create_report');
     }
 
     protected function getCreatedNotificationTitle(): ?string
     {
-        return 'Report Created Successfully';
+        return __('messages.users.report_created_successfully');
     }
 
     protected function getRedirectUrl(): string
@@ -45,6 +45,13 @@ class CreateReport extends CreateRecord
                 'param_type' => Department::class,
                 'param_id' => $data['department_id'],
             ]);
+        } else {
+            foreach (Department::pluck('id') as $id) {
+                $report->filters()->create([
+                    'param_type' => Department::class,
+                    'param_id' => $id,
+                ]);
+            }
         }
 
         if (!empty($data['client_id'])) {
@@ -52,20 +59,45 @@ class CreateReport extends CreateRecord
                 'param_type' => Client::class,
                 'param_id' => $data['client_id'],
             ]);
+        } else {
+            foreach (Client::pluck('id') as $id) {
+                $report->filters()->create([
+                    'param_type' => Client::class,
+                    'param_id' => $id,
+                ]);
+            }
         }
 
-        foreach ($data['project_ids'] ?? [] as $projectId) {
-            $report->filters()->create([
-                'param_type' => Project::class,
-                'param_id' => $projectId,
-            ]);
+        if (!empty($data['project_ids'])) {
+            foreach ($data['project_ids'] as $projectId) {
+                $report->filters()->create([
+                    'param_type' => Project::class,
+                    'param_id' => $projectId,
+                ]);
+            }
+        } else {
+            foreach (Project::pluck('id') as $id) {
+                $report->filters()->create([
+                    'param_type' => Project::class,
+                    'param_id' => $id,
+                ]);
+            }
         }
 
-        foreach ($data['user_ids'] ?? [] as $userId) {
-            $report->filters()->create([
-                'param_type' => User::class,
-                'param_id' => $userId,
-            ]);
+        if (!empty($data['user_ids'])) {
+            foreach ($data['user_ids'] as $userId) {
+                $report->filters()->create([
+                    'param_type' => User::class,
+                    'param_id' => $userId,
+                ]);
+            }
+        } else {
+            foreach (User::where('is_active', true)->pluck('id') as $id) {
+                $report->filters()->create([
+                    'param_type' => User::class,
+                    'param_id' => $id,
+                ]);
+            }
         }
 
         foreach ($data['tag_ids'] ?? [] as $tagId) {
