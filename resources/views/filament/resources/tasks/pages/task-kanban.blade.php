@@ -17,6 +17,7 @@
                     <div class="md:min-w-[500px] min-w-[300px]">
                         {{ $this->filterForm }}
                     </div>
+                    {{ $this->taskListAction }}
                     {{ $this->createTaskAction }}
                 </div>
             </div>
@@ -363,8 +364,8 @@
             </div>
 
             <div class="mt-2 text-xs text-slate-500">
-                ${task.projectName 
-                    ? `<span class="inline-block px-2 py-1 bg-slate-100 rounded">${escapeHtml(task.projectName)}</span>` 
+                ${task.projectName
+                    ? `<span class="inline-block px-2 py-1 bg-slate-100 rounded">${escapeHtml(task.projectName)}</span>`
                     : ''}
             </div>
         </div>
@@ -426,7 +427,7 @@
 
                 if (img) {
                     return `
-            <img src="${img}" 
+            <img src="${img}"
                  title="${name}"
                  class="avatar rounded-full w-8 h-8 object-cover border-2 border-white shadow" />
         `;

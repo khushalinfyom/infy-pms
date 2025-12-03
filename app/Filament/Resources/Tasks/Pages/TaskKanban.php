@@ -112,6 +112,14 @@ class TaskKanban extends Page implements HasActions, HasForms
         }
     }
 
+    public function taskListAction(): Action
+    {
+        return Action::make('taskList')
+            ->label('Task List')
+            ->icon('heroicon-s-list-bullet')
+            ->url(TaskResource::getUrl('index'));
+    }
+
     public function createTaskAction(): Action
     {
         return CreateAction::make('createTask')
