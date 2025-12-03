@@ -28,6 +28,10 @@ class ManageTasks extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('kanban')
+                ->label('Kanban')
+                ->url(TaskResource::getUrl('kanban')),
+
             ActionGroup::make([
 
                 CreateAction::make()

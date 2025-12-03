@@ -747,6 +747,7 @@ class TaskResource extends Resource
     {
         return [
             'index' => ManageTasks::route('/'),
+            'kanban' => Pages\TaskKanban::route('/kanban'),
             'taskdetails' => TaskDetails::route('/{record}'),
         ];
     }
