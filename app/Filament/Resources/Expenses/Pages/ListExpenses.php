@@ -15,7 +15,12 @@ class ListExpenses extends ListRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Expense'),
+                ->label(__('messages.users.new_expense')),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return __('messages.users.expenses');
     }
 }

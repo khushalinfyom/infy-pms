@@ -60,18 +60,28 @@ class TaskResource extends Resource
         return authUserHasPermission('manage_all_tasks');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.projects.tasks');
+    }
+
+    public static function getLabel(): ?string
+    {
+        return __('messages.projects.tasks');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
 
                 TextInput::make('title')
-                    ->label('Title')
-                    ->placeholder('Title')
+                    ->label(__('messages.projects.title'))
+                    ->placeholder(__('messages.projects.title'))
                     ->required(),
 
                 Select::make('project_id')
-                    ->label('Project')
+                    ->label(__('messages.projects.project'))
                     ->options(Project::all()->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
@@ -83,12 +93,12 @@ class TaskResource extends Resource
                     }),
 
                 Select::make('priority')
-                    ->label('Priority')
+                    ->label(__('messages.projects.priority'))
                     ->options(Task::PRIORITY)
                     ->searchable(),
 
                 Select::make('taskAssignee')
-                    ->label('Assignee')
+                    ->label(__('messages.projects.assignee'))
                     ->multiple()
                     ->options(function (callable $get) {
                         $projectId = $get('project_id');
@@ -116,8 +126,8 @@ class TaskResource extends Resource
                     }),
 
                 DatePicker::make('due_date')
-                    ->label('Due Date')
-                    ->placeholder('SelectDue Date')
+                    ->label(__('messages.projects.due_date'))
+                    ->placeholder(__('messages.projects.due_date'))
                     ->native(false)
                     ->minDate(now()),
 
@@ -161,9 +171,9 @@ class TaskResource extends Resource
                 //     ),
 
                 TextInput::make('estimate_time')
-                    ->label('Estimate Time')
+                    ->label(__('messages.projects.estimate_time'))
                     ->reactive()
-                    ->placeholder('Enter estimate')
+                    ->placeholder(__('messages.projects.estimate_time'))
                     ->default(0)
                     ->afterStateHydrated(function ($set, $get) {
                         if (! $get('estimate_time_type')) {
@@ -179,7 +189,7 @@ class TaskResource extends Resource
                     ->suffixActions([
                         Action::make('set_hours')
                             ->button()
-                            ->label('In Hours')
+                            ->label(__('messages.projects.in_hours'))
                             ->size('xs')
                             ->color(fn($get) => $get('estimate_time_type') === Task::IN_HOURS ? 'primary' : 'secondary')
                             ->action(function ($set) {
@@ -189,7 +199,7 @@ class TaskResource extends Resource
 
                         Action::make('set_days')
                             ->button()
-                            ->label('In Days')
+                            ->label(__('messages.projects.in_days'))
                             ->size('xs')
                             ->color(fn($get) => $get('estimate_time_type') === Task::IN_DAYS ? 'primary' : 'secondary')
                             ->action(function ($set) {
@@ -199,7 +209,7 @@ class TaskResource extends Resource
                     ]),
 
                 Select::make('tags')
-                    ->label('Tags')
+                    ->label(__('messages.settings.tags'))
                     ->multiple()
                     ->relationship('tags', 'name')
                     ->preload()
@@ -207,7 +217,7 @@ class TaskResource extends Resource
                     ->native(false),
 
                 RichEditor::make('description')
-                    ->label('Description')
+                    ->label(__('messages.common.description'))
                     ->placeholder('Description')
                     ->columnSpanFull()
                     ->extraAttributes(['style' => 'min-height: 200px;'])
@@ -231,7 +241,7 @@ class TaskResource extends Resource
                     ->persistTabInQueryString()
                     ->tabs([
                         Tab::make('taskdetail')
-                            ->label('Task Details')
+                            ->label(__('messages.projects.task_details'))
                             ->schema([
                                 Section::make()
                                     ->schema([
@@ -241,22 +251,22 @@ class TaskResource extends Resource
                                             ->columnSpanFull(),
 
                                         TextEntry::make('assignees')
-                                            ->label('Assignee')
+                                            ->label(__('messages.projects.assignee'))
                                             ->getStateUsing(function ($record) {
                                                 return $record->taskAssignee->pluck('name')->implode(', ');
                                             }),
 
                                         TextEntry::make('due_date')
-                                            ->label('Due Date')
+                                            ->label(__('messages.projects.due_date'))
                                             ->formatStateUsing(fn($state) => Carbon::parse($state)->format('jS F, Y'))
                                             ->visible(fn($record) => $record->due_date),
 
                                         TextEntry::make('status')
-                                            ->label('Status')
+                                            ->label(__('messages.common.status'))
                                             ->getStateUsing(fn($record) => $record->getStatusTextAttribute()),
 
                                         TextEntry::make('duration')
-                                            ->label('Time Tracking')
+                                            ->label(__('messages.projects.time_tracking'))
                                             ->getStateUsing(function ($record) {
                                                 $totalMinutes = $record->timeEntries->sum('duration');
                                                 $hours = floor($totalMinutes / 60);
@@ -265,21 +275,21 @@ class TaskResource extends Resource
                                             }),
 
                                         TextEntry::make('created_by')
-                                            ->label('Reporter')
+                                            ->label(__('messages.projects.reporter'))
                                             ->getStateUsing(function ($record) {
                                                 return $record->createdUser->name;
                                             }),
 
                                         TextEntry::make('created_at')
-                                            ->label('Created On')
+                                            ->label(__('messages.projects.created_on'))
                                             ->getStateUsing(fn($record) => Carbon::parse($record->created_at)->diffForHumans()),
 
                                         TextEntry::make('updated_at')
-                                            ->label('Updated On')
+                                            ->label(__('messages.projects.updated_on'))
                                             ->getStateUsing(fn($record) => Carbon::parse($record->updated_at)->diffForHumans()),
 
                                         TextEntry::make('description')
-                                            ->label('Description')
+                                            ->label(__('messages.common.description'))
                                             ->html()
                                             ->columnSpanFull()
                                     ])
@@ -287,21 +297,21 @@ class TaskResource extends Resource
                             ]),
 
                         Tab::make('attachments')
-                            ->label('Attachments')
+                            ->label(__('messages.projects.attachments'))
                             ->schema([
                                 Livewire::make(TaskAttachmentTable::class)
                                     ->columnSpanFull(),
                             ]),
 
                         Tab::make('comments')
-                            ->label('Comments')
+                            ->label(__('messages.projects.comments'))
                             ->schema([
                                 Livewire::make(TaskCommentsTable::class)
                                     ->columnSpanFull(),
                             ]),
 
                         Tab::make('taskTimeEntry')
-                            ->label('Task Time Entries')
+                            ->label(__('messages.projects.task_time_entries'))
                             ->schema([
                                 Livewire::make(TaskTimeEntryTable::class)
                                     ->columnSpanFull(),
@@ -317,12 +327,12 @@ class TaskResource extends Resource
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No tasks found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'tasks']);
                 } else {
-                    return 'No tasks found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'tasks', 'search' => $livewire->tableSearch]);
                 }
             })
             ->query(function () {
@@ -335,15 +345,15 @@ class TaskResource extends Resource
             ->columns([
 
                 TextColumn::make('title')
-                    ->label('Title')
+                    ->label(__('messages.projects.title'))
                     ->searchable(),
 
                 TextColumn::make('project.name')
-                    ->label('Project')
+                    ->label(__('messages.projects.project'))
                     ->searchable(),
 
                 ImageColumn::make('users')
-                    ->label('Assignees')
+                    ->label(__('messages.projects.assignees'))
                     ->circular()
                     ->stacked()
                     ->limit(6)
@@ -359,7 +369,7 @@ class TaskResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('project_id')
-                    ->label('Project')
+                    ->label(__('messages.projects.project'))
                     ->relationship('project', 'name')
                     ->native(false)
                     ->searchable()
@@ -369,7 +379,7 @@ class TaskResource extends Resource
             ->recordActions([
 
                 Action::make('completed')
-                    ->tooltip('Mark as Completed')
+                    ->tooltip(__('messages.projects.mark_as_completed'))
                     ->icon('heroicon-s-check-circle')
                     ->color('success')
                     ->iconButton()
@@ -381,14 +391,14 @@ class TaskResource extends Resource
                     ->visible(function ($record) {
                         return $record->status != Task::STATUS_COMPLETED;
                     })
-                    ->successNotificationTitle('Task marked as completed successfully!'),
+                    ->successNotificationTitle(__('messages.projects.task_completed_successfully')),
 
                 Action::make('view')
-                    ->tooltip('View')
+                    ->tooltip(__('messages.common.view'))
                     ->icon('heroicon-s-eye')
                     ->iconButton()
                     ->modalWidth('4xl')
-                    ->modalHeading('Task Details')
+                    ->modalHeading(__('messages.projects.task_details'))
                     ->infolist([
                         Group::make()
                             ->schema([
@@ -402,21 +412,21 @@ class TaskResource extends Resource
                                             ->extraAttributes(['style' => 'font-size: 1.25rem; font-weight: 600;']),
 
                                         TextEntry::make('description')
-                                            ->label('Description')
+                                            ->label(__('messages.common.description'))
                                             ->html()
-                                            ->placeholder('No description added yet.'),
+                                            ->placeholder('N/A'),
 
-                                        Fieldset::make('Attachments')
+                                        Fieldset::make(__('messages.projects.attachments'))
                                             ->schema([
 
                                                 Action::make('add_attachment')
-                                                    ->label('New Attachment')
+                                                    ->label(__('messages.projects.new_attachment'))
                                                     ->icon('heroicon-s-plus')
-                                                    ->modalHeading('Upload Attachment')
+                                                    ->modalHeading(__('messages.projects.upload_attachment'))
                                                     ->modalWidth('lg')
                                                     ->form([
                                                         SpatieMediaLibraryFileUpload::make('upload_file')
-                                                            ->label('Select File')
+                                                            ->label(__('messages.projects.select_file'))
                                                             ->directory('task-attachments')
                                                             ->preserveFilenames()
                                                             ->maxSize(10240)
@@ -433,7 +443,7 @@ class TaskResource extends Resource
                                                     }),
 
                                                 Repeater::make('attachments')
-                                                    ->label('All Attachments')
+                                                    ->label(__('messages.projects.all_attachments'))
                                                     ->default(function ($record) {
                                                         if (!$record) return [];
 
@@ -467,20 +477,20 @@ class TaskResource extends Resource
                                             ])
                                             ->columns(1),
 
-                                        Fieldset::make('Comments')
+                                        Fieldset::make(__('messages.projects.comments'))
                                             ->schema([
 
                                                 Action::make('add_comment')
-                                                    ->label('New Comment')
+                                                    ->label(__('messages.projects.new_comment'))
                                                     ->icon('heroicon-s-plus')
-                                                    ->modalHeading('Create Comment')
+                                                    ->modalHeading(__('messages.projects.create_comment'))
                                                     ->modalWidth('xl')
                                                     ->form([
                                                         RichEditor::make('new_comment')
-                                                            ->label('Comment')
+                                                            ->label(__('messages.projects.comment'))
                                                             ->required()
                                                             ->columnSpanFull()
-                                                            ->placeholder('Add comment...')
+                                                            ->placeholder(__('messages.projects.comment'))
                                                             ->extraAttributes(['style' => 'min-height: 200px;'])
                                                             ->toolbarButtons([
                                                                 ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
@@ -500,13 +510,13 @@ class TaskResource extends Resource
                                                     }),
 
                                                 Repeater::make('comment')
-                                                    ->label('Comments')
+                                                    ->label(__('messages.projects.comments'))
                                                     ->default(function ($record) {
                                                         if (!$record) return [];
 
                                                         return $record->comments->map(function ($item) {
                                                             return [
-                                                                'user_name'  => $item->createdUser->name ?? 'Unknown User',
+                                                                'user_name'  => $item->createdUser->name ?? __('messages.projects.unknown_user'),
                                                                 'avatar'     => $item->user_avatar,
                                                                 'comment'    => $item->comment,
                                                                 'created_at' => $item->created_at->diffForHumans(),
@@ -545,7 +555,7 @@ class TaskResource extends Resource
                                     ->schema([
 
                                         ImageEntry::make('task_assignees')
-                                            ->label('Assignee')
+                                            ->label(__('messages.projects.assignee'))
                                             ->default(function ($record) {
 
                                                 if (!$record) return [];
@@ -571,7 +581,7 @@ class TaskResource extends Resource
                                             ]),
 
                                         TextEntry::make('duration')
-                                            ->label('Time Tracking')
+                                            ->label(__('messages.projects.time_tracking'))
                                             ->getStateUsing(function ($record) {
                                                 $totalMinutes = $record->timeEntries->sum('duration');
                                                 $hours = floor($totalMinutes / 60);
@@ -584,18 +594,18 @@ class TaskResource extends Resource
                                             ->formatStateUsing(fn($state) => $state)
                                             ->html(),
 
-                                        Fieldset::make('Settings')
+                                        Fieldset::make(__('messages.settings.settings'))
                                             ->schema([
 
                                                 TextEntry::make('created_at')
-                                                    ->label('Start At')
+                                                    ->label(__('messages.projects.start_at'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         return Carbon::parse($state)->format('jS M, Y');
                                                     }),
 
                                                 TextEntry::make('due_date')
-                                                    ->label('Due Date')
+                                                    ->label(__('messages.projects.due_date'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         if (!$state) {
@@ -608,12 +618,12 @@ class TaskResource extends Resource
                                                     ->placeholder('N/A'),
 
                                                 TextEntry::make('status')
-                                                    ->label('Status')
+                                                    ->label(__('messages.common.status'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(fn($state) => Status::where('status', $state)->value('name') ?? $state),
 
                                                 TextEntry::make('priority')
-                                                    ->label('Priority')
+                                                    ->label(__('messages.projects.priority'))
                                                     ->inlineLabel()
                                                     ->default('N/A')
                                                     ->formatStateUsing(fn($state) => Task::PRIORITY[$state] ?? $state),
@@ -621,25 +631,25 @@ class TaskResource extends Resource
                                             ])
                                             ->columns(1),
 
-                                        Fieldset::make('Information')
+                                        Fieldset::make(__('messages.projects.information'))
                                             ->schema([
 
                                                 TextEntry::make('created_by')
-                                                    ->label('Created By')
+                                                    ->label(__('messages.projects.created_by'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         return User::find($state)->name;
                                                     }),
 
                                                 TextEntry::make('created_at')
-                                                    ->label('Created On')
+                                                    ->label(__('messages.projects.created_on'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         return Carbon::parse($state)->format('jS M, Y');
                                                     }),
 
                                                 TextEntry::make('time_tracking')
-                                                    ->label('Time Tracking')
+                                                    ->label(__('messages.projects.time_tracking'))
                                                     ->inlineLabel()
                                                     ->getStateUsing(function ($record) {
                                                         $totalMinutes = $record->timeEntries->sum('duration');
@@ -650,10 +660,8 @@ class TaskResource extends Resource
                                                     ->default('00:00 m'),
 
                                                 TextEntry::make('project.name')
-                                                    ->label('Project')
+                                                    ->label(__('messages.projects.project'))
                                                     ->inlineLabel(),
-
-
                                             ])
                                             ->columns(1),
 
@@ -667,16 +675,16 @@ class TaskResource extends Resource
 
                 Action::make('due date')
                     ->iconButton()
-                    ->tooltip('Set Due Date')
+                    ->tooltip(__('messages.projects.set_due_date'))
                     ->icon('heroicon-s-calendar')
                     ->modalWidth('md')
-                    ->modalHeading('Add Due Date')
+                    ->modalHeading(__('messages.projects.add_due_date'))
                     ->form([
                         DatePicker::make('due_date')
-                            ->label('Due Date')
+                            ->label(__('messages.projects.due_date'))
                             ->required()
                             ->native(false)
-                            ->placeholder('Due Date')
+                            ->placeholder(__('messages.projects.due_date'))
                             ->minDate(Carbon::now()->subDays(1)),
                     ])
                     ->action(function ($record, $data) {
@@ -685,14 +693,14 @@ class TaskResource extends Resource
                     ->visible(function ($record) {
                         return $record->due_date == null;
                     })
-                    ->successNotificationTitle('Due Date added successfully!'),
+                    ->successNotificationTitle(__('messages.projects.due_date_added_successfully')),
 
                 ActionGroup::make([
 
                     EditAction::make()
                         ->modalWidth('4xl')
-                        ->modalHeading('Edit Task')
-                        ->successNotificationTitle('Task updated successfully!')
+                        ->modalHeading(__('messages.projects.edit_task'))
+                        ->successNotificationTitle(__('messages.projects.task_updated_successfully'))
                         ->after(function ($record, array $data) {
                             if (isset($data['taskAssignee'])) {
                                 $record->taskAssignee()->sync($data['taskAssignee']);
@@ -700,11 +708,11 @@ class TaskResource extends Resource
                         }),
 
                     Action::make('taskEntry')
-                        ->label('New Time Entry')
-                        ->tooltip('New Time Entry')
+                        ->label(__('messages.projects.new_time_entry'))
+                        ->tooltip(__('messages.projects.new_time_entry'))
                         ->icon('heroicon-o-clock')
                         ->modalWidth('2xl')
-                        ->modalHeading('Create Time Entry')
+                        ->modalHeading(__('messages.projects.create_time_entry'))
                         ->form(fn($record) => self::createTimeEntryForm($record))
                         ->action(function (array $data) {
                             if (!isset($data['duration']) || empty($data['duration'])) {
@@ -718,17 +726,17 @@ class TaskResource extends Resource
                             return TimeEntry::create($data);
                         })
                         ->visible(authUserHasPermission('manage_time_entries'))
-                        ->successNotificationTitle('Time Entry added successfully!'),
+                        ->successNotificationTitle(__('messages.projects.time_entry_created_successfully')),
 
                     DeleteAction::make()
-                        ->tooltip('Delete')
-                        ->modalHeading('Delete Task')
-                        ->successNotificationTitle('Task deleted successfully!'),
+                        ->tooltip(__('messages.common.delete'))
+                        ->modalHeading(__('messages.projects.delete_task'))
+                        ->successNotificationTitle(__('messages.projects.task_deleted_successfully')),
                 ]),
 
                 Action::make('details')
                     ->iconButton()
-                    ->tooltip('Details')
+                    ->tooltip(__('messages.projects.details'))
                     ->icon('heroicon-o-arrow-right-circle')
                     ->url(fn($record) => TaskResource::getUrl('taskdetails', ['record' => $record->id])),
 
@@ -758,7 +766,7 @@ class TaskResource extends Resource
                 ->default(auth()->user()->id),
 
             Select::make('user_id')
-                ->label('User')
+                ->label(__('messages.users.user'))
                 ->relationship('createdUser', 'name')
                 ->required()
                 ->native(false)
@@ -770,7 +778,7 @@ class TaskResource extends Resource
                 Group::make([
 
                     Select::make('project_id')
-                        ->label('Project')
+                        ->label(__('messages.projects.project'))
                         ->relationship('project', 'name')
                         ->required()
                         ->native(false)
@@ -778,8 +786,8 @@ class TaskResource extends Resource
                         ->disabled(),
 
                     DateTimePicker::make('start_time')
-                        ->label('Start Time')
-                        ->placeholder('Start Time')
+                        ->label(__('messages.settings.start_time'))
+                        ->placeholder(__('messages.settings.start_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -790,8 +798,8 @@ class TaskResource extends Resource
                         ),
 
                     DateTimePicker::make('end_time')
-                        ->label('End Time')
-                        ->placeholder('End Time')
+                        ->label(__('messages.settings.end_time'))
+                        ->placeholder(__('messages.settings.end_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -804,8 +812,8 @@ class TaskResource extends Resource
                         ),
 
                     TextInput::make('duration')
-                        ->label('Duration (In Minutes)')
-                        ->placeholder('Duration')
+                        ->label(__('messages.settings.duration_in_minutes'))
+                        ->placeholder(__('messages.settings.duration'))
                         ->disabled()
                         ->required()
                         ->live(),
@@ -816,7 +824,7 @@ class TaskResource extends Resource
                 Group::make([
 
                     Select::make('task_id')
-                        ->label('Task')
+                        ->label(__('messages.projects.task'))
                         ->required()
                         ->native(false)
                         ->options([
@@ -826,7 +834,7 @@ class TaskResource extends Resource
                         ->disabled(),
 
                     Select::make('activity_type_id')
-                        ->label('Activity Type')
+                        ->label(__('messages.settings.activity_type'))
                         ->relationship('timeEntries.activityType', 'name')
                         ->required()
                         ->searchable()
@@ -834,7 +842,7 @@ class TaskResource extends Resource
                         ->native(false),
 
                     Textarea::make('note')
-                        ->label('Note')
+                        ->label(__('messages.settings.note'))
                         ->placeholder('Note')
                         ->required()
                         ->maxLength(255),

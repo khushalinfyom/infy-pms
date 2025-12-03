@@ -19,12 +19,12 @@ class RoleForm
                     ->schema([
 
                         TextInput::make('name')
-                            ->label('Name')
-                            ->placeholder('Name')
+                            ->label(__('messages.common.name'))
+                            ->placeholder(__('messages.common.name'))
                             ->required(),
 
                         CheckboxList::make('permissions')
-                            ->label('Permissions')
+                            ->label(__('messages.users.permissions'))
                             ->relationship(titleAttribute: 'display_name')
                             ->required()
                             ->bulkToggleable()
@@ -32,8 +32,8 @@ class RoleForm
                             ->columnSpanFull(),
 
                         RichEditor::make('description')
-                            ->label('Description')
-                            ->placeholder('Description')
+                            ->label(__('messages.common.description'))
+                            ->placeholder(__('messages.common.description'))
                             ->columnSpanFull()
                             ->extraAttributes(['style' => 'min-height: 250px;'])
                             ->toolbarButtons([

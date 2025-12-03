@@ -15,11 +15,11 @@ class ManageActivityTypes extends ManageRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Activity Type')
-                ->successNotificationTitle('Activity Type created successfully!')
+                ->label(__('messages.settings.new_activity_type'))
+                ->successNotificationTitle(__('messages.settings.activity_type_created_successfully'))
                 ->createAnother(false)
                 ->modalWidth('md')
-                ->modalHeading('Create Activity Type'),
+                ->modalHeading(__('messages.settings.create_activity_type')),
         ];
     }
 }

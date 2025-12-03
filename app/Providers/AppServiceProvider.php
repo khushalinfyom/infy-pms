@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use BezhanSalleh\LanguageSwitch\LanguageSwitch;
 use Illuminate\Support\ServiceProvider;
 use Filament\Support\Facades\FilamentView;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
@@ -32,6 +33,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+        LanguageSwitch::configureUsing(function (LanguageSwitch $switch) {
+            $switch
+                ->locales(['ar', 'en', 'fr']);
+        });
+
         FilamentView::registerRenderHook(
             TablesRenderHook::TOOLBAR_SEARCH_BEFORE,
             fn() => view('filament.tables.search-tooltip', ['allTables' => $this->allTables]),

@@ -10,7 +10,6 @@ use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
-use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -36,10 +35,10 @@ class ManageTasks extends ManageRecords
             ActionGroup::make([
 
                 CreateAction::make()
-                    ->label('New Task')
+                    ->label(__('messages.projects.new_task'))
                     ->modalWidth('2xl')
                     ->icon('heroicon-s-plus')
-                    ->modalHeading('Create Task')
+                    ->modalHeading(__('messages.projects.create_task'))
                     ->createAnother(false)
                     ->using(function (array $data) {
 
@@ -107,13 +106,13 @@ class ManageTasks extends ManageRecords
                                 ->log('Created new task ' . $record->title);
                         }
                     })
-                    ->successNotificationTitle('Task created successfully!'),
+                    ->successNotificationTitle(__('messages.projects.task_created_successfully')),
 
                 Action::make('new time entry')
-                    ->label('New Time Entry')
+                    ->label(__('messages.projects.new_time_entry'))
                     ->icon('heroicon-s-clock')
                     ->modalWidth('2xl')
-                    ->modalHeading('Create Time Entry')
+                    ->modalHeading(__('messages.projects.create_time_entry'))
                     ->form($this->createTimeEntryForm())
                     ->after(function (array $data) {
                         if (!isset($data['duration']) || empty($data['duration'])) {
@@ -127,10 +126,10 @@ class ManageTasks extends ManageRecords
                         return TimeEntry::create($data);
                     })
                     ->visible(authUserHasPermission('manage_time_entries'))
-                    ->successNotificationTitle('Time Entry created successfully!'),
+                    ->successNotificationTitle(__('messages.projects.time_entry_created_successfully')),
 
                 Action::make('copyTodayActivity')
-                    ->label('Copy Today Activity')
+                    ->label(__('messages.projects.copy_today_activity'))
                     ->icon('heroicon-s-document-duplicate')
                     ->action(function () {
                         $timeEntries = TimeEntry::getTodayEntries();
@@ -162,7 +161,7 @@ class ManageTasks extends ManageRecords
                         }
 
                         Notification::make()
-                            ->title('Today Activity Copied Successfully')
+                            ->title(__('messages.projects.today_activity_copied_successfully'))
                             ->send();
                     })
 
@@ -183,7 +182,7 @@ class ManageTasks extends ManageRecords
                 ->default(auth()->user()->id),
 
             Select::make('user_id')
-                ->label('User')
+                ->label(__('messages.users.user'))
                 ->relationship('createdUser', 'name')
                 ->required()
                 ->native(false)
@@ -195,7 +194,7 @@ class ManageTasks extends ManageRecords
                 Group::make([
 
                     Select::make('project_id')
-                        ->label('Project')
+                        ->label(__('messages.projects.project'))
                         ->relationship(
                             'project',
                             'name',
@@ -216,8 +215,8 @@ class ManageTasks extends ManageRecords
                         }),
 
                     DateTimePicker::make('start_time')
-                        ->label('Start Time')
-                        ->placeholder('Start Time')
+                        ->label(__('messages.settings.start_time'))
+                        ->placeholder(__('messages.settings.start_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -228,8 +227,8 @@ class ManageTasks extends ManageRecords
                         ),
 
                     DateTimePicker::make('end_time')
-                        ->label('End Time')
-                        ->placeholder('End Time')
+                        ->label(__('messages.settings.end_time'))
+                        ->placeholder(__('messages.settings.end_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -241,8 +240,8 @@ class ManageTasks extends ManageRecords
                         ),
 
                     TextInput::make('duration')
-                        ->label('Duration (In Minutes)')
-                        ->placeholder('Duration')
+                        ->label(__('messages.settings.duration_in_minutes'))
+                        ->placeholder(__('messages.settings.duration'))
                         ->disabled()
                         ->required()
                         ->live(),
@@ -253,7 +252,7 @@ class ManageTasks extends ManageRecords
                 Group::make([
 
                     Select::make('task_id')
-                        ->label('Task')
+                        ->label(__('messages.projects.task'))
                         ->options(function (callable $get) {
                             $projectId = $get('project_id');
 
@@ -273,7 +272,7 @@ class ManageTasks extends ManageRecords
                         ->native(false),
 
                     Select::make('activity_type_id')
-                        ->label('Activity Type')
+                        ->label(__('messages.settings.activity_type'))
                         ->relationship('timeEntries.activityType', 'name')
                         ->required()
                         ->searchable()
@@ -281,8 +280,8 @@ class ManageTasks extends ManageRecords
                         ->native(false),
 
                     Textarea::make('note')
-                        ->label('Note')
-                        ->placeholder('Note')
+                        ->label(__('messages.settings.note'))
+                        ->placeholder(__('messages.settings.note'))
                         ->required()
                         ->maxLength(255),
 

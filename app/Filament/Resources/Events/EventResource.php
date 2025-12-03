@@ -32,6 +32,11 @@ class EventResource extends Resource
         return authUserHasPermission('manage_events');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.events');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -40,36 +45,36 @@ class EventResource extends Resource
                     ->default(auth()->user()->id),
 
                 TextInput::make('title')
-                    ->label('Title')
-                    ->placeholder('Title')
+                    ->label(__('messages.projects.title'))
+                    ->placeholder(__('messages.projects.title'))
                     ->required()
                     ->columnSpanFull(),
 
                 DateTimePicker::make('start_date')
-                    ->label('Start Date')
-                    ->placeholder('Start Date')
+                    ->label(__('messages.settings.start_date'))
+                    ->placeholder(__('messages.settings.start_date'))
                     ->native(false)
                     ->required()
                     ->live()
                     ->maxDate(fn(callable $get) => $get('end_date')),
 
                 DateTimePicker::make('end_date')
-                    ->label('End Date')
-                    ->placeholder('End Date')
+                    ->label(__('messages.settings.end_date'))
+                    ->placeholder(__('messages.settings.end_date'))
                     ->native(false)
                     ->required()
                     ->live()
                     ->minDate(fn(callable $get) => $get('start_date')),
 
                 Select::make('type')
-                    ->label('Type')
+                    ->label(__('messages.users.type'))
                     ->options(Event::EVENTS)
                     ->native(false)
                     ->required(),
 
                 RichEditor::make('description')
-                    ->label('Description')
-                    ->placeholder('Description')
+                    ->label(__('messages.common.description'))
+                    ->placeholder(__('messages.common.description'))
                     ->columnSpanFull()
                     ->extraAttributes(['style' => 'height: 200px;'])
                     ->toolbarButtons([

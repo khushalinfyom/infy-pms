@@ -17,23 +17,23 @@ class ExpensesTable
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No expenses found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'expenses']);
                 } else {
-                    return 'No expenses found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'expenses', 'search' => $livewire->tableSearch]);
                 }
             })
             ->columns([
                 TextColumn::make('date')
-                    ->label('Date')
+                    ->label(__('messages.settings.date'))
                     ->date('d-m-Y')
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('amount')
-                    ->label('Amount')
+                    ->label(__('messages.settings.amount'))
                     ->formatStateUsing(function ($state, $record) {
                         if (! $record->project) {
                             return $state;
@@ -47,20 +47,20 @@ class ExpensesTable
                     ->searchable(),
 
                 TextColumn::make('created_by')
-                    ->label('Created By')
+                    ->label(__('messages.projects.created_by'))
                     ->formatStateUsing(fn($state, $record) => $record->user?->name ?? 'N/A')
                     ->sortable()
                     ->searchable()
                     ->placeholder('N/A'),
 
                 TextColumn::make('client.name')
-                    ->label('Client')
+                    ->label(__('messages.users.client'))
                     ->sortable()
                     ->searchable()
                     ->placeholder('N/A'),
 
                 TextColumn::make('project.name')
-                    ->label('Project')
+                    ->label(__('messages.projects.projects'))
                     ->sortable()
                     ->searchable()
                     ->placeholder('N/A'),
@@ -69,29 +69,29 @@ class ExpensesTable
 
                 ViewAction::make()
                     ->iconButton()
-                    ->tooltip('View'),
+                    ->tooltip(__('messages.common.view')),
 
                 EditAction::make()
                     ->iconButton()
-                    ->tooltip('Edit'),
+                    ->tooltip(__('messages.common.edit')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Expense')
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_expense'))
                     ->before(function ($record) {
                         $record->update([
                             'deleted_by' => auth()->id(),
                         ]);
                     })
-                    ->successNotificationTitle('Expense deleted successfully!'),
+                    ->successNotificationTitle(__('messages.users.expense_deleted_successfully')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     \App\Filament\Actions\CustomDeleteBulkAction::make()
                         ->setCommonProperties()
-                        ->modalHeading('Delete Expenses')
+                        ->modalHeading(__('messages.users.delete_selected_expenses'))
                         ->before(function ($records) {
                             $records->each(function ($record) {
                                 $record->update([
@@ -99,7 +99,7 @@ class ExpensesTable
                                 ]);
                             });
                         })
-                        ->successNotificationTitle('Expenses deleted successfully!'),
+                        ->successNotificationTitle(__('messages.users.expenses_deleted_successfully')),
                 ]),
             ]);
     }

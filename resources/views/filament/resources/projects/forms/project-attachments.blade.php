@@ -31,10 +31,10 @@
                             </div>
                             <div>
                                 <h2 class="fi-modal-heading">
-                                    Delete Attachment
+                                    {{ __('messages.projects.delete_attachment') }}
                                 </h2>
                                 <p class="fi-modal-description">
-                                    Are you sure you want to delete this attachment?
+                                    {{ __('messages.common.are_you_sure_you_would_like_to_do_this') }}
                                 </p>
                             </div>
                         </div>
@@ -43,12 +43,12 @@
                     <div style="display: flex; gap: 0.5rem; margin-top: 28px;">
                         <x-filament::button color="gray" wire:loading.attr="disabled"
                             x-on:click="$dispatch('close-modal')" style="width: 100%;">
-                            Cancel
+                            {{ __('messages.common.cancel') }}
                         </x-filament::button>
 
                         <x-filament::button color="danger" wire:click="deleteAttachment('{{ $attachment->id }}')"
                             style="width: 100%;">
-                            Confirm
+                            {{ __('messages.common.confirm') }}
                         </x-filament::button>
                     </div>
                 </div>

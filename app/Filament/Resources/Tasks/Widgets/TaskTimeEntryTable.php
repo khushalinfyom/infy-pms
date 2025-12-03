@@ -33,28 +33,28 @@ class TaskTimeEntryTable extends TableWidget
         return $table->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No time entries found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'time entries']);
                 } else {
-                    return 'No time entries found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'time entries', 'search' => $livewire->tableSearch]);
                 }
             })
             ->query(fn(): Builder => TimeEntry::query()->where('task_id', $this->record->id))
             ->columns([
                 TextColumn::make('activityType.name')
-                    ->label('Activity Type')
+                    ->label(__('messages.settings.activity_type'))
                     ->searchable(),
 
                 TextColumn::make('start_time')
-                    ->label('Start Time'),
+                    ->label(__('messages.settings.start_time')),
 
                 TextColumn::make('end_time')
-                    ->label('End Time'),
+                    ->label(__('messages.settings.end_time')),
 
                 TextColumn::make('duration')
-                    ->label('Duration')
+                    ->label(__('messages.settings.duration'))
                     ->formatStateUsing(function ($state) {
                         $hours = floor($state / 60);
                         $minutes = $state % 60;
@@ -62,10 +62,10 @@ class TaskTimeEntryTable extends TableWidget
                     }),
 
                 TextColumn::make('entry_type')
-                    ->label('Entry Type')
+                    ->label(__('messages.settings.entry_type'))
                     ->formatStateUsing(fn($state) => match ($state) {
-                        1 => 'Stopwatch',
-                        2 => 'Via Form',
+                        1 => __('messages.settings.stopwatch'),
+                        2 => __('messages.settings.via_form'),
                         default => 'N/A',
                     })
                     ->color(fn($state) => match ($state) {
@@ -76,12 +76,12 @@ class TaskTimeEntryTable extends TableWidget
                     ->badge(),
 
                 TextColumn::make('created_at')
-                    ->label('Created On')
+                    ->label(__('messages.projects.created_on'))
                     ->getStateUsing(fn($record) => Carbon::parse($record->created_at)->format('d-M-Y')),
             ])
             ->filters([
                 SelectFilter::make('activity_type_id')
-                    ->label('Activity Type')
+                    ->label(__('messages.settings.activity_type'))
                     ->relationship('activityType', 'name')
                     ->native(false)
                     ->searchable()
@@ -93,9 +93,9 @@ class TaskTimeEntryTable extends TableWidget
                 CreateAction::make('create_comment')
                     ->model(TimeEntry::class)
                     ->icon('heroicon-s-plus')
-                    ->label('New Time Entry')
+                    ->label(__('messages.projects.new_time_entry'))
                     ->modalWidth('2xl')
-                    ->modalHeading('Create Time Entry')
+                    ->modalHeading(__('messages.projects.create_time_entry'))
                     ->form($this->createTimeEntryForm())
                     ->createAnother(false)
                     ->using(function (array $data) {
@@ -110,15 +110,15 @@ class TaskTimeEntryTable extends TableWidget
                         return TimeEntry::create($data);
                     })
                     ->visible(authUserHasPermission('manage_time_entries'))
-                    ->successNotificationTitle('Time Entry created successfully!'),
+                    ->successNotificationTitle(__('messages.projects.time_entry_created_successfully')),
             ])
             ->recordActions([
 
                 EditAction::make('edit')
-                    ->label('Edit')
+                    ->label(__('messages.common.edit'))
                     ->iconButton()
                     ->modalWidth('2xl')
-                    ->modalHeading('Edit Time Entry')
+                    ->modalHeading(__('messages.projects.edit_time_entry'))
                     ->form($this->createTimeEntryForm())
                     ->using(function ($record, array $data) {
                         if (!isset($data['duration']) || empty($data['duration'])) {
@@ -133,14 +133,14 @@ class TaskTimeEntryTable extends TableWidget
 
                         return $record;
                     })
-                    ->successNotificationTitle('Time Entry updated successfully!'),
+                    ->successNotificationTitle(__('messages.projects.time_entry_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Time Entry')
-                    ->successNotificationTitle('Time Entry deleted successfully!')
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.projects.delete_time_entry'))
+                    ->successNotificationTitle(__('messages.projects.time_entry_deleted_successfully'))
                     ->before(function ($record) {
                         $record->update([
                             'deleted_by' => auth()->id(),
@@ -163,7 +163,7 @@ class TaskTimeEntryTable extends TableWidget
                 ->default(auth()->user()->id),
 
             Select::make('user_id')
-                ->label('User')
+                ->label(__('messages.users.user'))
                 ->relationship('user', 'name')
                 ->required()
                 ->native(false)
@@ -175,7 +175,7 @@ class TaskTimeEntryTable extends TableWidget
                 Group::make([
 
                     Select::make('project_id')
-                        ->label('Project')
+                        ->label(__('messages.projects.project'))
                         ->relationship('task.project', 'name')
                         ->required()
                         ->native(false)
@@ -186,8 +186,8 @@ class TaskTimeEntryTable extends TableWidget
                         }),
 
                     DateTimePicker::make('start_time')
-                        ->label('Start Time')
-                        ->placeholder('Start Time')
+                        ->label(__('messages.settings.start_time'))
+                        ->placeholder(__('messages.settings.start_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -198,8 +198,8 @@ class TaskTimeEntryTable extends TableWidget
                         ),
 
                     DateTimePicker::make('end_time')
-                        ->label('End Time')
-                        ->placeholder('End Time')
+                        ->label(__('messages.settings.end_time'))
+                        ->placeholder(__('messages.settings.end_time'))
                         ->required()
                         ->native(false)
                         ->maxDate(now())
@@ -212,8 +212,8 @@ class TaskTimeEntryTable extends TableWidget
                         ),
 
                     TextInput::make('duration')
-                        ->label('Duration (In Minutes)')
-                        ->placeholder('Duration')
+                        ->label(__('messages.settings.duration_in_minutes'))
+                        ->placeholder(__('messages.settings.duration'))
                         ->disabled()
                         ->required()
                         ->live(),
@@ -224,7 +224,7 @@ class TaskTimeEntryTable extends TableWidget
                 Group::make([
 
                     Select::make('task_id')
-                        ->label('Task')
+                        ->label(__('messages.projects.task'))
                         ->relationship('task', 'title')
                         ->required()
                         ->native(false)
@@ -232,7 +232,7 @@ class TaskTimeEntryTable extends TableWidget
                         ->disabled(),
 
                     Select::make('activity_type_id')
-                        ->label('Activity Type')
+                        ->label(__('messages.settings.activity_type'))
                         ->relationship('activityType', 'name')
                         ->required()
                         ->searchable()
@@ -240,8 +240,8 @@ class TaskTimeEntryTable extends TableWidget
                         ->native(false),
 
                     Textarea::make('note')
-                        ->label('Note')
-                        ->placeholder('Note')
+                        ->label(__('messages.settings.note'))
+                        ->placeholder(__('messages.settings.note'))
                         ->required()
                         ->maxLength(255),
 

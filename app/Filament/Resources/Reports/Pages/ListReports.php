@@ -15,7 +15,12 @@ class ListReports extends ListRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Report'),
+                ->label(__('messages.users.new_report')),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return __('messages.users.reports');
     }
 }

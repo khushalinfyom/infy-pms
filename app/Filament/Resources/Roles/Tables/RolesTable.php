@@ -17,21 +17,22 @@ class RolesTable
             ->recordUrl(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No roles found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'roles']);
                 } else {
-                    return 'No roles found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'roles', 'search' => $livewire->tableSearch]);
                 }
             })
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('messages.common.name'))
                     ->searchable()
                     ->width(200),
 
                 TextColumn::make('permissions')
-                    ->label('Permissions')
+                    ->label(__('messages.users.permissions'))
                     ->getStateUsing(fn($record) => $record->permissions->pluck('display_name'))
                     ->width(1200)
                     ->wrap()
@@ -41,19 +42,20 @@ class RolesTable
 
                 ViewAction::make()
                     ->iconButton()
-                    ->tooltip('View'),
+                    ->modalHeading(__('messages.users.view_role'))
+                    ->tooltip(__('messages.common.view')),
 
                 EditAction::make()
                     ->iconButton()
-                    ->tooltip('Edit')
+                    ->tooltip(__('messages.common.edit'))
                     ->hidden(fn(Role $record): bool => $record->name === 'Admin'),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Role')
-                    ->successNotificationTitle('Role deleted successfully!')
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_role'))
+                    ->successNotificationTitle(__('messages.users.role_deleted_successfully'))
                     ->hidden(fn(Role $record): bool => $record->name === 'Admin'),
             ]);
     }

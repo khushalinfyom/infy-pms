@@ -36,7 +36,12 @@ class InvoiceResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Sales';
+        return __('messages.users.sales');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.invoices');
     }
 
     public static function form(Schema $schema): Schema

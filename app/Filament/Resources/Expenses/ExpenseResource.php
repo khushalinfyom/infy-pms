@@ -35,7 +35,12 @@ class ExpenseResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Sales';
+        return __('messages.users.sales');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.expenses');
     }
 
     public static function form(Schema $schema): Schema

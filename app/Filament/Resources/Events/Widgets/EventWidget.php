@@ -44,19 +44,21 @@ class EventWidget extends FullCalendarWidget
         return [
             EditAction::make()
                 ->modalWidth('xl')
-                ->modalHeading('Edit Event')
+                ->modalHeading(__('messages.users.edit_event'))
                 ->record(fn($livewire) => $livewire->getRecord())
                 ->form($this->getFormSchema())
                 ->mountUsing(function (Event $record, Schema $form) {
                     $form->fill($record->toArray());
                 })
-                ->successNotificationTitle('Event updated successfully!'),
+                ->visible(auth()->user()->hasRole('Admin'))
+                ->successNotificationTitle(__('messages.users.event_updated_successfully')),
 
             DeleteAction::make()
                 ->record(fn($livewire) => $livewire->getRecord())
-                ->modalHeading('Delete Event')
-                ->modalSubheading('Are you sure you want to delete this event?')
-                ->successNotificationTitle('Event deleted successfully!'),
+                ->modalHeading(__('messages.users.delete_event'))
+                ->modalSubheading(__('messages.common.are_you_sure_you_would_like_to_do_this'))
+                ->successNotificationTitle(__('messages.users.event_deleted_successfully'))
+                ->visible(auth()->user()->hasRole('Admin')),
         ];
     }
 
@@ -64,37 +66,38 @@ class EventWidget extends FullCalendarWidget
     {
         return ViewAction::make()
             ->modalWidth('xl')
-            ->modalHeading('Event Details')
+            ->modalHeading(__('messages.users.event_details'))
             ->infolist([
 
                 Group::make([
 
                     TextEntry::make('title')
-                        ->label('Title'),
+                        ->label(__('messages.projects.title')),
 
                     TextEntry::make('type')
-                        ->label('Type')
+                        ->label(__('messages.users.type'))
                         ->formatStateUsing(function ($state) {
                             return Event::EVENTS[$state] ?? $state;
                         })
                         ->badge(),
 
                     TextEntry::make('start_date')
-                        ->label('Start Date')
+                        ->label(__('messages.settings.start_date'))
                         ->dateTime('j M, Y g:i A'),
 
                     TextEntry::make('end_date')
-                        ->label('End Date')
+                        ->label(__('messages.settings.end_date'))
                         ->dateTime('j M, Y g:i A'),
 
                     TextEntry::make('description')
-                        ->label('Description')
+                        ->label(__('messages.common.description'))
                         ->placeholder('N/A')
                         ->html()
                         ->columnSpanFull(),
                 ])
                     ->columns(2),
-            ]);
+            ])
+            ->visible(auth()->user()->hasRole('Admin'));
     }
 
     public function getFormSchema(): array
@@ -106,36 +109,36 @@ class EventWidget extends FullCalendarWidget
                     ->default(auth()->user()->id),
 
                 TextInput::make('title')
-                    ->label('Title')
-                    ->placeholder('Title')
+                    ->label(__('messages.projects.title'))
+                    ->placeholder(__('messages.projects.title'))
                     ->required()
                     ->columnSpanFull(),
 
                 DateTimePicker::make('start_date')
-                    ->label('Start Date')
-                    ->placeholder('Start Date')
+                    ->label(__('messages.settings.start_date'))
+                    ->placeholder(__('messages.settings.start_date'))
                     ->native(false)
                     ->required()
                     ->live()
                     ->maxDate(fn(callable $get) => $get('end_date')),
 
                 DateTimePicker::make('end_date')
-                    ->label('End Date')
-                    ->placeholder('End Date')
+                    ->label(__('messages.settings.end_date'))
+                    ->placeholder(__('messages.settings.end_date'))
                     ->native(false)
                     ->required()
                     ->live()
                     ->minDate(fn(callable $get) => $get('start_date')),
 
                 Select::make('type')
-                    ->label('Type')
+                    ->label(____('messages.users.type'))
                     ->options(Event::EVENTS)
                     ->native(false)
                     ->required(),
 
                 RichEditor::make('description')
-                    ->label('Description')
-                    ->placeholder('Description')
+                    ->label(__('messages.common.description'))
+                    ->placeholder(__('messages.common.description'))
                     ->columnSpanFull()
                     ->extraAttributes(['style' => 'height: 200px;'])
                     ->toolbarButtons([

@@ -27,47 +27,47 @@ class TaskAttachmentTable extends TableWidget
             ->recordAction(null)
             ->paginated([10, 25, 50, 100])
             ->defaultSort('id', 'desc')
-            ->recordActionsColumnLabel('Action')
+            ->recordActionsColumnLabel(__('messages.common.action'))
             ->emptyStateHeading(function ($livewire) {
                 if (empty($livewire->tableSearch)) {
-                    return 'No attachments found.';
+                    return __('messages.common.empty_table_heading', ['table' => 'attachments']);
                 } else {
-                    return 'No attachments found for "' . $livewire->tableSearch . '".';
+                    return __('messages.common.empty_table_search_heading', ['table' => 'attachments', 'search' => $livewire->tableSearch]);
                 }
             })
             ->query(fn(): Builder => TaskAttachment::query()->where('task_id', $this->record->id))
             ->columns([
                 SpatieMediaLibraryImageColumn::make('file_path')
                     ->collection('attachments')
-                    ->label('Attachment')
+                    ->label(__('messages.projects.attachment'))
                     ->circular(),
             ])
             ->headerActions([
                 CreateAction::make('create_attachment')
                     ->model(TaskAttachment::class)
                     ->icon('heroicon-s-plus')
-                    ->label('New Attachment')
+                    ->label(__('messages.projects.new_attachment'))
                     ->modalWidth('md')
-                    ->modalHeading('Create Attachment')
+                    ->modalHeading(__('messages.projects.create_attachment'))
                     ->form($this->createAttachmentForm())
                     ->createAnother(false)
-                    ->successNotificationTitle('Attachment created successfully!'),
+                    ->successNotificationTitle(__('messages.projects.attachment_created_successfully')),
             ])
             ->recordActions([
                 EditAction::make('edit')
-                    ->label('Edit')
+                    ->label(__('messages.common.edit'))
                     ->iconButton()
                     ->modalWidth('md')
-                    ->modalHeading('Edit Attachment')
+                    ->modalHeading(__('messages.projects.edit_attachment'))
                     ->form($this->createAttachmentForm())
-                    ->successNotificationTitle('Attachment updated successfully!'),
+                    ->successNotificationTitle(__('messages.projects.attachment_updated_successfully')),
 
                 \App\Filament\Actions\CustomDeleteAction::make()
                     ->setCommonProperties()
                     ->iconButton()
-                    ->tooltip('Delete')
-                    ->modalHeading('Delete Attachment')
-                    ->successNotificationTitle('Attachment deleted successfully!'),
+                    ->tooltip( __('messages.common.delete'))
+                    ->modalHeading( __('messages.projects.delete_attachment'))
+                    ->successNotificationTitle( __('messages.projects.attachment_deleted_successfully')),
             ]);
     }
 
@@ -78,7 +78,7 @@ class TaskAttachmentTable extends TableWidget
                 ->default($this->record->id),
 
             SpatieMediaLibraryFileUpload::make('file')
-                ->label('Attachment')
+                ->label( __('messages.projects.attachment'))
                 ->disk(config('app.media_disk'))
                 ->collection('attachments'),
         ];
