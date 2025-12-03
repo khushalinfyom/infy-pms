@@ -4,9 +4,135 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <link rel="shortcut icon" href="{{ asset(getSettingValue('favicon')) }}" type="image/x-icon" sizes="16x16">
-    <title>{{ __('messages.invoice.invoice_pdf') }}</title>
-    @vite('resources/css/bootstrap.min.css')
-    @vite('resources/css/invoice-pdf.scss')
+    <title>{{ __('messages.users.invoice_pdf') }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Lato", sans-serif;
+            padding: 30px;
+            font-size: 14px;
+        }
+
+        .font-color-gray {
+            color: #7a7a7a;
+        }
+
+        .main-heading {
+            font-size: 34px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .logo,
+        .company-name {
+            margin-bottom: 8px;
+        }
+
+        .font-weight-bold {
+            font-weight: bold;
+        }
+
+        .address {
+            margin-top: 60px;
+        }
+
+        .address tr:first-child td {
+            padding-bottom: 10px;
+        }
+
+        .d-items-table {
+            width: 100%;
+            border: 0;
+            border-collapse: collapse;
+            margin-top: 40px;
+        }
+
+        .d-items-table thead {
+            background: #2f353a;
+            color: #fff;
+        }
+
+        .d-items-table td,
+        .d-items-table th {
+            padding: 8px;
+            font-size: 14px;
+            border-bottom: 1px solid #ccc;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .d-invoice-footer {
+            margin-top: 15px;
+            width: 80%;
+            float: right;
+            text-align: right;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+        }
+
+        .items-table td,
+        .items-table th {
+            padding: 8px;
+            font-size: 14px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .invoice-footer {
+            margin-top: 15px;
+            width: 100%;
+            text-align: right;
+        }
+
+        .number-align {
+            text-align: right !important;
+        }
+
+        .invoice-currency-symbol {
+            font-family: "DejaVu Sans";
+        }
+
+        .vertical-align-top {
+            vertical-align: text-top;
+        }
+
+        .tu {
+            text-transform: uppercase;
+        }
+
+        .l-col-66 {
+            width: 100%;
+        }
+
+        .thank {
+            font-size: 45px;
+            line-height: 1.2em;
+            text-align: center;
+            font-style: italic;
+            padding-right: 25px;
+        }
+
+        .to-font-size {
+            font-size: 15px;
+        }
+
+        .from-font-size {
+            font-size: 15px;
+        }
+    </style>
 </head>
 
 <body>
@@ -18,6 +144,8 @@
                 <p class="w-75 mb-0">{{ html_entity_decode($setting['company_address']) }}</p>
                 Mo: {{ $setting['company_phone'] }}
             </td>
+            {{-- @dd(asset(getSettingValue('app_logo'))) --}}
+            {{-- @dd(getBase64EncodedLogo()) --}}
             <td width="180px">
                 <div class="logo"><img width="100px" src="{{ asset(getSettingValue('app_logo')) }}"
                         {{-- src="data:image/png,image/jpeg,image/jpg;base64,{{ base64_encode(file_get_contents(getSettings('app_logo')->logo_path)) }}" --}} alt=""></div>
@@ -82,14 +210,14 @@
                                 <tr>
                                     <td>{{ $key + 1 }}</td>
                                     <td>{{ html_entity_decode($invoiceItem->item_name) }}</td>
-                                    <td>{{ $invoiceItem->hours }}</td>
+                                    <td>{{ decimalHoursToHHMM($invoiceItem->hours) }} H</td>
                                     <td>
                                         <span class="float-right"><span class="invoice-currency-symbol">
                                                 @if ($invoiceItem->task_amount != 0)
-                                                    &#{{ getCurrencyIconForInvoicePDF($invoice) }}
+                                                    {!! currencyEntityForInvoice($invoice) !!}
                                                     {{ number_format($invoiceItem->task_amount, 2) }}
                                                 @else
-                                                    {{ __('messages.invoice.fix_rate') }}
+                                                    {{ __('messages.users.fix_rate') }}
                                             </span>
                             @endif
                             </span>
@@ -108,15 +236,15 @@
                 <tr>
                     <td class="font-weight-bold tu">Amount:</td>
                     <td>
-                        <span class="invoice-currency-symbol">&#{{ getCurrencyIconForInvoicePDF($invoice) }}</span>
+                        <span class="invoice-currency-symbol">{!! currencyEntityForInvoice($invoice) !!}</span>
                         {{ number_format($invoice->sub_total, 2) }}
                     </td>
                 </tr>
                 <tr>
                     <td class="font-weight-bold tu">Discount:</td>
                     <td>
-                        <span class="invoice-currency-symbol">&#{{ getCurrencyIconForInvoicePDF($invoice) }}
-                            {{ number_format($invoice->discount, 2) }}</span>
+                        <span class="invoice-currency-symbol">{!! currencyEntityForInvoice($invoice) !!}</span>
+                        {{ number_format($invoice->discount, 2) }}
                     </td>
                 </tr>
                 <tr>
@@ -130,7 +258,7 @@
                         style="color: {{ $setting['default_invoice_color'] }};font-size: 17px">Total:
                     </td>
                     <td style="color: {{ $setting['default_invoice_color'] }};font-size: 17px">
-                        <span class="invoice-currency-symbol">&#{{ getCurrencyIconForInvoicePDF($invoice) }} </span>
+                        <span class="invoice-currency-symbol">{!! currencyEntityForInvoice($invoice) !!}</span>
                         {{ number_format($invoice->amount, 2) }}
                     </td>
                 </tr>

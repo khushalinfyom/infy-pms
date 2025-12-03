@@ -5,26 +5,11 @@ namespace App\Filament\Resources\Calenders;
 use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Calenders\Pages\ManageCalenders;
 use App\Filament\Resources\Calenders\Widgets\CalendarWidget;
-use App\Models\Calender;
 use App\Models\TimeEntry;
 use BackedEnum;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\RestoreBulkAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CalenderResource extends Resource
 {
@@ -38,7 +23,7 @@ class CalenderResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return 'Calender';
+        return __('messages.users.calender');
     }
 
     public static function canViewAny(): bool

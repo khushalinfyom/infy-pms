@@ -15,7 +15,12 @@ class ListRoles extends ListRecords
         return [
             CreateAction::make()
                 ->icon('heroicon-s-plus')
-                ->label('New Role'),
+                ->label(__('messages.users.new_role')),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return __('messages.users.roles');
     }
 }

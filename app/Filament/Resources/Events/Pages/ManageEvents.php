@@ -6,6 +6,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Widgets\EventWidget;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ManageEvents extends ManageRecords
 {
@@ -15,16 +16,21 @@ class ManageEvents extends ManageRecords
     {
         return [
             CreateAction::make()->icon('heroicon-s-plus')
-                ->label('New Event')
+                ->label(__('messages.users.new_event'))
                 ->createAnother(false)
-                ->modalHeading('Create Event')
+                ->modalHeading(__('messages.users.create_event'))
                 ->modalWidth('xl')
-                ->successNotificationTitle('Event created successfully!')
+                ->successNotificationTitle(__('messages.users.event_created_successfully'))
                 ->after(function () {
                     $this->redirect($this->getResource()::getUrl('index'));
                 })
                 ->visible(auth()->user()->hasRole('Admin')),
         ];
+    }
+
+    public function getTitle(): string | Htmlable
+    {
+        return __('messages.users.events');
     }
 
     protected function getHeaderWidgets(): array
