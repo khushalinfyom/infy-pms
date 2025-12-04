@@ -34,6 +34,7 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Group;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -41,16 +42,36 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Livewire\WithPagination;
 
 class Task extends Page implements HasActions
 {
     use InteractsWithActions;
+    use WithPagination;
 
     protected string $view = 'filament.pages.task';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 
     protected static ?int $navigationSort = AdminPanelSidebar::TASKS->value;
+
+    // Add properties for search and pagination
+    public string $search = '';
+
+    public int $perPage = 10;
+    protected array $perPageOptions = [5, 10, 20, 50, 100, 'all'];
+
+    // Reset pagination when search changes
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    // Reset pagination when perPage changes
+    public function updatedPerPage(): void
+    {
+        $this->resetPage();
+    }
 
     public function getTitle(): string
     {
@@ -62,14 +83,26 @@ class Task extends Page implements HasActions
         return 'Task';
     }
 
-    public function getTasks(): Collection
+    public function getPerPageOptions(): array
     {
-        return TaskModel::whereHas('taskAssignee', function ($q) {
+        return $this->perPageOptions;
+    }
+
+    // Update the getTasks method to support pagination and search
+    public function getTasks(): LengthAwarePaginator
+    {
+        $query = TaskModel::whereHas('taskAssignee', function ($q) {
             $q->where('user_id', Auth::id());
         })->where('status', '!=', TaskModel::STATUS_COMPLETED)
-            ->with(['project', 'taskAssignee', 'timeEntries'])
-            ->orderBy('id', 'desc')
-            ->get();
+            ->with(['project', 'taskAssignee', 'timeEntries']);
+
+        // Add search functionality
+        if (!empty($this->search)) {
+            $query->where('title', 'like', '%' . $this->search . '%');
+        }
+
+        return $query->orderBy('id', 'desc')
+            ->paginate($this->perPage);
     }
 
     protected function getHeaderActions(): array
@@ -875,7 +908,7 @@ class Task extends Page implements HasActions
             ->modalHeading(__('messages.projects.delete_task'))
             ->before(function ($record) {
                 $record->update([
-                    'deleted_by' => auth()->id(),
+                    'deleted_by' => Auth::id(),
                 ]);
             })
             ->successNotificationTitle(__('messages.projects.task_deleted_successfully'));

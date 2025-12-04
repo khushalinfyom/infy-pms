@@ -39,8 +39,8 @@ class ProjectForm
                     }),
 
                 TextInput::make('prefix')
-                    ->label(__('messages.project.prefix'))
-                    ->placeholder(__('messages.project.prefix'))
+                    ->label(__('messages.projects.prefix'))
+                    ->placeholder(__('messages.projects.prefix'))
                     ->maxLength(8)
                     ->reactive()
                     ->unique()

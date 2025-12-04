@@ -1,6 +1,18 @@
 <x-filament-panels::page>
     <div class="mx-auto w-full">
-        @foreach ($this->getTasks() as $task)
+        <div class="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="w-100">
+                <x-filament::input.wrapper>
+                    <x-filament::input
+                        wire:model.live.debounce.500ms="search"
+                        placeholder="Search tasks by title..."
+                        type="search"
+                    />
+                </x-filament::input.wrapper>
+            </div>
+        </div>
+
+        @forelse ($this->getTasks() as $task)
             <div
                 class="flex justify-between items-start bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-3 hover:shadow-lg transition-shadow duration-200">
 
@@ -87,6 +99,29 @@
                     </div>
                 </div>
             </div>
-        @endforeach
+        @empty
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                <x-filament::icon
+                    icon="heroicon-o-document-magnifying-glass"
+                    class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+                />
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+                    No tasks found
+                </h3>
+                <p class="mt-1 text-gray-500 dark:text-gray-400">
+                    @if (!empty($this->search))
+                        No tasks matched your search query "{{ $this->search }}".
+                    @else
+                        You don't have any tasks assigned to you.
+                    @endif
+                </p>
+            </div>
+        @endforelse
+
+        @if ($this->getTasks()->hasPages())
+            <div class="mt-6">
+                <x-filament::pagination :paginator="$this->getTasks()" :page-options="$this->getPerPageOptions()" :current-page-option-property="'perPage'" />
+            </div>
+        @endif
     </div>
 </x-filament-panels::page>
