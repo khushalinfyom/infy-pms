@@ -746,6 +746,7 @@ class TaskResource extends Resource
     public static function getPages(): array
     {
         return [
+            // app/Filament/Pages/Task.php
             'index' => ManageTasks::route('/'),
             'kanban' => Pages\TaskKanban::route('/kanban'),
             'taskdetails' => TaskDetails::route('/{record}'),

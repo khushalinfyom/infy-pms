@@ -37,7 +37,7 @@ class ListProjects extends Page implements HasForms
 
     public int $perPage = 12;
 
-    public string $search = '';
+    public ?string $search = '';
 
     public int | null $status = Project::STATUS_ONGOING;
     public int | null $client_id = null;

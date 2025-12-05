@@ -161,7 +161,8 @@ class TaskKanban extends Page implements HasActions, HasForms
     public function taskListAction(): Action
     {
         return Action::make('taskList')
-            ->label('Task List')
+            ->hiddenLabel()
+            ->tooltip('Task List')
             ->icon('heroicon-s-list-bullet')
             ->url(fn(): string => route('filament.admin.pages.task'));
     }
