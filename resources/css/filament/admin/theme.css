@@ -72,3 +72,6 @@
     justify-content: flex-end !important;
 }
 
+.no-clear .fi-select-input-value-remove-btn {
+    display: none !important;
+}
