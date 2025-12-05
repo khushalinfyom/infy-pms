@@ -131,7 +131,7 @@ class EventWidget extends FullCalendarWidget
                     ->minDate(fn(callable $get) => $get('start_date')),
 
                 Select::make('type')
-                    ->label(____('messages.users.type'))
+                    ->label(__('messages.users.type'))
                     ->options(Event::EVENTS)
                     ->native(false)
                     ->required(),
