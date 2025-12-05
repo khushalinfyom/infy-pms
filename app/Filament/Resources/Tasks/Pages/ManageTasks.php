@@ -30,6 +30,7 @@ class ManageTasks extends ManageRecords
         return [
             Action::make('kanban')
                 ->label('Kanban')
+                ->icon('heroicon-s-view-columns')
                 ->url(TaskResource::getUrl('kanban')),
 
             ActionGroup::make([
