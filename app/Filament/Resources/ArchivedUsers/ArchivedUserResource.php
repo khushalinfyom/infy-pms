@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ArchivedUsers;
 
 use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\ArchivedUsers\Pages\ManageArchivedUsers;
+use App\Filament\Tables\Columns\ArchivedUserImageColumn;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -61,19 +62,11 @@ class ArchivedUserResource extends Resource
             ->recordTitleAttribute('User')
             ->columns([
 
-                SpatieMediaLibraryImageColumn::make('image_path')
-                    ->collection(User::IMAGE_PATH)
-                    ->label(__('messages.common.profile'))
-                    ->circular()
-                    ->width(40)
-                    ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name),
+                ArchivedUserImageColumn::make('profile')
+                    ->label(__('messages.users.user'))
+                    ->sortable()
+                    ->searchable(['name', 'email']),
 
-                TextColumn::make('name')
-                    ->label(__('messages.common.name'))
-                    ->searchable()
-                    ->description(function (User $record) {
-                        return $record->email;
-                    }),
             ])
             ->recordActions([
                 ForceDeleteAction::make()
