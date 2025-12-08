@@ -12,6 +12,8 @@ class ProjectStatusChart extends ApexChartWidget
 
     protected static ?string $heading = 'Project Status';
 
+    protected static ?int $sort = 4;
+
     public $colors = [
         '#8baee2',
         '#3bd06d',

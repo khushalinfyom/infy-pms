@@ -26,6 +26,8 @@ class UserReportChart extends ApexChartWidget
 
     protected static ?string $chartId = 'userReportChart';
 
+    protected static ?int $sort = 1;
+
     public function updatedInteractsWithSchemas(string $statePath): void
     {
         $this->updateOptions();
@@ -108,86 +110,100 @@ class UserReportChart extends ApexChartWidget
         $daysDiff = $start_date->diffInDays($end_date);
         $groupByDay = $daysDiff <= 90;
 
+        // Create all periods in the range
+        $allPeriods = collect();
         if ($groupByDay) {
-            // Query time entries grouped by day
-            $timeEntryQuery = TimeEntry::select(
-                DB::raw('DATE(created_at) as period'),
-                DB::raw('SUM(duration) as total_duration')
-            )
-                ->where('created_at', '>=', $start_date)
-                ->where('created_at', '<=', $end_date);
-
-            // Apply user filter if selected
-            if ($userId) {
-                $timeEntryQuery->where('user_id', $userId);
-            }
-
-            $timeEntryData = $timeEntryQuery->groupBy('period')
-                ->orderBy('period')
-                ->get();
-
-            // Create daily range
-            $periods = [];
-            $durations = [];
-
             $current = $start_date->copy();
             while ($current <= $end_date) {
-                $periodKey = $current->format('Y-m-d');
-                $periods[] = $current->format('M d');
-
-                // Find duration for this day
-                $periodDuration = $timeEntryData->where('period', $periodKey)->first();
-                $durations[] = $periodDuration ? (float) $periodDuration->total_duration : 0;
-
+                $allPeriods->push($current->format('Y-m-d'));
                 $current->addDay();
             }
+
+            $formattedPeriods = $allPeriods->map(function ($period) {
+                return Carbon::createFromFormat('Y-m-d', $period)->format('M d');
+            })->toArray();
         } else {
             // Group by month
-            $timeEntryQuery = TimeEntry::select(
-                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as period'),
-                DB::raw('SUM(duration) as total_duration')
-            )
-                ->where('created_at', '>=', $start_date)
-                ->where('created_at', '<=', $end_date);
-
-            // Apply user filter if selected
-            if ($userId) {
-                $timeEntryQuery->where('user_id', $userId);
-            }
-
-            $timeEntryData = $timeEntryQuery->groupBy('period')
-                ->orderBy('period')
-                ->get();
-
-            // Create monthly range
-            $periods = [];
-            $durations = [];
-
             $current = $start_date->copy()->startOfMonth();
             $endMonth = $end_date->copy()->endOfMonth();
 
             while ($current <= $endMonth) {
-                $periodKey = $current->format('Y-%m');
-                $periods[] = $current->format('M Y');
-
-                // Find duration for this month
-                $periodDuration = $timeEntryData->where('period', $periodKey)->first();
-                $durations[] = $periodDuration ? (float) $periodDuration->total_duration : 0;
-
+                $allPeriods->push($current->format('Y-m'));
                 $current->addMonth();
+            }
+
+            $formattedPeriods = $allPeriods->map(function ($period) {
+                $date = Carbon::createFromFormat('Y-m', $period);
+                return $date->format('M Y');
+            })->toArray();
+        }
+
+        // Query time entries grouped by period and project with duration > 0
+        if ($groupByDay) {
+            $timeEntryQuery = TimeEntry::select(
+                DB::raw('DATE(time_entries.created_at) as period'),
+                'projects.name as project_name',
+                DB::raw('SUM(time_entries.duration) as total_duration')
+            )
+                ->join('tasks', 'time_entries.task_id', '=', 'tasks.id')
+                ->join('projects', 'tasks.project_id', '=', 'projects.id')
+                ->where('time_entries.created_at', '>=', $start_date)
+                ->where('time_entries.created_at', '<=', $end_date)
+                ->where('time_entries.duration', '>', 0); // Only entries with duration > 0
+        } else {
+            $timeEntryQuery = TimeEntry::select(
+                DB::raw('DATE_FORMAT(time_entries.created_at, "%Y-%m") as period'),
+                'projects.name as project_name',
+                DB::raw('SUM(time_entries.duration) as total_duration')
+            )
+                ->join('tasks', 'time_entries.task_id', '=', 'tasks.id')
+                ->join('projects', 'tasks.project_id', '=', 'projects.id')
+                ->where('time_entries.created_at', '>=', $start_date)
+                ->where('time_entries.created_at', '<=', $end_date)
+                ->where('time_entries.duration', '>', 0); // Only entries with duration > 0
+        }
+
+        // Apply user filter if selected
+        if ($userId) {
+            $timeEntryQuery->where('time_entries.user_id', $userId);
+        }
+
+        $timeEntryData = $timeEntryQuery->groupBy('period', 'projects.name')
+            ->orderBy('period')
+            ->get();
+
+        // Get projects that have duration > 0
+        $projects = $timeEntryData->pluck('project_name')->unique()->values();
+
+        // Initialize series data for each project
+        $series = [];
+        foreach ($projects as $project) {
+            $series[] = [
+                'name' => $project,
+                'data' => array_fill(0, count($allPeriods), 0)
+            ];
+        }
+
+        // Populate series data
+        foreach ($timeEntryData as $entry) {
+            $periodIndex = $allPeriods->search($entry->period);
+            $projectIndex = $projects->search($entry->project_name);
+
+            if ($periodIndex !== false && $projectIndex !== false) {
+                $series[$projectIndex]['data'][$periodIndex] = (float) $entry->total_duration;
             }
         }
 
         // Fixed color palette
         $colors = [
             '#5b65d4',
+            '#32dac2',
             '#684395',
             '#d885e0',
-            '#dc4a60',
             '#4692df',
-            '#00d4df',
             '#3bd06d',
-            '#32dac2',
+            '#dc4a60',
+            '#00d4df',
             '#e6d5bd',
             '#e09c8d',
             '#96d1d5',
@@ -216,6 +232,7 @@ class UserReportChart extends ApexChartWidget
             'chart' => [
                 'type' => 'bar',
                 'height' => 400,
+                'stacked' => true,
                 'toolbar' => [
                     'show' => false,
                 ],
@@ -244,14 +261,9 @@ class UserReportChart extends ApexChartWidget
                     'opacity' => 0.1,
                 ],
             ],
-            'series' => [
-                [
-                    'name' => 'Time Duration (In Minutes)',
-                    'data' => $durations,
-                ],
-            ],
+            'series' => $series,
             'xaxis' => [
-                'categories' => $periods,
+                'categories' => $formattedPeriods,
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
@@ -259,7 +271,7 @@ class UserReportChart extends ApexChartWidget
                         'fontSize' => '12px',
                         'colors' => ['#64748b'],
                     ],
-                    'rotate' => $groupByDay && count($periods) > 10 ? -45 : 0,
+                    'rotate' => $groupByDay && count($formattedPeriods) > 10 ? -45 : 0,
                 ],
                 'axisBorder' => [
                     'show' => false,
@@ -295,7 +307,6 @@ class UserReportChart extends ApexChartWidget
                     'borderRadiusApplication' => 'end',
                     'horizontal' => false,
                     'columnWidth' => $groupByDay ? '70%' : '50%',
-                    'distributed' => true,
                 ],
             ],
             'fill' => [
@@ -319,7 +330,9 @@ class UserReportChart extends ApexChartWidget
                 'colors' => ['rgba(255,255,255,0.3)'],
             ],
             'legend' => [
-                'show' => false,
+                'show' => true,
+                'position' => 'bottom',
+                'fontFamily' => 'inherit',
             ],
             'tooltip' => [
                 'enabled' => true,

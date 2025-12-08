@@ -1,31 +1,32 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Client\Widgets;
 
 use App\Models\Invoice;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class InvoiceStatusChart extends ApexChartWidget
+class ClientInvoiceStatusChart extends ApexChartWidget
 {
-    protected static ?string $chartId = 'invoiceStatusChart';
-
     protected static ?string $heading = 'Invoice Status';
 
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 2;
 
     public $colors = [
-        '#d77cd1ff',
         '#8baee2',
         '#3bd06d',
     ];
+    protected static ?string $chartId = 'clientInvoiceStatusChart';
 
     protected function getOptions(): array
     {
-        // Get count of invoices for each status
+        $clientId = Auth::id();
+
         $statusCounts = Invoice::select('status', DB::raw('count(*) as count'))
+            ->join('invoice_clients', 'invoices.id', '=', 'invoice_clients.invoice_id')
+            ->where('invoice_clients.client_id', $clientId)
             ->whereIn('status', [
-                Invoice::STATUS_DRAFT,
                 Invoice::STATUS_SENT,
                 Invoice::STATUS_PAID
             ])
@@ -33,9 +34,7 @@ class InvoiceStatusChart extends ApexChartWidget
             ->pluck('count', 'status')
             ->toArray();
 
-        // Prepare data for the chart
         $statuses = [
-            Invoice::STATUS_DRAFT => 'Draft',
             Invoice::STATUS_SENT => 'Sent',
             Invoice::STATUS_PAID => 'Paid'
         ];

@@ -2,84 +2,110 @@
 
 namespace App\Filament\Client\Resources\Invoices\Tables;
 
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use App\Models\Invoice;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class InvoicesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordAction(null)
+            ->paginated([10, 25, 50, 100])
+            ->defaultSort('id', 'desc')
+            ->recordActionsColumnLabel(__('messages.common.action'))
+            ->emptyStateHeading(function ($livewire) {
+                if (empty($livewire->tableSearch)) {
+                    return __('messages.common.empty_table_heading', ['table' => 'invoices']);
+                } else {
+                    return __('messages.common.empty_table_search_heading', ['table' => 'invoices', 'search' => $livewire->tableSearch]);
+                }
+            })
+            ->query(function () {
+                return Invoice::whereHas('invoiceClients', function ($query) {
+                    $query->where('client_id', Auth::id());
+                });
+            })
             ->columns([
-                TextColumn::make('name')
-                    ->searchable(),
+
                 TextColumn::make('invoice_number')
+                    ->label('Invoice Number')
+                    ->formatStateUsing(function ($record) {
+                        return 'INV-' . $record->invoice_number;
+                    })
                     ->searchable(),
-                TextColumn::make('issue_date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('due_date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('total_hour')
+
+                TextColumn::make('name')
+                    ->label('Name')
                     ->searchable(),
-                TextColumn::make('discount')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('tax_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('status')
-                    ->numeric()
-                    ->sortable(),
+
+                TextColumn::make('invoiceProjects.name')
+                    ->label('Project')
+                    ->wrap()
+                    ->placeholder('N/A')
+                    ->searchable(),
+
                 TextColumn::make('amount')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('sub_total')
-                    ->numeric()
-                    ->sortable(),
-                IconColumn::make('is_default')
-                    ->boolean(),
-                TextColumn::make('created_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('discount_type')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Amount')
+                    ->prefix('$ ')
+                    ->searchable(),
+
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->formatStateUsing(function ($record) {
+                        return Invoice::STATUS[$record->status];
+                    })
+                    ->badge()
+                    ->colors([
+                        'warning' => Invoice::STATUS_DRAFT,
+                        'info' => Invoice::STATUS_SENT,
+                        'success' => Invoice::STATUS_PAID,
+                    ]),
+
+                TextColumn::make('due_date')
+                    ->label('Due Date')
+                    ->date()
+                    ->placeholder('N/A'),
             ])
             ->filters([
-                TrashedFilter::make(),
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        '' => 'ALL',
+                        Invoice::STATUS_SENT => 'SENT',
+                        Invoice::STATUS_DRAFT => 'DRAFT',
+                        Invoice::STATUS_PAID => 'PAID',
+                    ])
+                    ->default(Invoice::STATUS_SENT)
+                    ->native(false),
             ])
+            ->deferFilters(false)
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
+                ViewAction::make()
+                    ->tooltip(__('messages.common.view'))
+                    ->iconButton()
+                    ->modalHeading(__('messages.users.view_invoice'))
+                    ->modalWidth('md'),
+
+                EditAction::make()
+                    ->tooltip(__('messages.common.edit'))
+                    ->iconButton()
+                    ->modalHeading(__('messages.users.edit_invoice'))
+                    ->modalWidth('xl')
+                    ->hidden(fn($record) => $record->status === Invoice::STATUS_PAID)
+                    ->successNotificationTitle(__('messages.users.invoice_updated_successfully')),
+
+                \App\Filament\Actions\CustomDeleteAction::make()
+                    ->setCommonProperties()
+                    ->iconButton()
+                    ->tooltip(__('messages.common.delete'))
+                    ->modalHeading(__('messages.users.delete_invoice'))
+                    ->successNotificationTitle(__('messages.users.invoice_deleted_successfully')),
             ]);
     }
 }

@@ -1,43 +1,47 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Client\Widgets;
 
-use App\Models\Invoice;
+use App\Models\Project;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class InvoiceStatusChart extends ApexChartWidget
+class ClientProjectStatusChart extends ApexChartWidget
 {
-    protected static ?string $chartId = 'invoiceStatusChart';
+    protected static ?string $chartId = 'clientProjectStatusChart';
 
-    protected static ?string $heading = 'Invoice Status';
+    protected static ?string $heading = 'Project Status';
 
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 1;
 
     public $colors = [
-        '#d77cd1ff',
         '#8baee2',
         '#3bd06d',
+        '#dc4a60',
+        '#e09c8d',
     ];
 
     protected function getOptions(): array
     {
-        // Get count of invoices for each status
-        $statusCounts = Invoice::select('status', DB::raw('count(*) as count'))
+        $clientId = Auth::id();
+        $statusCounts = Project::select('status', DB::raw('count(*) as count'))
+            ->where('client_id', $clientId)
             ->whereIn('status', [
-                Invoice::STATUS_DRAFT,
-                Invoice::STATUS_SENT,
-                Invoice::STATUS_PAID
+                Project::STATUS_ONGOING,
+                Project::STATUS_FINISHED,
+                Project::STATUS_ONHOLD,
+                Project::STATUS_ARCHIVED
             ])
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
 
-        // Prepare data for the chart
         $statuses = [
-            Invoice::STATUS_DRAFT => 'Draft',
-            Invoice::STATUS_SENT => 'Sent',
-            Invoice::STATUS_PAID => 'Paid'
+            Project::STATUS_ONGOING => 'Ongoing',
+            Project::STATUS_FINISHED => 'Finished',
+            Project::STATUS_ONHOLD => 'On Hold',
+            Project::STATUS_ARCHIVED => 'Archived'
         ];
 
         $series = [];
@@ -50,7 +54,7 @@ class InvoiceStatusChart extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'donut',
+                'type' => 'pie',
                 'height' => 300,
             ],
             'series' => $series,
@@ -61,13 +65,6 @@ class InvoiceStatusChart extends ApexChartWidget
                     'fontFamily' => 'inherit',
                 ],
                 'position' => 'bottom',
-            ],
-            'plotOptions' => [
-                'pie' => [
-                    'donut' => [
-                        'size' => '50%',
-                    ],
-                ],
             ],
         ];
     }
