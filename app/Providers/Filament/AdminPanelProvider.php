@@ -6,6 +6,7 @@ use App\Filament\Pages\CustomEditProfile;
 use App\Filament\Pages\CustomLogin;
 use App\Filament\Pages\CustomRequestPasswordReset;
 use App\Filament\Pages\CustomResetPassword;
+use App\Models\TimeEntry;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -14,8 +15,6 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -99,16 +98,32 @@ class AdminPanelProvider extends PanelProvider
 
     public function stopwatch(): string
     {
-        return '
+        $active = TimeEntry::where('user_id', auth()->id())
+            ->whereNull('end_time')
+            ->exists();
+
+        $colorClass = $active
+            ? 'text-green-600 dark:text-green-400'
+            : 'text-red-600 dark:text-red-400';
+        return "
         <button
-            @click="$dispatch(\'open-modal\', { id: \'stop-watch-modal\' })"
-            type="button"
-            wire:loading.attr="disabled"
-            style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
-            class="fi-ac-grouped-action rounded-full transition-colors duration-200"
+            @click=\"\$dispatch('open-modal', { id: 'stop-watch-modal' })\"
+            type=\"button\"
+            wire:loading.attr=\"disabled\"
+            style=\"cursor: pointer; display: inline-flex; align-items: center; justify-content: center;\"
+            class=\"fi-ac-grouped-action rounded-full transition-colors duration-200\"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" class="text-primary-600 dark:text-primary-400"><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"></path></svg>
+            <svg
+                xmlns=\"http://www.w3.org/2000/svg\"
+                width=\"20\"
+                height=\"20\"
+                viewBox=\"0 0 256 256\"
+                class=\"$colorClass\"
+                style=\"margin-left: -20px;\"
+            >
+                <path fill=\"currentColor\" d=\"M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z\"></path>
+            </svg>
         </button>
-        ';
+    ";
     }
 }
