@@ -1,173 +1,127 @@
 <x-filament-panels::page>
-    <div class="space-y-4">
-        @foreach ($this->getTasks() as $task)
+    <div class="mx-auto w-full">
+        <div class="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="w-100">
+                <x-filament::input.wrapper>
+                    <x-filament::input
+                        wire:model.live.debounce.500ms="search"
+                        placeholder="Search tasks by title..."
+                        type="search"
+                    />
+                </x-filament::input.wrapper>
+            </div>
+        </div>
+
+        @forelse ($this->getTasks() as $task)
             <div
-                class="task-row bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between hover:shadow-md transition-all duration-300">
+                class="flex justify-between items-start bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-3 hover:shadow-lg transition-shadow duration-200">
 
-                {{-- LEFT SIDE --}}
-                <div class="flex items-center space-x-6 overflow-hidden">
+                <div class="flex flex-col flex-1 mr-5">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+                        {{ $task->title }}
+                    </h3>
 
-                    {{-- Status Dot & Title --}}
-                    <div>
-                        <div class="flex items-center space-x-2">
+                    <div class="flex items-center gap-1">
+                        <x-filament::icon icon="heroicon-o-folder-open"
+                            class="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                            {{ $task->project->name ?? 'No Project' }}
+                        </p>
+                    </div>
+                </div>
 
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate w-56">
-                                {{ $task->title }}
-                            </h3>
-                            {{-- Project Badge --}}
-                            <span
-                                class="mt-1 inline-block text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100">
-                                {{ $task->project->name ?? 'No Project' }}
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center">
+                        @foreach ($task->taskAssignee->take(3) as $assignee)
+                            <img src="{{ $assignee->getFirstMediaUrl('images') ?: 'https://ui-avatars.com/api/?background=random&name=' . urlencode($assignee->name) }}"
+                                alt="{{ $assignee->name }}"
+                                class="w-10 h-10 rounded-full -ml-2 first:ml-0 border-2 border-white dark:border-gray-800 shadow-sm">
+                        @endforeach
+
+                        @if ($task->taskAssignee->count() > 3)
+                            <span class="text-xs text-gray-600 dark:text-gray-300 ml-2">
+                                +{{ $task->taskAssignee->count() - 3 }}
                             </span>
-                        </div>
-
+                        @endif
                     </div>
 
-                    {{-- Time Tracking --}}
-                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                        <svg class="mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
-                            </path>
-                        </svg>
-
+                    <div class="flex flex-col items-start">
                         @php
                             $totalMinutes = $task->timeEntries->sum('duration');
                             $hours = floor($totalMinutes / 60);
                             $minutes = $totalMinutes % 60;
+                            $timeDisplay =
+                                $hours > 0 ? $hours . 'h ' . ($minutes > 0 ? $minutes . 'm' : '') : $minutes . 'm';
                         @endphp
 
-                        <span>{{ sprintf('%02dh %02dm', $hours, $minutes) }}</span>
-                    </div>
+                        <div class="flex gap-3">
+                            <div class="flex gap-1">
+                                <x-filament::icon icon="heroicon-o-clock"
+                                    class="w-4 h-4 mb-2 mt-0.5
+                                       text-gray-700 dark:text-gray-300" />
 
-                    {{-- Assignees --}}
-                    <div class="flex -space-x-2">
-                        @foreach ($task->taskAssignee->take(4) as $assignee)
-                            <img class="inline-block h-9 w-9 rounded-full border-2 border-white dark:border-gray-700"
-                                src="{{ $assignee->getFirstMediaUrl('images') ?: 'https://ui-avatars.com/api/?background=random&name=' . urlencode($assignee->name) }}"
-                                alt="{{ $assignee->name }}">
-                        @endforeach
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                    {{ $timeDisplay }}
+                                </p>
+                            </div>
 
-                        @if ($task->taskAssignee->count() > 4)
-                            <span
-                                class="inline-flex items-center justify-center h-9 w-9 rounded-full bg-gray-200 dark:bg-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 border-2 border-white dark:border-gray-700">
-                                +{{ $task->taskAssignee->count() - 4 }}
-                            </span>
-                        @endif
-                    </div>
+                            {{-- @if ($task->due_date)
+                                <div class="flex gap-1">
+                                    <x-filament::icon icon="heroicon-o-calendar"
+                                        class="w-4 h-4 mb-2 mt-0.5
+                                           text-gray-700 dark:text-gray-300" />
+                                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ \Carbon\Carbon::parse($task->due_date)->format('d M, Y') }}
+                                    </p>
+                                </div>
+                            @endif --}}
+                        </div>
 
-                    {{-- Due Date --}}
-                    <div>
-                        @if ($task->due_date)
-                            @php
-                                $dueDate = \Carbon\Carbon::parse($task->due_date);
-                                $isOverdue = $dueDate->isPast();
-                            @endphp
+                        <div class="flex gap-3 items-center">
 
-                            <span
-                                class="inline-flex items-center text-xs px-2 py-1 rounded-full
-                            {{ $isOverdue
-                                ? 'bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100'
-                                : 'bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100' }}">
-                                {{ $dueDate->format('M j, Y') }}
-                            </span>
-                        @else
-                            <span
-                                class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100">
-                                No Due Date
-                            </span>
-                        @endif
+                            {{ $this->infoAction()->arguments(['task' => $task->id]) }}
+
+                            @if (!$task->due_date)
+                                {{ $this->dueDateAction()->arguments(['task' => $task->id]) }}
+                            @endif
+
+                            {{ $this->completeAction()->arguments(['task' => $task->id]) }}
+
+                            {{ $this->editTaskAction()->arguments(['task' => $task->id]) }}
+
+                            {{ $this->taskEntryAction()->arguments(['task' => $task->id]) }}
+
+                            {{ $this->deleteTaskAction()->arguments(['task' => $task->id]) }}
+
+                            {{ $this->viewDetailsAction->arguments(['task' => $task->id]) }}
+                        </div>
+
                     </div>
                 </div>
-
-                {{-- RIGHT SIDE ACTIONS --}}
-                <div class="flex items-center space-x-3">
-
-                    {{-- View --}}
-                    {{-- <button type="button"
-                        class="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 dark:bg-indigo-700 dark:text-indigo-100 hover:bg-indigo-100 dark:hover:bg-indigo-600 rounded-md"
-                        onclick="alert('Task details modal open')">
-                        View
-                    </button> --}}
-
-                    {{-- Set Due Date --}}
-                    {{-- @if (!$task->due_date)
-                        <button type="button"
-                            class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md"
-                            onclick="promptSetDueDate({{ $task->id }})">
-                            Set Due
-                        </button>
-                    @endif --}}
-
-                    {{-- Complete --}}
-                    {{-- <button type="button"
-                        class="px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md"
-                        onclick="confirmCompleteTask({{ $task->id }})">
-                        Complete
-                    </button> --}}
-                </div>
-
             </div>
-        @endforeach
+        @empty
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                <x-filament::icon
+                    icon="heroicon-o-document-magnifying-glass"
+                    class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+                />
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+                    No tasks found
+                </h3>
+                <p class="mt-1 text-gray-500 dark:text-gray-400">
+                    @if (!empty($this->search))
+                        No tasks matched your search query "{{ $this->search }}".
+                    @else
+                        You don't have any tasks assigned to you.
+                    @endif
+                </p>
+            </div>
+        @endforelse
+
+        @if ($this->getTasks()->hasPages())
+            <div class="mt-6">
+                <x-filament::pagination :paginator="$this->getTasks()" :page-options="$this->getPerPageOptions()" :current-page-option-property="'perPage'" />
+            </div>
+        @endif
     </div>
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            Livewire.on('taskUpdated', () => {
-                // Reload the page to show updated data
-                location.reload();
-            });
-        });
-
-        function promptSetDueDate(taskId) {
-            document.getElementById('taskIdInput').value = taskId;
-            document.getElementById('dueDateModal').classList.remove('hidden');
-            document.getElementById('dueDateModal').classList.add('flex');
-        }
-
-        function closeModal() {
-            document.getElementById('dueDateModal').classList.add('hidden');
-            document.getElementById('dueDateModal').classList.remove('flex');
-        }
-
-        function closeConfirmModal() {
-            document.getElementById('confirmModal').classList.add('hidden');
-            document.getElementById('confirmModal').classList.remove('flex');
-        }
-
-        function confirmCompleteTask(taskId) {
-            document.getElementById('completeTaskIdInput').value = taskId;
-            document.getElementById('confirmModal').classList.remove('hidden');
-            document.getElementById('confirmModal').classList.add('flex');
-        }
-
-        function setDueDate() {
-            const taskId = document.getElementById('taskIdInput').value;
-            const dueDate = document.getElementById('dueDateInput').value;
-
-            if (!dueDate) {
-                alert('Please select a due date');
-                return;
-            }
-
-            // Call Livewire method to set due date
-            Livewire.dispatch('setTaskDueDate', {
-                taskId: taskId,
-                dueDate: dueDate
-            });
-            closeModal();
-        }
-
-        function completeTask() {
-            const taskId = document.getElementById('completeTaskIdInput').value;
-
-            // Call Livewire method to mark task as completed
-            Livewire.dispatch('markTaskAsCompleted', {
-                taskId: taskId
-            });
-            closeConfirmModal();
-        }
-    </script>
 </x-filament-panels::page>

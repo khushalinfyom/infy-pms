@@ -6,14 +6,16 @@
             color: #a0a0a0;
         }
     </style>
+    <div x-show="$store.sidebar.isOpen"
+        class="flex items-center w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+           rounded-lg px-3 py-2 gap-2 shadow-sm focus-within:ring-2 focus-within:ring-primary-500">
+        @svg('phosphor-magnifying-glass', ['class' => 'sm:w-5 sm:h-5 w-4 h-4 text-gray-700 dark:text-gray-400'])
 
-    <x-filament::input.wrapper x-show="$store.sidebar.isOpen">
-        <x-slot name="prefix">
-            <x-filament::icon icon="heroicon-s-magnifying-glass" />
-        </x-slot>
-        <x-filament::input type="search" class="searchinsidebar" id="sidebar-search" placeholder="Search"
+        <input id="sidebar-search" type="search" placeholder="Search"
+            class="w-full bg-transparent border-none focus:ring-0 outline-none text-sm text-gray-900 dark:text-gray-200"
             onkeyup="attachSearchEvent()" oninput="attachSearchEvent()" />
-    </x-filament::input.wrapper>
+    </div>
+
 
     <span id="no-results">
         No matching records found
