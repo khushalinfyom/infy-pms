@@ -35,6 +35,11 @@ class InvoiceResource extends Resource
         return authUserHasPermission('manage_invoices');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('messages.users.invoices');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return InvoiceForm::configure($schema);
