@@ -26,6 +26,8 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -43,15 +45,17 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Livewire\WithPagination;
+use Illuminate\Contracts\Support\Htmlable;
 
-class Task extends Page implements HasActions
+class Task extends Page implements HasActions, HasForms
 {
     use InteractsWithActions;
     use WithPagination;
+    use InteractsWithForms;
 
     protected string $view = 'filament.pages.task';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedListBullet;
 
     protected static ?int $navigationSort = AdminPanelSidebar::TASKS->value;
 
@@ -60,6 +64,32 @@ class Task extends Page implements HasActions
 
     public int $perPage = 10;
     protected array $perPageOptions = [5, 10, 20, 50, 100, 'all'];
+
+    // Add properties for filters
+    public int | null $project_id = null;
+    public int | null $user_id = null;
+    public int | null $status = TaskModel::STATUS_PENDING; // Default to pending status
+
+    public function mount()
+    {
+        $this->user_id = Auth::id(); // <--- set default here
+        $this->status = TaskModel::STATUS_PENDING;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return authUserHasPermission('manage_all_tasks');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Task';
+    }
+
+    public function getHeading(): string|Htmlable
+    {
+        return 'Task';
+    }
 
     // Reset pagination when search changes
     public function updatedSearch(): void
@@ -73,14 +103,20 @@ class Task extends Page implements HasActions
         $this->resetPage();
     }
 
-    public function getTitle(): string
+    // Reset pagination when filters change
+    public function updatedProjectId(): void
     {
-        return 'Task';
+        $this->resetPage();
     }
 
-    public static function getNavigationLabel(): string
+    public function updatedUserId(): void
     {
-        return 'Task';
+        $this->resetPage();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
     }
 
     public function getPerPageOptions(): array
@@ -88,29 +124,86 @@ class Task extends Page implements HasActions
         return $this->perPageOptions;
     }
 
-    // Update the getTasks method to support pagination and search
+    // Update the getTasks method to support pagination, search, and filters
     public function getTasks(): LengthAwarePaginator
     {
         $query = TaskModel::whereHas('taskAssignee', function ($q) {
             $q->where('user_id', Auth::id());
-        })->where('status', '!=', TaskModel::STATUS_COMPLETED)
-            ->with(['project', 'taskAssignee', 'timeEntries']);
+        })->with(['project', 'taskAssignee', 'timeEntries']);
 
         // Add search functionality
         if (!empty($this->search)) {
             $query->where('title', 'like', '%' . $this->search . '%');
         }
 
+        // Add project filter
+        if (!is_null($this->project_id)) {
+            $query->where('project_id', $this->project_id);
+        }
+
+        // Add user filter (assignee)
+        if (!is_null($this->user_id)) {
+            $query->whereHas('taskAssignee', function ($q) {
+                $q->where('user_id', $this->user_id);
+            });
+        }
+
+        // Add status filter
+        if (!is_null($this->status)) {
+            $query->where('status', $this->status);
+        }
+
         return $query->orderBy('id', 'desc')
             ->paginate($this->perPage);
+    }
+
+    // Get available projects for filter
+    public function getProjectsProperty()
+    {
+        return Project::all()->pluck('name', 'id');
+    }
+
+    // Get available users for filter
+    public function getUsersProperty()
+    {
+        // Get users from projects that the authenticated user is part of
+        return User::whereHas('projects', function ($q) {
+            $q->whereHas('users', function ($q2) {
+                $q2->where('user_id', Auth::id());
+            });
+        })->pluck('name', 'id');
+    }
+
+    // Get available statuses for filter
+    public function getStatusesProperty()
+    {
+        return Status::orderBy('name')->pluck('name', 'status');
+    }
+
+    // Reset filters
+    public function resetFilters(): void
+    {
+        $this->project_id = null;
+        $this->user_id = null;
+        $this->status = TaskModel::STATUS_PENDING; // Reset to default pending status
+
+        // Reset the form
+        $this->form->fill([
+            'project_id' => null,
+            'user_id' => Auth::id(),
+            'status' => TaskModel::STATUS_PENDING,
+        ]);
+
+        $this->resetPage();
     }
 
     protected function getHeaderActions(): array
     {
         return [
             Action::make('kanban')
-                ->label('Kanban')
+                ->hiddenLabel()
                 ->icon('heroicon-s-view-columns')
+                ->tooltip('Kanban View')
                 ->url(TaskResource::getUrl('kanban')),
 
             ActionGroup::make([
@@ -252,6 +345,48 @@ class Task extends Page implements HasActions
                 ->button(),
         ];
     }
+
+    protected function getFormSchema(): array
+    {
+        return [
+            Group::make([
+                Select::make('project_id')
+                    ->hiddenLabel()
+                    ->placeholder('All Projects')
+                    ->options(fn() => $this->projects)
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->live()
+                    ->afterStateUpdated(fn($state) => $this->project_id = $state),
+
+                Select::make('user_id')
+                    ->hiddenLabel()
+                    ->placeholder('All Assignees')
+                    ->options(fn() => $this->users)
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->live()
+                    ->afterStateUpdated(function ($state) {
+
+                        $this->user_id = $state;
+                    }),
+
+                Select::make('status')
+                    ->hiddenLabel()
+                    ->placeholder('All Statuses')
+                    ->options(fn() => $this->statuses)
+                    ->native(false)
+                    ->searchable()
+                    ->preload()
+                    ->live()
+                    ->afterStateUpdated(fn($state) => $this->status = $state),
+            ])
+                ->columns(3),
+        ];
+    }
+
 
     public function getTaskForm(): array
     {
