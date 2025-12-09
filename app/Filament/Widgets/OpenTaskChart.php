@@ -3,11 +3,19 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Task;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Schema;
+use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
 use Illuminate\Support\Facades\DB;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class OpenTaskChart extends ApexChartWidget
 {
+    use HasFiltersSchema;
+
+    public ?array $userData = [];
+    public ?array $selectedUsers = [];
+
     protected ?string $maxHeight = '400px';
 
     protected int | string | array $columnSpan = 'full';
@@ -20,24 +28,72 @@ class OpenTaskChart extends ApexChartWidget
 
     protected static ?int $sort = 3;
 
-    protected function getOptions(): array
+    public function mount(): void
     {
-        // Get users with their pending task counts
-        $userData = DB::table('users')
+        $this->userData = DB::table('users')
             ->join('task_assignees', 'users.id', '=', 'task_assignees.user_id')
             ->join('tasks', 'task_assignees.task_id', '=', 'tasks.id')
             ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->where('tasks.status', Task::STATUS_PENDING) // 0 is pending status
-            ->where('projects.deleted_at', null)
-            ->where('users.deleted_at', null)
-            ->select('users.name as user_name', DB::raw('count(tasks.id) as pending_tasks'))
+            ->where('tasks.status', Task::STATUS_PENDING)
+            ->whereNull('projects.deleted_at')
+            ->whereNull('users.deleted_at')
+            ->select(
+                'users.id as user_id',
+                'users.name as user_name',
+                DB::raw('COUNT(tasks.id) as pending_tasks')
+            )
             ->groupBy('users.id', 'users.name')
-            // ->orderBy('pending_tasks', 'desc')
-            ->get(); // Removed limit to show all users with pending tasks
+            ->get()
+            ->toArray();
 
-        // Extract user names and task counts
-        $userNames = $userData->pluck('user_name')->toArray();
-        $taskCounts = $userData->pluck('pending_tasks')->toArray();
+        $this->selectedUsers = collect($this->userData)
+            ->pluck('user_id')
+            ->take(20)
+            ->toArray();
+
+        $this->filters = [
+            'users' => $this->selectedUsers
+        ];
+
+        if (method_exists($this, 'getFiltersSchema')) {
+            $this->getFiltersSchema()->fill();
+        }
+
+        $this->options = $this->getOptions();
+
+        if (! $this->getDeferLoading()) {
+            $this->readyToLoad = true;
+        }
+    }
+
+    public function filtersSchema(Schema $schema): Schema
+    {
+        return $schema->components([
+            Select::make('users')
+                ->label('Select Users')
+                ->multiple()
+                ->native(false)
+                ->live()
+                ->maxItems(30)
+                ->options(collect($this->userData)->pluck('user_name', 'user_id')->toArray())
+                ->default($this->selectedUsers),
+        ]);
+    }
+
+    public function updatedInteractsWithSchemas(string $statePath): void
+    {
+        $this->selectedUsers = $this->filters['users'] ?? [];
+        $this->updateOptions();
+    }
+
+    protected function getOptions(): array
+    {
+        $filteredData = collect($this->userData)
+            ->filter(fn($u) => in_array($u->user_id, $this->selectedUsers))
+            ->values();
+
+        $userNames = $filteredData->pluck('user_name')->toArray();
+        $taskCounts = $filteredData->pluck('pending_tasks')->toArray();
 
         $colors = [
             '#5b65d4',
