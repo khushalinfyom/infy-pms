@@ -9,6 +9,7 @@ use App\Models\TimeEntry;
 use Carbon\Carbon;
 use Exception;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -26,14 +27,18 @@ class StopWatchModal extends Component implements HasForms
     public $task_id = null;
     public $activity_id = null;
     public $activeTimeEntry = null;
-    // public ?array $data = [];
+    public $elapsedTime = 0;
+    public $note = '';
 
     public function mount()
     {
-        // Check if user has an active time entry (without end time)
         $this->activeTimeEntry = TimeEntry::where('user_id', Auth::id())
             ->whereNull('end_time')
             ->first();
+
+        if ($this->activeTimeEntry) {
+            $this->elapsedTime = Carbon::parse($this->activeTimeEntry->start_time)->diffInSeconds(Carbon::now());
+        }
     }
 
     public function render()
@@ -41,9 +46,15 @@ class StopWatchModal extends Component implements HasForms
         return view('livewire.stop-watch-modal');
     }
 
+    public function updateTimer()
+    {
+        if ($this->activeTimeEntry) {
+            $this->elapsedTime = Carbon::parse($this->activeTimeEntry->start_time)->diffInSeconds(Carbon::now());
+        }
+    }
+
     public function form(Schema $form): Schema
     {
-        // If user has an active time entry, don't show the form
         if ($this->activeTimeEntry) {
             return $form->schema([]);
         }
@@ -87,6 +98,12 @@ class StopWatchModal extends Component implements HasForms
                     ->native(false)
                     ->required(),
 
+                Textarea::make('note')
+                    ->label('Note')
+                    ->placeholder('Note')
+                    ->required()
+                    ->columnSpanFull()
+
             ]);
     }
 
@@ -102,7 +119,7 @@ class StopWatchModal extends Component implements HasForms
                 'duration' => 0,
                 'start_time' => Carbon::now(),
                 'entry_type' => TimeEntry::STOPWATCH,
-                'note' => '',
+                'note' => $this->note,
             ]);
 
             $this->reset(['project_id', 'task_id', 'activity_id']);
@@ -111,6 +128,9 @@ class StopWatchModal extends Component implements HasForms
                 ->whereNull('end_time')
                 ->first();
 
+            if ($this->activeTimeEntry) {
+                $this->elapsedTime = 0;
+            }
         } catch (Exception $exception) {
             Notification::make()
                 ->danger()
@@ -136,6 +156,7 @@ class StopWatchModal extends Component implements HasForms
                 ]);
 
                 $this->activeTimeEntry = null;
+                $this->elapsedTime = 0;
 
                 Notification::make()
                     ->success()
