@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use AbanoubNassem\FilamentGRecaptchaField\Forms\Components\GRecaptcha;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Support\HtmlString;
@@ -39,6 +40,13 @@ class CustomLogin extends Login
 
                 $this->getRememberFormComponent()
                     ->label(__('messages.users.remember_me')),
+
+                // GRecaptcha::make('captcha')
+                //     ->columnSpanFull()
+                //     ->hiddenLabel()
+                //     ->visible(function () {
+                //         return enableCaptcha() ?? false;
+                //     }),
             ]);
     }
 

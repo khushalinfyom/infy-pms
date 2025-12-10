@@ -33,13 +33,13 @@ class ResetPasswordNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail($notifiable)
     {
-        $mail = SystemMail::where('type', SystemMail::RESET_PASSWORD)->first();
         $resetUrl = $this->resetUrl($notifiable);
-        return (new MailMessage)
-            ->subject($mail->subject)
-            ->markdown('emails.custom_view', ['url' => $resetUrl, 'user_name' => $notifiable->full_name, 'message' => $mail->message]);
+
+        return ( new MailMessage() )
+            ->view('auth.emails.password_reset_link', ['link' => $resetUrl, 'username' => $notifiable->name])
+            ->subject('Reset Password Notification');
     }
 
     protected function resetUrl(mixed $notifiable): string

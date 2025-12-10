@@ -22,6 +22,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
@@ -92,27 +93,36 @@ class AdminPanelProvider extends PanelProvider
     public function settingsIcon(): string
     {
         $settingsUrl = route('filament.admin.settings.pages.general');
-        $stopWatchColor = 'text-primary-600 dark:text-primary-400';
+
+        $activeTimeEntry = TimeEntry::where('user_id', Auth::id())
+            ->whereNull('end_time')
+            ->first();
+
+        $stopWatchColor = $activeTimeEntry
+            ? 'text-green-600 dark:text-green-400'
+            : 'text-red-600 dark:text-red-400';
 
         return Blade::render("
-        <button
-            @click=\"\$dispatch('open-modal', { id: 'stop-watch-modal' })\"
-            type='button'
-            wire:loading.attr='disabled'
-            class='fi-ac-grouped-action rounded-full transition-colors duration-200'
-            style='cursor: pointer; display: inline-flex; align-items: center; justify-content: center;'
-        >
-            @svg('phosphor-alarm-fill', ['class' => \"$stopWatchColor w-6 h-6 mr-2\"])
-        </button>
+        <div style='display: flex; gap: 10px; transform: translateX(15px);'>
+            <button
+                @click=\"\$dispatch('open-modal', { id: 'stop-watch-modal' })\"
+                type='button'
+                wire:loading.attr='disabled'
+                class='fi-ac-grouped-action rounded-full transition-colors duration-200'
+                style='cursor: pointer; display: inline-flex; align-items: center; justify-content: center;'
+            >
+                @svg('phosphor-alarm-fill', ['class' => \"$stopWatchColor w-6 h-6\"])
+            </button>
 
-        <a href='{{ \$settingsUrl }}'
-            class='fi-ac-grouped-action rounded-full transition-colors duration-200'
-            wire:loading.attr='disabled'>
-            @svg('phosphor-gear-fine-fill', ['class' => 'text-gray-600 dark:text-gray-300 w-6 h-6 mr-2'])
-        </a>
+            <a href='{{ \$settingsUrl }}'
+                class='fi-ac-grouped-action rounded-full transition-colors duration-200'
+                wire:loading.attr='disabled'>
+                @svg('phosphor-gear-fine-fill', ['class' => 'text-[#e17100] dark:text-[#f8ba00] w-6 h-6'])
+            </a>
+        </div>
     ", [
             'settingsUrl' => $settingsUrl,
-        'stopWatchColor' => $stopWatchColor,
+            'stopWatchColor' => $stopWatchColor,
         ]);
     }
 }

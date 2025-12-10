@@ -65,7 +65,7 @@ class ProjectForm
 
                 Select::make('users')
                     ->label(__('messages.users.users'))
-                    ->relationship('users', 'name')
+                    ->relationship('users', 'name', fn($query) => $query->where('is_active', 1))
                     ->multiple()
                     ->preload()
                     ->searchable()
