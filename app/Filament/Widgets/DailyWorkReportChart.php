@@ -6,6 +6,7 @@ use App\Models\TimeEntry;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
@@ -15,6 +16,9 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 class DailyWorkReportChart extends ApexChartWidget
 {
     use HasFiltersSchema;
+
+    public ?array $allUsers = [];
+    public ?array $selectedUsers = [];
 
     protected ?string $maxHeight = '400px';
 
@@ -28,15 +32,38 @@ class DailyWorkReportChart extends ApexChartWidget
 
     protected static ?int $sort = 2;
 
-    protected function getChartContainerAttributes(): array
+    public function mount(): void
     {
-        return [
-            'style' => '
-                overflow-x: auto;
-                overflow-y: hidden;
-                white-space: nowrap;
-            ',
+        $this->allUsers = User::where('users.is_active', 1)
+            ->whereNotNull('users.email_verified_at')
+            ->whereNotNull('users.password')
+            ->where('users.set_password', 1)
+            ->where('users.is_email_verified', 1)
+            ->whereNull('users.deleted_by')
+            ->whereNull('users.deleted_at')
+            ->select('id', 'name')
+            ->get()
+            ->toArray();
+
+        $this->selectedUsers = collect($this->allUsers)
+            ->pluck('id')
+            ->take(20)
+            ->toArray();
+
+        $this->filters = [
+            'date' => Carbon::today(),
+            'users' => $this->selectedUsers
         ];
+
+        if (method_exists($this, 'getFiltersSchema')) {
+            $this->getFiltersSchema()->fill();
+        }
+
+        $this->options = $this->getOptions();
+
+        if (! $this->getDeferLoading()) {
+            $this->readyToLoad = true;
+        }
     }
 
     public function updatedInteractsWithSchemas(string $statePath): void
@@ -57,19 +84,30 @@ class DailyWorkReportChart extends ApexChartWidget
                 ->maxDate(Carbon::now())
                 ->afterStateUpdated(fn() => $this->updateOptions())
                 ->extraAttributes(['class' => 'no-clear']),
+
+            Select::make('users')
+                ->label('Select Users')
+                ->multiple()
+                ->native(false)
+                ->live()
+                ->maxItems(30)
+                ->options(collect($this->allUsers)->pluck('name', 'id')->toArray())
+                ->default($this->selectedUsers),
         ]);
     }
 
     protected function getOptions(): array
     {
         $selectedDate = $this->filters['date'] ?? Carbon::today();
+        $this->selectedUsers = $this->filters['users'] ?? [];
 
         if (is_string($selectedDate)) {
             $selectedDate = Carbon::parse($selectedDate);
         }
 
         // Get all active users (regardless of whether they have time entries)
-        $allUsers = User::where('users.is_active', 1)
+        $allUsers = User::whereIn('id', $this->selectedUsers)
+            ->where('users.is_active', 1)
             ->whereNotNull('users.email_verified_at')
             ->whereNotNull('users.password')
             ->where('users.set_password', 1)
@@ -84,6 +122,7 @@ class DailyWorkReportChart extends ApexChartWidget
             'time_entries.user_id',
             DB::raw('SUM(time_entries.duration) as total_duration')
         )
+            ->whereIn('time_entries.user_id', $this->selectedUsers)
             ->whereDate('time_entries.created_at', $selectedDate)
             ->groupBy('time_entries.user_id')
             ->get()
@@ -121,14 +160,10 @@ class DailyWorkReportChart extends ApexChartWidget
             '#e6e0b9',
         ];
 
-        $chartWidth = max(800, count($userNames) * 100);
-
         return [
             'chart' => [
                 'type' => 'bar',
                 'height' => 400,
-                // 'width' => 4000,
-                'width' => $chartWidth,
                 'toolbar' => [
                     'show' => false,
                 ],
@@ -159,7 +194,7 @@ class DailyWorkReportChart extends ApexChartWidget
             ],
             'series' => [
                 [
-                    'name' => 'Time Duration (In Minutes)',
+                    'name' => 'Duration(In Minutes)',
                     'data' => $durations,
                 ],
             ],
@@ -170,7 +205,6 @@ class DailyWorkReportChart extends ApexChartWidget
                         'fontFamily' => 'inherit',
                         'fontWeight' => 500,
                         'fontSize' => '12px',
-                        'colors' => ['#64748b'],
                     ],
                     'rotate' => count($userNames) > 5 ? -45 : 0,
                 ],
@@ -187,7 +221,6 @@ class DailyWorkReportChart extends ApexChartWidget
                         'fontFamily' => 'inherit',
                         'fontWeight' => 500,
                         'fontSize' => '12px',
-                        'colors' => ['#64748b'],
                     ],
                     'formatter' => 'function (value) { return Number.isInteger(value) ? value : value.toFixed(2); }',
                 ],
@@ -201,7 +234,7 @@ class DailyWorkReportChart extends ApexChartWidget
                     'show' => false,
                 ],
             ],
-            'colors' => array_slice($colors, 0, count($userNames)),
+            'colors' => $colors,
             'plotOptions' => [
                 'bar' => [
                     'borderRadius' => 8,
@@ -256,12 +289,6 @@ class DailyWorkReportChart extends ApexChartWidget
                     'lines' => [
                         'show' => true,
                     ],
-                ],
-                'padding' => [
-                    'top' => 0,
-                    'right' => 0,
-                    'bottom' => 0,
-                    'left' => 0,
                 ],
             ],
         ];

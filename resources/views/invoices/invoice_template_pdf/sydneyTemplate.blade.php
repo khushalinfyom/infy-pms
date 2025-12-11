@@ -136,7 +136,7 @@
 </head>
 
 <body>
-    <div style="border: 5px solid {{ $setting['default_invoice_color'] }}">
+    <div style="border: 5px solid {{ $setting['default_invoice_color'] }}; padding: 20px">
         <table width="100%" class="ml-4 mr-4 mt-4 mb-4">
             <tr>
                 <td colspan="2">

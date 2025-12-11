@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\MailResetPasswordNotification;
+use App\Notifications\ResetPasswordNotification;
 use App\Traits\ImageTrait;
 use Eloquent;
 use Filament\Models\Contracts\FilamentUser;
@@ -288,7 +289,7 @@ class User extends Authenticatable implements MustVerifyEmail, HasMedia, Filamen
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new MailResetPasswordNotification($token));
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /**

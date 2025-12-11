@@ -201,6 +201,7 @@ return [
         'task' => 'Task',
         'pending_tasks' => 'Pending Tasks',
         'assigneed_users' => 'Assigneed Users',
+        'no_user_assigned' => 'No user assigned',
         'activity' => 'Activity',
         'unknown' => 'Unknown',
         'attachments' => 'Attachments',

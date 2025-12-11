@@ -813,3 +813,16 @@ function currencyEntityForInvoice($invoice = null)
 
     return '&#' . $code . ';';
 }
+
+if (! function_exists('enableCaptcha')) {
+    function enableCaptcha()
+    {
+        $secret = getSettingValue('google_recaptcha_secret_key');
+        $sitekey = getSettingValue('google_recaptcha_site_key');
+        config([
+            'captcha.secret' => $secret,
+            'captcha.sitekey' => $sitekey,
+        ]);
+        return ! empty($secret) && !empty($sitekey) ? getSettingValue('show_recaptcha') : false;
+    }
+}

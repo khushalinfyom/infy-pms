@@ -24,7 +24,7 @@ class OpenTaskChart extends ApexChartWidget
 
     protected static ?string $chartId = 'openTaskChart';
 
-    protected static ?string $heading = 'User Pending Tasks';
+    protected static ?string $heading = 'Open Task';
 
     protected static ?int $sort = 3;
 
@@ -132,6 +132,33 @@ class OpenTaskChart extends ApexChartWidget
             'chart' => [
                 'type' => 'bar',
                 'height' => 400,
+                'toolbar' => [
+                    'show' => false,
+                ],
+                'animations' => [
+                    'enabled' => true,
+                    'easing' => 'easeinout',
+                    'speed' => 800,
+                    'animateGradually' => [
+                        'enabled' => true,
+                        'delay' => 150,
+                    ],
+                    'dynamicAnimation' => [
+                        'enabled' => true,
+                        'speed' => 350,
+                    ],
+                ],
+                'zoom' => [
+                    'enabled' => false,
+                ],
+                'dropShadow' => [
+                    'enabled' => true,
+                    'color' => '#000',
+                    'top' => 18,
+                    'left' => 7,
+                    'blur' => 10,
+                    'opacity' => 0.1,
+                ],
             ],
             'series' => [
                 [
@@ -144,21 +171,91 @@ class OpenTaskChart extends ApexChartWidget
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
+                        'fontWeight' => 500,
+                        'fontSize' => '12px',
                     ],
+                    'rotate' => count($userNames) > 5 ? -45 : 0,
+                ],
+                'axisBorder' => [
+                    'show' => false,
+                ],
+                'axisTicks' => [
+                    'show' => false,
                 ],
             ],
             'yaxis' => [
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
+                        'fontWeight' => 500,
+                        'fontSize' => '12px',
                     ],
+                ],
+                'forceNiceScale' => true,
+                'tickAmount' => 6,
+                'min' => 0,
+                'axisBorder' => [
+                    'show' => false,
+                ],
+                'axisTicks' => [
+                    'show' => false,
                 ],
             ],
             'colors' => $colors,
             'plotOptions' => [
                 'bar' => [
-                    'borderRadius' => 3,
-                    'horizontal' => false, // Changed to vertical bars for better readability
+                    'borderRadius' => 8,
+                    'borderRadiusApplication' => 'end',
+                    'horizontal' => false,
+                    'columnWidth' => '70%',
+                ],
+            ],
+            'fill' => [
+                'type' => 'gradient',
+                'gradient' => [
+                    'shade' => 'light',
+                    'type' => 'vertical',
+                    'shadeIntensity' => 0.4,
+                    'inverseColors' => false,
+                    'opacityFrom' => 1,
+                    'opacityTo' => 0.7,
+                    'stops' => [0, 100],
+                ],
+            ],
+            'dataLabels' => [
+                'enabled' => false,
+            ],
+            'stroke' => [
+                'show' => true,
+                'width' => 2,
+                'colors' => ['rgba(255,255,255,0.3)'],
+            ],
+            'legend' => [
+                'show' => false,
+            ],
+            'tooltip' => [
+                'enabled' => true,
+                'style' => [
+                    'fontSize' => '14px',
+                    'fontFamily' => 'inherit',
+                ],
+                'y' => [
+                    'formatter' => "function(value) { return value + ' minutes'; }",
+                ],
+            ],
+            'grid' => [
+                'show' => true,
+                'borderColor' => '#e2e8f0',
+                'strokeDashArray' => 4,
+                'xaxis' => [
+                    'lines' => [
+                        'show' => false,
+                    ],
+                ],
+                'yaxis' => [
+                    'lines' => [
+                        'show' => true,
+                    ],
                 ],
             ],
         ];

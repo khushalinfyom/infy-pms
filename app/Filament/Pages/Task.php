@@ -70,6 +70,8 @@ class Task extends Page implements HasActions, HasForms
     public int | null $user_id = null;
     public int | null $status = TaskModel::STATUS_PENDING; // Default to pending status
 
+    public string $copyContent = '';
+
     public function mount()
     {
         $this->user_id = Auth::id(); // <--- set default here
@@ -309,37 +311,117 @@ class Task extends Page implements HasActions, HasForms
                     ->action(function () {
                         $timeEntries = TimeEntry::getTodayEntries();
 
-                        $note = '** Today Time entry Activity - ' . now()->format('jS M Y') . "**\n";
+                        if ($timeEntries->isEmpty()) {
+                            Notification::make()
+                                ->title(__('messages.projects.no_task_found'))
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+
+                        $output = '** Today Time entry Activity - ' . now()->format('jS M Y') . " **\n\n";
 
                         $projects = [];
 
                         foreach ($timeEntries as $entry) {
                             $projectName = $entry->task->project->name;
-                            $taskId = $entry->task_id;
+                            $taskTitle = $entry->task->title;
 
-                            $projects[$projectName][$taskId]['name'] = $entry->task->title;
+                            $durationInMinutes = $entry->duration;
+                            $hours = floor($durationInMinutes / 60);
+                            $minutes = $durationInMinutes % 60;
+                            $formattedDuration = sprintf('%02d:%02d', $hours, $minutes);
 
-                            if (!isset($projects[$projectName][$taskId]['note'])) {
-                                $projects[$projectName][$taskId]['note'] = '';
+                            if (!isset($projects[$projectName])) {
+                                $projects[$projectName] = [];
                             }
 
-                            $projects[$projectName][$taskId]['note'] .= "\n" . $entry->note . "\n";
-                        }
+                            $taskExists = false;
+                            foreach ($projects[$projectName] as &$task) {
+                                if ($task['title'] === $taskTitle) {
 
-                        foreach ($projects as $name => $project) {
-                            $note .= "\n" . $name . "\n";
+                                    $totalMinutes = $task['duration_minutes'] + $durationInMinutes;
+                                    $newHours = floor($totalMinutes / 60);
+                                    $newMinutes = $totalMinutes % 60;
+                                    $task['duration'] = sprintf('%02d:%02d', $newHours, $newMinutes);
+                                    $task['duration_minutes'] = $totalMinutes;
+                                    $taskExists = true;
+                                    break;
+                                }
+                            }
 
-                            foreach ($project as $task) {
-                                $note .= "\n* " . $task['name'];
-                                $note .= $task['note'];
+                            if (!$taskExists) {
+                                $projects[$projectName][] = [
+                                    'title' => $taskTitle,
+                                    'duration' => $formattedDuration,
+                                    'duration_minutes' => $durationInMinutes,
+                                    'note' => $entry->note ?? ''
+                                ];
                             }
                         }
+
+
+                        foreach ($projects as $projectName => $tasks) {
+                            $output .= $projectName . "\n";
+                            foreach ($tasks as $task) {
+                                $output .= "- " . $task['title'] . " (" . $task['duration'] . " M)\n";
+                                if (!empty($task['note'])) {
+                                    $output .= "  Note: " . $task['note'] . "\n";
+                                }
+                            }
+                            $output .= "\n";
+                        }
+
+                        $jsonOutput = json_encode($output);
+                        $this->js("
+                        (function() {
+                            var content = {$jsonOutput};
+                            function copyToClipboard(text) {
+                                if (navigator.clipboard && window.isSecureContext) {
+                                    navigator.clipboard.writeText(text).then(function() {
+                                        console.log('Copied to clipboard using Clipboard API');
+                                    }).catch(function(error) {
+                                        console.error('Clipboard API failed:', error);
+                                        fallbackCopyTextToClipboard(text);
+                                    });
+                                } else {
+                                    fallbackCopyTextToClipboard(text);
+                                }
+                            }
+
+                            function fallbackCopyTextToClipboard(text) {
+                                var textArea = document.createElement('textarea');
+                                textArea.value = text;
+                                textArea.style.position = 'fixed';
+                                textArea.style.top = '0';
+                                textArea.style.left = '0';
+                                textArea.style.width = '2em';
+                                textArea.style.height = '2em';
+                                textArea.style.padding = '0';
+                                textArea.style.border = 'none';
+                                textArea.style.outline = 'none';
+                                textArea.style.boxShadow = 'none';
+                                textArea.style.background = 'transparent';
+                                document.body.appendChild(textArea);
+                                textArea.focus();
+                                textArea.select();
+                                try {
+                                    var successful = document.execCommand('copy');
+                                } catch (err) {
+                                    console.error('Fallback failed:', err);
+                                }
+                                document.body.removeChild(textArea);
+                            }
+
+                            copyToClipboard(content);
+                        })();
+                    ");
 
                         Notification::make()
                             ->title(__('messages.projects.today_activity_copied_successfully'))
+                            ->success()
                             ->send();
-                    })
-
+                    }),
             ])
                 ->label('Actions')
                 ->button(),

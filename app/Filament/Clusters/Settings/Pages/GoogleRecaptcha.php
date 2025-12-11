@@ -87,18 +87,18 @@ class GoogleRecaptcha extends Page
                 Section::make([
 
                     Toggle::make('show_recaptcha')
-                        ->label(__('messages.common.show_recaptcha'))
+                        ->label(__('messages.settings.show_recaptcha'))
                         ->live(),
 
                     TextInput::make('google_recaptcha_site_key')
-                        ->label(__('messages.common.site_key'))
-                        ->placeholder(__('messages.common.site_key'))
+                        ->label(__('messages.settings.site_key'))
+                        ->placeholder(__('messages.settings.site_key'))
                         ->required()
                         ->visible(fn(Get $get) => $get('show_recaptcha') == true),
 
                     TextInput::make('google_recaptcha_secret_key')
-                        ->label(__('messages.common.secret_key'))
-                        ->placeholder(__('messages.common.secret_key'))
+                        ->label(__('messages.settings.secret_key'))
+                        ->placeholder(__('messages.settings.secret_key'))
                         ->required()
                         ->visible(fn(Get $get) => $get('show_recaptcha') == true),
 

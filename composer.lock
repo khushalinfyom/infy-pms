@@ -4,8 +4,146 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "14a7b96085be9f2bb8855f6d95da4590",
+    "content-hash": "32cadbac73421944d0b00494397e8525",
     "packages": [
+        {
+            "name": "abanoubnassem/filament-grecaptcha-field",
+            "version": "v0.0.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/AbanoubNassem/filament-grecaptcha-field.git",
+                "reference": "a9ad5f79972bb1dd00695999b09109f9479febbd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/AbanoubNassem/filament-grecaptcha-field/zipball/a9ad5f79972bb1dd00695999b09109f9479febbd",
+                "reference": "a9ad5f79972bb1dd00695999b09109f9479febbd",
+                "shasum": ""
+            },
+            "require": {
+                "anhskohbo/no-captcha": "^3.4",
+                "filament/forms": "^2.16|^3.0-stable|^3.2.51|^4.0",
+                "illuminate/contracts": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.0|^8.1|^8.2|^8.3",
+                "spatie/laravel-package-tools": "^1.13.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^6.0",
+                "orchestra/testbench": "^7.0||^8.22.0||^9.0.0||^10.0.0",
+                "pestphp/pest": "^1.21||^2.1||^3.0",
+                "pestphp/pest-plugin-laravel": "^1.1||^2.0||^3.0",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FilamentGRecaptchaField": "AbanoubNassem\\FilamentGRecaptchaField\\Facades\\FilamentGRecaptchaField"
+                    },
+                    "providers": [
+                        "AbanoubNassem\\FilamentGRecaptchaField\\FilamentGRecaptchaFieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "AbanoubNassem\\FilamentGRecaptchaField\\": "src",
+                    "AbanoubNassem\\FilamentGRecaptchaField\\Database\\Factories\\": "database/factories"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "AbanoubNassem",
+                    "email": "abanoubnassemmousa@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Provides a Google reCaptcha V2 field for the Filament Forms",
+            "homepage": "https://github.com/abanoubnassem/filament-grecaptcha-field",
+            "keywords": [
+                "AbanoubNassem",
+                "captcha",
+                "filament-grecaptcha-field",
+                "google",
+                "grecaptcha",
+                "laravel",
+                "recaptcha"
+            ],
+            "support": {
+                "issues": "https://github.com/AbanoubNassem/filament-grecaptcha-field/issues",
+                "source": "https://github.com/AbanoubNassem/filament-grecaptcha-field/tree/v0.0.11"
+            },
+            "time": "2025-08-23T11:35:16+00:00"
+        },
+        {
+            "name": "anhskohbo/no-captcha",
+            "version": "3.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/anhskohbo/no-captcha.git",
+                "reference": "87666572f0dbe1e3380a2e9ae7574bf3a2d0804e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/anhskohbo/no-captcha/zipball/87666572f0dbe1e3380a2e9ae7574bf3a2d0804e",
+                "reference": "87666572f0dbe1e3380a2e9ae7574bf3a2d0804e",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.2|^7.0",
+                "illuminate/support": "^5.0|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
+                "php": ">=5.5.5"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.8|^9.5.10|^10.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "NoCaptcha": "Anhskohbo\\NoCaptcha\\Facades\\NoCaptcha"
+                    },
+                    "providers": [
+                        "Anhskohbo\\NoCaptcha\\NoCaptchaServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Anhskohbo\\NoCaptcha\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "anhskohbo",
+                    "email": "anhskohbo@gmail.com"
+                }
+            ],
+            "description": "No CAPTCHA reCAPTCHA For Laravel.",
+            "keywords": [
+                "captcha",
+                "laravel",
+                "laravel4",
+                "laravel5",
+                "laravel6",
+                "no-captcha",
+                "recaptcha"
+            ],
+            "support": {
+                "issues": "https://github.com/anhskohbo/no-captcha/issues",
+                "source": "https://github.com/anhskohbo/no-captcha/tree/3.7.0"
+            },
+            "time": "2025-02-25T18:53:34+00:00"
+        },
         {
             "name": "anourvalar/eloquent-serialize",
             "version": "1.3.5",

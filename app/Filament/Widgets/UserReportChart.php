@@ -269,7 +269,6 @@ class UserReportChart extends ApexChartWidget
                         'fontFamily' => 'inherit',
                         'fontWeight' => 500,
                         'fontSize' => '12px',
-                        'colors' => ['#64748b'],
                     ],
                     'rotate' => $groupByDay && count($formattedPeriods) > 10 ? -45 : 0,
                 ],
@@ -286,7 +285,6 @@ class UserReportChart extends ApexChartWidget
                         'fontFamily' => 'inherit',
                         'fontWeight' => 500,
                         'fontSize' => '12px',
-                        'colors' => ['#64748b'],
                     ],
                     'formatter' => 'function (value) { return Number.isInteger(value) ? value : value.toFixed(2); }',
                 ],
@@ -357,12 +355,6 @@ class UserReportChart extends ApexChartWidget
                     'lines' => [
                         'show' => true,
                     ],
-                ],
-                'padding' => [
-                    'top' => 0,
-                    'right' => 0,
-                    'bottom' => 0,
-                    'left' => 0,
                 ],
             ],
         ];
