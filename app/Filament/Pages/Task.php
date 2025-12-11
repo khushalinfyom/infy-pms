@@ -845,38 +845,84 @@ class Task extends Page implements HasActions, HasForms
 
                                         Repeater::make('comment')
                                             ->label(__('messages.projects.comments'))
-                                            ->default(function ($record) {
-                                                if (!$record) return [];
-
-                                                return $record->comments->map(function ($item) {
-                                                    return [
-                                                        'user_name'  => $item->createdUser->name ?? __('messages.projects.unknown_user'),
-                                                        'avatar'     => $item->user_avatar,
-                                                        'comment'    => $item->comment,
-                                                        'created_at' => $item->created_at->diffForHumans(),
-                                                    ];
-                                                })->toArray();
-                                            })
-
+                                            ->hiddenLabel()
+                                            ->relationship('comments')
                                             ->schema([
-                                                Group::make()->schema([
-                                                    ImageEntry::make('avatar')
-                                                        ->circular()
-                                                        ->imageHeight(35)
-                                                        ->label(''),
+                                                Group::make()
+                                                    ->schema([
+                                                        Group::make()
+                                                            ->schema([
+                                                                Group::make()
+                                                                    ->schema([
+                                                                        ImageEntry::make('createdUser.img_avatar')
+                                                                            ->circular()
+                                                                            ->imageHeight(40)
+                                                                            ->imageWidth(40)
+                                                                            ->hiddenLabel()
+                                                                            ->default(fn($record) => $record && $record->createdUser ?
+                                                                                ($record->createdUser->getFirstMediaUrl('images') ?:
+                                                                                    'https://ui-avatars.com/api/?name=' . urlencode($record->createdUser->name) . '&background=random') :
+                                                                                asset('assets/img/user-avatar.png')),
 
-                                                    TextEntry::make('user_name')
-                                                        ->label('')
-                                                        ->extraAttributes(['style' => 'font-weight: 600;']),
+                                                                        TextEntry::make('createdUser.name')
+                                                                            ->hiddenLabel()
+                                                                            ->default(__('messages.projects.unknown_user'))
+                                                                            ->extraAttributes(['style' => 'font-weight: 600; font-size: 14px; margin: 0; margin-left: -20px; ']),
+                                                                    ])
+                                                                    ->columns(2)
+                                                                    ->columnSpan(1),
 
-                                                    TextEntry::make('created_at')
-                                                        ->label('')
-                                                        ->extraAttributes(['style' => 'font-size: 12px; color: #888;']),
+                                                                TextEntry::make('created_at')
+                                                                    ->hiddenLabel()
+                                                                    ->formatStateUsing(fn($state) => $state?->diffForHumans() ?? '')
+                                                                    ->extraAttributes(['style' => 'font-size: 12px; color: #888; text-align: right;']),
 
-                                                    TextEntry::make('comment')
-                                                        ->label('')
-                                                        ->html(),
-                                                ]),
+                                                                ActionGroup::make([
+                                                                    Action::make('edit_comment')
+                                                                        ->icon('heroicon-o-pencil')
+                                                                        ->tooltip(__('messages.common.edit'))
+                                                                        ->modalWidth('xl')
+                                                                        ->modalHeading(__('messages.projects.edit_comment'))
+                                                                        ->form([
+                                                                            RichEditor::make('comment')
+                                                                                ->label(__('messages.projects.comment'))
+                                                                                ->required()
+                                                                                ->columnSpanFull()
+                                                                                ->placeholder(__('messages.projects.comment'))
+                                                                                ->extraAttributes(['style' => 'min-height: 200px;'])
+                                                                                ->toolbarButtons([
+                                                                                    ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],
+                                                                                    ['h2', 'h3', 'alignStart', 'alignCenter', 'alignEnd'],
+                                                                                    ['blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+                                                                                    ['undo', 'redo'],
+                                                                                ]),
+                                                                        ])
+                                                                        ->mountUsing(fn($record, $form) => $form->fill(['comment' => $record->comment]))
+                                                                        ->action(function (array $data, $record) {
+                                                                            $record->update(['comment' => $data['comment']]);
+                                                                        })
+                                                                        ->visible(fn($record) => $record && Auth::id() === $record->created_by),
+
+                                                                    Action::make('delete_comment')
+                                                                        ->icon('heroicon-o-trash')
+                                                                        ->tooltip(__('messages.common.delete'))
+                                                                        ->requiresConfirmation()
+                                                                        ->action(function ($record) {
+                                                                            $record->delete();
+                                                                        })
+                                                                        ->visible(fn($record) => $record && Auth::id() === $record->created_by),
+                                                                ])
+                                                                    ->extraAttributes(['style' => 'display: flex; justify-content: flex-end; gap: 4px;']),
+                                                            ])
+                                                            ->columns(3)
+                                                            ->columnSpanFull(),
+
+                                                        TextEntry::make('comment')
+                                                            ->hiddenLabel()
+                                                            ->html()
+                                                            ->formatStateUsing(fn($state) => $state ?? ''),
+                                                    ])
+                                                    ->columns(1),
                                             ])
                                             ->columns(1)
 
@@ -894,15 +940,14 @@ class Task extends Page implements HasActions, HasForms
 
                                         if (!$record) return [];
 
-                                        $users = \App\Models\User::whereIn('id', function ($query) use ($record) {
-                                            $query->select('user_id')
-                                                ->from('task_assignees')
-                                                ->where('task_id', $record->id);
-                                        })->get();
+                                        $assignees = $record->taskAssignee;
 
-                                        return $users->map(function ($user) {
-                                            return $user->img_avatar
-                                                ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
+                                        return $assignees->map(function ($user) {
+                                            $avatar = $user->img_avatar;
+                                            if (empty($avatar) || !filter_var($avatar, FILTER_VALIDATE_URL)) {
+                                                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=random&size=64&rounded=true&color=fff';
+                                            }
+                                            return $avatar;
                                         })->toArray();
                                     })
                                     ->stacked()

@@ -35,13 +35,12 @@
                 <div class="flex items-center gap-4">
                     <div class="flex items-center">
                         @foreach ($task->taskAssignee->take(3) as $assignee)
-                            <img src="{{ $assignee->getFirstMediaUrl('images') ?: 'https://ui-avatars.com/api/?background=random&name=' . urlencode($assignee->name) }}"
-                                alt="{{ $assignee->name }}"
+                            <img src="{{ $assignee->img_avatar }}" alt="{{ $assignee->name }}"
                                 class="w-10 h-10 rounded-full -ml-2 first:ml-0 border-2 border-white dark:border-gray-800 shadow-sm">
                         @endforeach
 
                         @if ($task->taskAssignee->count() > 3)
-                            <span class="text-xs text-gray-600 dark:text-gray-300 ml-2">
+                            <span class="text-xs text-gray-600 dark:text-gray-300 ml-[-7px] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full w-9 h-9 flex items-center justify-center">
                                 +{{ $task->taskAssignee->count() - 3 }}
                             </span>
                         @endif
