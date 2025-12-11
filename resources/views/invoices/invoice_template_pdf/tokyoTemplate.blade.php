@@ -91,9 +91,14 @@
             vertical-align: top;
         }
 
+        .footer-td {
+            display: flex;
+            justify-content: flex-end;
+        }
+
         .invoice-footer {
             margin-top: 15px;
-            width: 100%;
+            width: 35%;
             text-align: right;
         }
 
@@ -138,7 +143,7 @@
 <body>
     <div
         style="border-top: 15px solid {{ $setting['default_invoice_color'] }};border-bottom: 15px solid {{ $setting['default_invoice_color'] }}">
-        <table width="100%" class="mt-4">
+        <table width="100%" style="margin-top: 20px">
             <tr>
                 <td>
                     <div class="logo"><img width="100px" src="{{ asset(getSettingValue('app_logo')) }}"
@@ -235,7 +240,7 @@
         </tr>
         <tr>
             <td></td>
-            <td>
+            <td class="footer-td">
                 <table class="invoice-footer">
                     <tr>
                         <td class="font-weight-bold tu">Amount:</td>
@@ -258,7 +263,8 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="font-weight-bold tu">Total:</td>
+                        <td class="font-weight-bold tu"
+                            style="border-bottom: 1px solid {{ $setting['default_invoice_color'] }}">Total:</td>
                         <td style="border-bottom: 1px solid {{ $setting['default_invoice_color'] }}">
                             <span class="invoice-currency-symbol">{!! currencyEntityForInvoice($invoice) !!}</span>
                             {{ number_format($invoice->amount, 2) }}
@@ -273,7 +279,6 @@
                 <br><span style="color: {{ $setting['default_invoice_color'] }}">{{ $setting['app_name'] }}</span>
             </td>
         </tr>
-        </table>
     </div>
 </body>
 

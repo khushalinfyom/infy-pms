@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Reports\Pages;
 
 use App\Filament\Resources\Reports\ReportResource;
+use App\Filament\Resources\Taxes\TaxResource;
 use App\Models\Tax;
 use App\Models\Invoice;
 use Filament\Actions\Action;
@@ -22,6 +23,8 @@ use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 
 class CreateInvoice extends Page implements HasForms
 {
@@ -408,6 +411,9 @@ class CreateInvoice extends Page implements HasForms
                             ->label('Tax')
                             ->options(Tax::all()->pluck('name', 'id')->toArray())
                             ->live()
+                            ->suffixAction(function (Set $set, Get $get) {
+                                return TaxResource::getSuffixAction($set, 'tax_id');
+                            })
                             ->native(false),
 
                         DatePicker::make('issue_date')

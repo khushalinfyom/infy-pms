@@ -199,7 +199,12 @@ class ListProjects extends Page implements HasForms
                                             ->width(45)
                                             ->height(45)
                                             ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($project->name) . '&background=random')
-                                            ->columnSpan(1),
+                                            ->columnSpan([
+                                                'default' => 1,
+                                                'sm' => 1,
+                                                'md' => 1,
+                                                'lg' => 1,
+                                            ]),
 
                                         TextEntry::make('name')
                                             ->hiddenLabel()
@@ -215,11 +220,26 @@ class ListProjects extends Page implements HasForms
 
                                                 return $formatted;
                                             })
-                                            ->columnSpan(6),
+                                            ->columnSpan([
+                                                'default' => 6,
+                                                'sm' => 6,
+                                                'md' => 6,
+                                                'lg' => 6,
+                                            ]),
 
                                     ])
-                                        ->columns(7)
-                                        ->columnSpan(4),
+                                        ->columns([
+                                            'default' => 7,
+                                            'sm' => 7,
+                                            'md' => 7,
+                                            'lg' => 7,
+                                        ])
+                                        ->columnSpan([
+                                            'default' => 4,
+                                            'sm' => 4,
+                                            'md' => 4,
+                                            'lg' => 4,
+                                        ]),
 
                                     ActionGroup::make([
 
@@ -234,7 +254,12 @@ class ListProjects extends Page implements HasForms
                                     ])
                                         ->extraAttributes(['style' => 'margin-left: auto;'])
                                 ])
-                                    ->columns(5),
+                                    ->columns([
+                                        'default' => 5,
+                                        'sm' => 5,
+                                        'md' => 5,
+                                        'lg' => 5,
+                                    ]),
 
                                 Group::make([
                                     Group::make([
@@ -262,10 +287,28 @@ class ListProjects extends Page implements HasForms
                                             ]),
 
                                     ])
-                                        ->columns(2)
-                                        ->columnSpan(4),
+                                        ->columns([
+                                            'default' => 2,
+                                            'sm' => 2,
+                                            'md' => 2,
+                                            'lg' => 2,
+                                            'xl' => 2,
+                                        ])
+                                        ->columnSpan([
+                                            'default' => 4,
+                                            'sm' => 4,
+                                            'md' => 4,
+                                            'lg' => 4,
+                                            'xl' => 4,
+                                        ]),
                                 ])
-                                    ->columns(5),
+                                    ->columns([
+                                        'default' => 5,
+                                        'sm' => 5,
+                                        'md' => 5,
+                                        'lg' => 5,
+                                        'xl' => 5,
+                                    ]),
 
                                 Group::make([
 
@@ -284,7 +327,13 @@ class ListProjects extends Page implements HasForms
                                                     </div>
                                                 HTML;
                                         })
-                                        ->columnSpan(4),
+                                        ->columnSpan([
+                                            'default' => 4,
+                                            'sm' => 4,
+                                            'md' => 4,
+                                            'lg' => 4,
+                                            'xl' => 4,
+                                        ]),
 
                                     TextEntry::make('status')
                                         ->hiddenLabel()
@@ -313,10 +362,22 @@ class ListProjects extends Page implements HasForms
 
                                             return $colors[$project->status] ?? 'gray';
                                         })->extraAttributes(['style' => 'margin-top: -15px;'])
-                                        ->columnSpan(1),
+                                        ->columnSpan([
+                                            'default' => 1,
+                                            'sm' => 1,
+                                            'md' => 1,
+                                            'lg' => 1,
+                                            'xl' => 1,
+                                        ]),
 
                                 ])
-                                    ->columns(5),
+                                    ->columns([
+                                        'default' => 5,
+                                        'sm' => 5,
+                                        'md' => 5,
+                                        'lg' => 5,
+                                        'xl' => 5,
+                                    ]),
 
                                 Group::make([
 
@@ -324,18 +385,22 @@ class ListProjects extends Page implements HasForms
                                         ->label('Team')
                                         ->hiddenLabel()
                                         ->default(function () use ($project) {
-                                            $users = $project->users ?? collect();
+                                            $users = $project->users ? $project->users->where('is_active', 1) : collect();
 
                                             if ($users->isEmpty()) {
                                                 $users = User::whereIn('id', function ($query) use ($project) {
                                                     $query->select('user_id')
                                                         ->from('project_user')
                                                         ->where('project_id', $project->id);
-                                                })->get();
+                                                })->where('is_active', 1)->get();
                                             }
                                             return $users->map(function ($user) {
-                                                return $user->img_avatar
-                                                    ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
+                                                $image = $user->getFirstMediaUrl(User::IMAGE_PATH);
+                                                if (!empty($image)) {
+                                                    return $image;
+                                                }
+
+                                                return "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
                                             })->toArray();
                                         })
                                         ->circular()
@@ -345,7 +410,18 @@ class ListProjects extends Page implements HasForms
                                         ->imageHeight(40)
                                         ->extraAttributes([
                                             'style' => 'display: flex;',
-                                        ]),
+                                        ])
+                                        ->visible(function () use ($project) {
+                                            $users = $project->users ? $project->users->where('is_active', 1) : collect();
+                                            if ($users->isEmpty()) {
+                                                $users = User::whereIn('id', function ($query) use ($project) {
+                                                    $query->select('user_id')
+                                                        ->from('project_user')
+                                                        ->where('project_id', $project->id);
+                                                })->where('is_active', 1)->get();
+                                            }
+                                            return !$users->isEmpty();
+                                        }),
 
                                     Action::make('View' . $project->id)
                                         ->label('View')
@@ -355,7 +431,7 @@ class ListProjects extends Page implements HasForms
                                         ->modalHeading(__('messages.projects.edit_assignees'))
                                         ->modalWidth('md')
                                         ->fillForm(fn() => [
-                                            'users' => $project->users->pluck('id')->toArray(),
+                                            'users' => $project->users->where('is_active', 1)->pluck('id')->toArray(),
                                         ])
                                         ->form([
                                             Select::make('users')
@@ -371,7 +447,7 @@ class ListProjects extends Page implements HasForms
                                         ])
                                         ->action(function (array $data) use ($project) {
 
-                                            $oldUserIds = $project->users()->pluck('users.id')->toArray();
+                                            $oldUserIds = $project->users()->where('is_active', 1)->pluck('users.id')->toArray();
                                             $project->users()->sync($data['users']);
 
                                             $newUserIds = array_diff($data['users'], $oldUserIds);
@@ -420,9 +496,22 @@ class ListProjects extends Page implements HasForms
                                         })
                                         ->after(fn() => redirect(request()->header('Referer')))
                                         ->successNotificationTitle(__('messages.projects.assignee_updated_successfully'))
-                                        ->extraAttributes([
-                                            'style' => 'display: flex; justify-content: center; align-items: center; border: 1px solid #5689fd; border-radius: 50%; padding: 0.5rem; margin: 2px 0px 2px -17px;',
-                                        ])
+                                        ->extraAttributes(function () use ($project) {
+                                            $users = $project->users ? $project->users->where('is_active', 1) : collect();
+                                            if ($users->isEmpty()) {
+                                                $users = User::whereIn('id', function ($query) use ($project) {
+                                                    $query->select('user_id')
+                                                        ->from('project_user')
+                                                        ->where('project_id', $project->id);
+                                                })->where('is_active', 1)->get();
+                                            }
+
+                                            $marginLeft = $users->isEmpty() ? '2px' : '-17px';
+
+                                            return [
+                                                'style' => 'display: flex; justify-content: center; align-items: center; border: 1px solid #5689fd; border-radius: 50%; padding: 0.5rem; margin: 2px 0px 2px ' . $marginLeft . ';',
+                                            ];
+                                        })
 
                                 ])
                                     ->columns([
@@ -484,7 +573,7 @@ class ListProjects extends Page implements HasForms
                     'status' => $project->status,
                     'color' => $project->color,
                     'description' => $project->description,
-                    'user_ids' => $project->users()->pluck('users.id')->toArray(),
+                    'user_ids' => $project->users()->where('is_active', 1)->pluck('users.id')->toArray(),
                 ];
             })
             ->form([
@@ -518,7 +607,7 @@ class ListProjects extends Page implements HasForms
                     Select::make('user_ids')
                         ->label(__('messages.users.users'))
                         ->multiple()
-                        ->options(User::pluck('name', 'id'))
+                        ->options(User::where('is_active', 1)->pluck('name', 'id'))
                         ->searchable()
                         ->preload(),
 
@@ -592,7 +681,7 @@ class ListProjects extends Page implements HasForms
                 $oldStatus = $project->status;
                 $newStatus = $data['status'] ?? $project->status;
 
-                $oldUserIds = $project->users()->pluck('users.id')->toArray();
+                $oldUserIds = $project->users()->where('is_active', 1)->pluck('users.id')->toArray();
 
                 $project->update([
                     'name' => $data['name'],
@@ -647,7 +736,7 @@ class ListProjects extends Page implements HasForms
                     $oldStatusText = Project::STATUS[$oldStatus] ?? $oldStatus;
                     $newStatusText = Project::STATUS[$newStatus] ?? $newStatus;
 
-                    $projectUsers = $project->users()->pluck('users.id')->toArray();
+                    $projectUsers = $project->users()->where('is_active', 1)->pluck('users.id')->toArray();
                     foreach ($projectUsers as $userId) {
                         UserNotification::create([
                             'title'       => 'Project Status Changed',

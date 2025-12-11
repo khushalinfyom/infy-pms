@@ -5,9 +5,11 @@ namespace App\Filament\Resources\Taxes;
 use App\Filament\Resources\Taxes\Pages\ManageTaxes;
 use App\Models\Tax;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -119,5 +121,73 @@ class TaxResource extends Resource
         return [
             'index' => ManageTaxes::route('/'),
         ];
+    }
+
+    public static function getSuffixAction($set = null, $inputName = null, $recordId = null)
+    {
+        $record = null;
+        if (!empty($recordId)) {
+            $record = Tax::find($recordId);
+        }
+        return Action::make('createTax')
+            ->icon(function () use ($record) {
+                if (isset($record) && $record) {
+                    return 'heroicon-s-pencil-square';
+                } else {
+                    return 'heroicon-s-plus';
+                }
+            })
+            ->modalWidth('md')
+            ->label(function () use ($record) {
+                if (isset($record) && $record) {
+                    return __('messages.settings.edit_tax');
+                } else {
+                    return __('messages.settings.new_tax');
+                }
+            })
+            ->modalHeading(function () use ($record) {
+                if (isset($record) && $record) {
+                    return __('messages.settings.edit_tax');
+                } else {
+                    return __('messages.settings.create_tax');
+                }
+            })
+            ->form([
+                TextInput::make('name')
+                    ->label(__('messages.common.name'))
+                    ->placeholder(__('messages.common.name'))
+                    ->required(),
+
+                TextInput::make('tax')
+                    ->label(__('messages.settings.tax'))
+                    ->placeholder(__('messages.settings.tax'))
+                    ->numeric()
+                    ->required(),
+            ])
+            ->action(function (array $data) use ($set, $inputName, $record) {
+                if (isset($record) && $record) {
+                    $record->update([
+                        'name' => $data['name'],
+                        'tax' => $data['tax'],
+                    ]);
+                    Notification::make()
+                        ->title(__('messages.settings.tax_updated_successfully'))
+                        ->success()
+                        ->send();
+                } else {
+                    $record = Tax::create([
+                        'name' => $data['name'],
+                        'tax' => $data['tax'],
+                    ]);
+
+                    Notification::make()
+                        ->title(__('messages.settings.tax_created_successfully'))
+                        ->success()
+                        ->send();
+                }
+                if (!empty($set) && !empty($inputName)) {
+                    $set($inputName, $record->id);
+                }
+            });
     }
 }

@@ -91,9 +91,14 @@
             vertical-align: top;
         }
 
+        .footer-td {
+            display: flex;
+            justify-content: flex-end;
+        }
+
         .invoice-footer {
             margin-top: 15px;
-            width: 100%;
+            width: 35%;
             text-align: right;
         }
 
@@ -245,7 +250,7 @@
     </tr>
     <tr>
         <td></td>
-        <td>
+        <td class="footer-td">
             <table class="invoice-footer">
                 <tr>
                     <td class="font-weight-bold tu"

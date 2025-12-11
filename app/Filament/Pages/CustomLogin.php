@@ -41,12 +41,12 @@ class CustomLogin extends Login
                 $this->getRememberFormComponent()
                     ->label(__('messages.users.remember_me')),
 
-                // GRecaptcha::make('captcha')
-                //     ->columnSpanFull()
-                //     ->hiddenLabel()
-                //     ->visible(function () {
-                //         return enableCaptcha() ?? false;
-                //     }),
+                GRecaptcha::make('captcha')
+                    ->columnSpanFull()
+                    ->hiddenLabel()
+                    ->visible(function () {
+                        return enableCaptcha() ?? false;
+                    }),
             ]);
     }
 

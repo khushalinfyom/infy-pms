@@ -26,12 +26,13 @@ class ProjectProgessChartWidget extends ApexChartWidget
     public $colors = [
         '#c4c9ffff',
         '#f5b9fbff',
-        '#e1c9ffff',
         '#ffb3bfff',
+        '#84e2a4ff',
+        '#e1c9ffff',
+        '#32dac2',
         '#7db7f1ff',
         '#00d4df',
-        '#3bd06d',
-        '#32dac2',
+        '#ff8f9fff',
         '#e6d5bd',
         '#e09c8d',
         '#96d1d5',
@@ -45,7 +46,6 @@ class ProjectProgessChartWidget extends ApexChartWidget
         '#5b65d4',
         '#684395',
         '#d885e0',
-        '#dc4a60',
         '#4692df',
         '#00d4df',
         '#3bd06d',
@@ -69,10 +69,10 @@ class ProjectProgessChartWidget extends ApexChartWidget
 
         foreach ($statusCounts as $index => $row) {
 
-            $statusId = $row->status;
+            $statusValue = $row->status;
             $count    = $row->total;
 
-            $status = Status::find($statusId);
+            $status = Status::where('status', $statusValue)->first();
             $statusName = $status ? $status->name : __('messages.projects.unknown_status');
 
             $labels[] = $statusName;

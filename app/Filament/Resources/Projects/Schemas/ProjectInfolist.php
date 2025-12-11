@@ -100,7 +100,12 @@ class ProjectInfolist
                                 ->width(60)
                                 ->height(60)
                                 ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->client->name) . '&background=random')
-                                ->columns(1),
+                                ->columns([
+                                    'default' => 1,
+                                    'sm' => 1,
+                                    'md' => 1,
+                                    'lg' => 1,
+                                ]),
 
                             TextEntry::make('client_info')
                                 ->label('Client')
@@ -116,16 +121,34 @@ class ProjectInfolist
                                 })
                                 ->formatStateUsing(fn(string $state) => nl2br($state))
                                 ->html()
-                                ->columnSpan(2),
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                ]),
                         ])
-                        ->columns(3),
+                        ->columns([
+                            'default' => 3,
+                            'sm' => 3,
+                            'md' => 3,
+                            'lg' => 3,
+                            'xl' => 3,
+                        ]),
 
                     Section::make()
                         ->schema([
                             IconEntry::make('status')
                                 ->hiddenLabel()
                                 ->icon('phosphor-money-fill')
-                                ->columnSpan(1)
+                                ->columnSpan([
+                                    'default' => 1,
+                                    'sm' => 1,
+                                    'md' => 1,
+                                    'lg' => 1,
+                                    'xl' => 1,
+                                ])
                                 ->extraAttributes([
                                     'class' => 'project-side-card',
                                     'style' => 'align-items: center; display: flex; justify-content: center; margin-left: -10px;'
@@ -137,19 +160,37 @@ class ProjectInfolist
                                     return Project::getCurrencyClass($record->currency) . ' ';
                                 })
                                 ->default(0)
-                                ->columnSpan(2),
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                ]),
                         ])
                         ->extraAttributes([
                             'class' => 'project-price-card',
                         ])
-                        ->columns(3),
+                        ->columns([
+                            'default' => 3,
+                            'sm' => 3,
+                            'md' => 3,
+                            'lg' => 3,
+                            'xl' => 3,
+                        ]),
 
                     Section::make()
                         ->schema([
                             IconEntry::make('status')
                                 ->hiddenLabel()
                                 ->icon('phosphor-credit-card-fill')
-                                ->columnSpan(1)
+                                ->columnSpan([
+                                    'default' => 1,
+                                    'sm' => 1,
+                                    'md' => 1,
+                                    'lg' => 1,
+                                    'xl' => 1,
+                                ])
                                 ->extraAttributes([
                                     'class' => 'project-side-card',
                                     'style' => 'align-items: center; display: flex; justify-content: center; margin-left: -10px;'
@@ -159,19 +200,37 @@ class ProjectInfolist
                                 ->label(__('messages.projects.budget_type'))
                                 ->placeholder('N/A')
                                 ->formatStateUsing(fn($state) => Project::BUDGET_TYPE[$state] ?? 'N/A')
-                                ->columnSpan(2),
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                ]),
                         ])
                         ->extraAttributes([
                             'class' => 'project-budget-type-card',
                         ])
-                        ->columns(3),
+                        ->columns([
+                            'default' => 3,
+                            'sm' => 3,
+                            'md' => 3,
+                            'lg' => 3,
+                            'xl' => 3,
+                        ]),
 
                     Section::make()
                         ->schema([
                             IconEntry::make('status')
                                 ->hiddenLabel()
                                 ->icon('phosphor-list-bullets-fill')
-                                ->columnSpan(1)
+                                ->columnSpan([
+                                    'default' => 1,
+                                    'sm' => 1,
+                                    'md' => 1,
+                                    'lg' => 1,
+                                    'xl' => 1,
+                                ])
                                 ->extraAttributes([
                                     'class' => 'project-side-card',
                                     'style' => 'align-items: center; display: flex; justify-content: center; margin-left: -10px;'
@@ -187,26 +246,48 @@ class ProjectInfolist
 
                                     return "{$pending}/{$total} " . __('messages.projects.pending_tasks');
                                 })
-                                ->columnSpan(2),
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                ]),
                         ])
                         ->extraAttributes([
                             'class' => 'project-created-at-card',
                         ])
-                        ->columns(3),
+                        ->columns([
+                            'default' => 3,
+                            'sm' => 3,
+                            'md' => 3,
+                            'lg' => 3,
+                            'xl' => 3,
+                        ]),
                 ]),
                 Fieldset::make(__('messages.projects.assigneed_users'))
                     ->schema(function ($record) {
                         $sections = [];
 
-                        foreach ($record->users as $user) {
-                            $sections[] = Fieldset::make('')
-                                ->schema([
-                                    ProjectUserEntry::make("user_{$user->id}")
-                                        ->hiddenLabel()
-                                        ->user($user),
-                                ])
-                                ->extraAttributes(['style' => 'display: flex;'])
-                                ->columns(2);
+                        $activeUsers = $record->users->where('is_active', 1);
+
+                        if ($activeUsers->isEmpty()) {
+                            $sections[] = TextEntry::make('no_users')
+                                ->hiddenLabel()
+                                ->state(__('messages.projects.no_user_assigned'))
+                                ->html()
+                                ->extraAttributes(['style' => 'font-style: bold; padding: 10px;']);
+                        } else {
+                            foreach ($activeUsers as $user) {
+                                $sections[] = Fieldset::make('')
+                                    ->schema([
+                                        ProjectUserEntry::make("user_{$user->id}")
+                                            ->hiddenLabel()
+                                            ->user($user),
+                                    ])
+                                    ->extraAttributes(['style' => 'display: flex;'])
+                                    ->columns(2);
+                            }
                         }
 
                         return $sections;
