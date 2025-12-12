@@ -181,7 +181,12 @@ class General extends Page implements HasForms
                             ->disk(config('app.media_disk'))
                             ->collection(Setting::APP_FAVICON),
 
-                    ])->columns(2)->columnSpanFull(),
+                        SpatieMediaLibraryFileUpload::make('login_bg_image')
+                            ->label(__('messages.settings.login_bg_image'))
+                            ->disk(config('app.media_disk'))
+                            ->collection(Setting::LOGIN_BG_IMAGE),
+
+                    ])->columns(3)->columnSpanFull(),
                 ])->columns(2)
             ])
             ->columns(1)
@@ -196,6 +201,7 @@ class General extends Page implements HasForms
             $AppSetting = Setting::where('key', 'app_name')->first();
             $data['app_logo'] = $AppSetting->getFirstMediaUrl(Setting::APP_LOGO) ?? asset('images/logo.png');
             $data['app_favicon'] = $AppSetting->getFirstMediaUrl(Setting::APP_FAVICON) ?? asset('images/logo.png');
+            $data['login_bg_image'] = $AppSetting->getFirstMediaUrl(Setting::LOGIN_BG_IMAGE) ?? asset('images/login-bg.jpg');
 
             $paymentSettings = [
                 'app_name',
@@ -208,6 +214,7 @@ class General extends Page implements HasForms
                 'working_hours_of_day',
                 'app_logo',
                 'app_favicon',
+                'login_bg_image',
                 'default_task_status'
             ];
 

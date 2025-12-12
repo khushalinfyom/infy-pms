@@ -59,7 +59,8 @@ class ExpenseForm
                                 ->options(Expense::CATEGORY)
                                 ->searchable()
                                 ->preload()
-                                ->native(false),
+                                ->native(false)
+                                ->required(),
 
                             Select::make('client_id')
                                 ->label(__('messages.users.client'))

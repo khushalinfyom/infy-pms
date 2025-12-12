@@ -6,6 +6,7 @@ use App\Enums\AdminPanelSidebar;
 use App\Filament\Resources\Tasks\TaskResource;
 use App\Models\Comment;
 use App\Models\Task as TaskModel;
+use App\Models\TaskAttachment;
 use App\Models\Project;
 use App\Models\Status;
 use App\Models\Tag;
@@ -26,6 +27,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Components\ImageEntry;
@@ -44,6 +46,8 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Support\Exceptions\Halt;
 use Livewire\WithPagination;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -301,6 +305,49 @@ class Task extends Page implements HasActions, HasForms
                         }
 
                         return TimeEntry::create($data);
+                    })
+                    ->mutateFormDataUsing(function (array $data): array {
+
+                        $start = Carbon::parse($data['start_time']);
+                        $end   = Carbon::parse($data['end_time']);
+
+                        if ($start >= $end) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Start time must be less than end time')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        $diffHours = $start->diffInHours($end);
+                        if ($diffHours > 12) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Time Entry must be less than 12 hours.')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        $exists = \App\Models\TimeEntry::where('task_id', $data['task_id'])
+                            ->where(function ($q) use ($start, $end) {
+                                $q->whereBetween('start_time', [$start, $end])
+                                    ->orWhereBetween('end_time', [$start, $end])
+                                    ->orWhere(function ($q2) use ($start, $end) {
+                                        $q2->where('start_time', '<=', $start)
+                                            ->where('end_time', '>=', $end);
+                                    });
+                            })
+                            ->exists();
+
+                        if ($exists) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Time entry between this duration already exist.')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        return $data;
                     })
                     ->visible(authUserHasPermission('manage_time_entries'))
                     ->successNotificationTitle(__('messages.projects.time_entry_created_successfully')),
@@ -561,6 +608,9 @@ class Task extends Page implements HasActions, HasForms
                             }),
                     ]),
 
+                Hidden::make('estimate_time_type')
+                    ->default(TaskModel::IN_HOURS),
+
                 Select::make('tags')
                     ->label(__('messages.settings.tags'))
                     ->multiple()
@@ -751,6 +801,7 @@ class Task extends Page implements HasActions, HasForms
                                     ->placeholder('N/A'),
 
                                 Fieldset::make(__('messages.projects.attachments'))
+                                    ->hiddenLabel()
                                     ->schema([
 
                                         Action::make('add_attachment')
@@ -767,46 +818,55 @@ class Task extends Page implements HasActions, HasForms
                                                     ->required(),
                                             ])
                                             ->action(function (array $data, $record) {
-
                                                 if ($record && !empty($data['upload_file'])) {
-                                                    $record
+                                                    // Create a TaskAttachment record
+                                                    $attachment = \App\Models\TaskAttachment::create([
+                                                        'task_id' => $record->id,
+                                                        'file' => $data['upload_file']->getClientOriginalName(),
+                                                    ]);
+
+                                                    // Attach the media to the attachment
+                                                    $attachment
                                                         ->addMedia($data['upload_file']->getRealPath())
                                                         ->usingFileName($data['upload_file']->getClientOriginalName())
                                                         ->toMediaCollection('attachments');
+
+                                                    // Refresh the record to update the attachments relationship
+                                                    $record->refresh();
                                                 }
                                             }),
 
                                         Repeater::make('attachments')
+                                            ->key('attachments-list')
                                             ->label(__('messages.projects.all_attachments'))
                                             ->default(function ($record) {
                                                 if (!$record) return [];
 
-                                                return $record->getMedia('attachments')->map(function ($media) {
+                                                return $record->attachments->map(function ($attachment) {
                                                     return [
-                                                        'file_name' => $media->file_name,
-                                                        'file_url'  => $media->getFullUrl(),
-                                                        'created_at' => $media->created_at->diffForHumans(),
+                                                        'id' => $attachment->id,
+                                                        'file' => $attachment->file,
+                                                        'file_path' => $attachment->file, // Using file_path for SpatieMediaLibraryImageColumn
+                                                        'created_at' => $attachment->created_at,
                                                     ];
                                                 })->toArray();
                                             })
                                             ->schema([
                                                 Group::make()->schema([
 
-                                                    ImageEntry::make('file_url')
-                                                        ->circular()
-                                                        ->imageHeight(40)
-                                                        ->label(''),
-
-                                                    TextEntry::make('file_name')
+                                                    SpatieMediaLibraryImageEntry::make('file_path')
+                                                        ->collection('attachments')
                                                         ->label('')
-                                                        ->extraAttributes(['style' => 'font-weight: 600;']),
+                                                        ->circular()
+                                                        ->imageHeight(40),
 
                                                     TextEntry::make('created_at')
                                                         ->label('')
-                                                        ->extraAttributes(['style' => 'font-size: 12px; color: #888;']),
+                                                        ->extraAttributes(['style' => 'font-size: 12px; color: #888;'])
+                                                        ->default(fn($record) => $record['created_at']->diffForHumans() ?? ''),
                                                 ]),
                                             ])
-                                            ->columns(1)
+                                            ->columns(1),
 
                                     ])
                                     ->columns(1),
@@ -840,43 +900,116 @@ class Task extends Page implements HasActions, HasForms
                                                         'task_id' => $record->id,
                                                         'created_by' => Auth::id(),
                                                     ]);
+                                                    // Refresh the record to update the comments relationship
+                                                    $record->refresh();
                                                 }
                                             }),
 
                                         Repeater::make('comment')
                                             ->label(__('messages.projects.comments'))
-                                            ->default(function ($record) {
-                                                if (!$record) return [];
-
-                                                return $record->comments->map(function ($item) {
-                                                    return [
-                                                        'user_name'  => $item->createdUser->name ?? __('messages.projects.unknown_user'),
-                                                        'avatar'     => $item->user_avatar,
-                                                        'comment'    => $item->comment,
-                                                        'created_at' => $item->created_at->diffForHumans(),
-                                                    ];
-                                                })->toArray();
-                                            })
-
+                                            ->hiddenLabel()
+                                            ->relationship('comments')
                                             ->schema([
-                                                Group::make()->schema([
-                                                    ImageEntry::make('avatar')
-                                                        ->circular()
-                                                        ->imageHeight(35)
-                                                        ->label(''),
+                                                Group::make()
+                                                    ->schema([
+                                                        Group::make()
+                                                            ->schema([
+                                                                ImageEntry::make('createdUser.img_avatar')
+                                                                    ->circular()
+                                                                    ->imageHeight(40)
+                                                                    ->imageWidth(40)
+                                                                    ->hiddenLabel()
+                                                                    ->default(fn($record) => $record && $record->createdUser
+                                                                        ? ($record->createdUser->getFirstMediaUrl('images')
+                                                                            ?: 'https://ui-avatars.com/api/?name=' . urlencode($record->createdUser->name) . '&background=random')
+                                                                        : asset('assets/img/user-avatar.png'))
+                                                                    ->extraAttributes(['style' => 'margin-right: 10px;']),
 
-                                                    TextEntry::make('user_name')
-                                                        ->label('')
-                                                        ->extraAttributes(['style' => 'font-weight: 600;']),
+                                                                TextEntry::make('createdUser.name')
+                                                                    ->hiddenLabel()
+                                                                    ->formatStateUsing(function ($state, $record) {
+                                                                        if (!$record || !$record->createdUser) {
+                                                                            return __('messages.projects.unknown_user');
+                                                                        }
 
-                                                    TextEntry::make('created_at')
-                                                        ->label('')
-                                                        ->extraAttributes(['style' => 'font-size: 12px; color: #888;']),
+                                                                        $name = $record->createdUser->name;
+                                                                        $time = $record->created_at?->diffForHumans();
 
-                                                    TextEntry::make('comment')
-                                                        ->label('')
-                                                        ->html(),
-                                                ]),
+                                                                        return "
+                                                                                    <div style='display:flex; flex-direction:column; line-height:1.2;'>
+                                                                                        <span style='font-weight:600; font-size:14px;'>{$name}</span>
+                                                                                        <span style='color:#888; font-size:12px;'>{$time}</span>
+                                                                                    </div>
+                                                                                ";
+                                                                    })
+                                                                    ->html()
+                                                                    ->extraAttributes(['style' => 'display:flex; align-items:center; margin-top: 3px;'])
+                                                                    ->columnSpan([
+                                                                        'sm' => 10,
+                                                                        'md' => 10,
+                                                                        'lg' => 10,
+                                                                        'xl' => 10,
+                                                                    ]),
+
+                                                                Group::make()
+                                                                    ->schema([
+                                                                        ActionGroup::make([
+                                                                            Action::make('edit_comment')
+                                                                                ->icon('heroicon-o-pencil')
+                                                                                ->tooltip(__('messages.common.edit'))
+                                                                                ->modalWidth('xl')
+                                                                                ->modalHeading(__('messages.projects.edit_comment'))
+                                                                                ->form([
+                                                                                    RichEditor::make('comment')
+                                                                                        ->label(__('messages.projects.comment'))
+                                                                                        ->required()
+                                                                                        ->columnSpanFull()
+                                                                                        ->extraAttributes(['style' => 'min-height: 200px;']),
+                                                                                ])
+                                                                                ->mountUsing(fn($record, $form) => $form->fill(['comment' => $record->comment]))
+                                                                                ->action(fn(array $data, $record) => $record->update(['comment' => $data['comment']]))
+                                                                                ->visible(fn($record) => $record && Auth::id() === $record->created_by),
+
+                                                                            Action::make('delete_comment')
+                                                                                ->icon('heroicon-o-trash')
+                                                                                ->tooltip(__('messages.common.delete'))
+                                                                                ->requiresConfirmation()
+                                                                                ->action(function ($record) {
+                                                                                    $task = $record->task;
+                                                                                    $record->delete();
+                                                                                    $task->refresh();
+                                                                                })
+                                                                                ->visible(fn($record) => $record && Auth::id() === $record->created_by),
+                                                                        ])
+                                                                            ->extraAttributes([
+                                                                                'style' => 'display:flex; justify-content:flex-end; align-items:center; gap:4px;',
+                                                                            ]),
+                                                                    ])
+                                                                    ->columnSpan([
+                                                                        'sm' => 1,
+                                                                        'md' => 1,
+                                                                        'lg' => 1,
+                                                                        'xl' => 1,
+                                                                    ]),
+
+                                                            ])
+                                                            ->columns([
+                                                                'sm' => 12,
+                                                                'md' => 12,
+                                                                'lg' => 12,
+                                                                'xl' => 12,
+                                                            ])
+                                                            ->columnSpanFull(),
+
+                                                        TextEntry::make('comment')
+                                                            ->hiddenLabel()
+                                                            ->html()
+                                                            ->extraAttributes([
+                                                                'style' => 'margin-top:-5px;'
+                                                            ]),
+
+                                                    ])
+                                                    ->columns(1),
                                             ])
                                             ->columns(1)
 
@@ -894,15 +1027,14 @@ class Task extends Page implements HasActions, HasForms
 
                                         if (!$record) return [];
 
-                                        $users = \App\Models\User::whereIn('id', function ($query) use ($record) {
-                                            $query->select('user_id')
-                                                ->from('task_assignees')
-                                                ->where('task_id', $record->id);
-                                        })->get();
+                                        $assignees = $record->taskAssignee;
 
-                                        return $users->map(function ($user) {
-                                            return $user->img_avatar
-                                                ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
+                                        return $assignees->map(function ($user) {
+                                            $avatar = $user->img_avatar;
+                                            if (empty($avatar) || !filter_var($avatar, FILTER_VALIDATE_URL)) {
+                                                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=random&size=64&rounded=true&color=fff';
+                                            }
+                                            return $avatar;
                                         })->toArray();
                                     })
                                     ->stacked()
@@ -1101,6 +1233,49 @@ class Task extends Page implements HasActions, HasForms
                 ];
                 $form->fill($formData);
             })
+            ->mutateFormDataUsing(function (array $data): array {
+
+                $start = Carbon::parse($data['start_time']);
+                $end   = Carbon::parse($data['end_time']);
+
+                if ($start >= $end) {
+                    Notification::make()
+                        ->danger()
+                        ->title('Start time must be less than end time')
+                        ->send();
+                    throw new Halt();
+                }
+
+                $diffHours = $start->diffInHours($end);
+                if ($diffHours > 12) {
+                    Notification::make()
+                        ->danger()
+                        ->title('Time Entry must be less than 12 hours.')
+                        ->send();
+                    throw new Halt();
+                }
+
+                $exists = TimeEntry::where('task_id', $data['task_id'])
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('start_time', [$start, $end])
+                            ->orWhereBetween('end_time', [$start, $end])
+                            ->orWhere(function ($q2) use ($start, $end) {
+                                $q2->where('start_time', '<=', $start)
+                                    ->where('end_time', '>=', $end);
+                            });
+                    })
+                    ->exists();
+
+                if ($exists) {
+                    Notification::make()
+                        ->danger()
+                        ->title('Time entry between this duration already exist.')
+                        ->send();
+                    throw new Halt();
+                }
+
+                return $data;
+            })
             ->action(function (array $data) {
                 if (empty($data['duration'])) {
                     $start = Carbon::parse($data['start_time']);
@@ -1139,5 +1314,133 @@ class Task extends Page implements HasActions, HasForms
             ->tooltip(__('messages.projects.details'))
             ->icon('heroicon-o-arrow-right-circle')
             ->url(fn($record) => TaskResource::getUrl('taskdetails', ['record' => $record->id]));
+    }
+
+    public static function getSuffixAction($inputName = null, $recordId = null)
+    {
+        $record = null;
+        if (!empty($recordId)) {
+            $record = TaskModel::find($recordId);
+        }
+        return Action::make('createTask')
+            ->icon(function () use ($record) {
+                if (isset($record) && $record) {
+                    return 'heroicon-s-pencil-square';
+                } else {
+                    return 'heroicon-s-plus';
+                }
+            })
+            ->modalWidth('md')
+            ->label(function () use ($record) {
+                if (isset($record) && $record) {
+                    return __('messages.projects.edit_task');
+                } else {
+                    return __('messages.projects.create_task');
+                }
+            })
+            ->modalHeading(function () use ($record) {
+                if (isset($record) && $record) {
+                    return __('messages.projects.edit_task');
+                } else {
+                    return __('messages.projects.create_task');
+                }
+            })
+            ->form([
+                TextInput::make('title')
+                    ->label(__('messages.projects.title'))
+                    ->placeholder(__('messages.projects.title'))
+                    ->required(),
+
+                Select::make('project_id')
+                    ->label(__('messages.projects.project'))
+                    ->options(Project::all()->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->reactive()
+                    ->required()
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $set('taskAssignee', null);
+                    }),
+
+                Select::make('taskAssignee')
+                    ->label(__('messages.projects.assignee'))
+                    ->multiple()
+                    ->options(function (callable $get) {
+                        $projectId = $get('project_id');
+
+                        if (!$projectId) {
+                            return [];
+                        }
+
+                        return User::whereHas('projects', function ($q) use ($projectId) {
+                            $q->where('project_id', $projectId)
+                                ->where('is_active', 1);
+                        })->pluck('name', 'id');
+                    })
+                    ->preload()
+                    ->searchable()
+                    ->native(false)
+                    ->required(fn(callable $get) => !empty($get('project_id'))),
+            ])
+            ->action(function (array $data, Set $set) use ($inputName, $record) {
+                if (isset($record) && $record) {
+                    $record->update([
+                        'title' => $data['title'],
+                        'project_id' => $data['project_id'],
+                    ]);
+
+                    // Sync task assignees
+                    if (! empty($data['taskAssignee'])) {
+                        $record->taskAssignee()->sync($data['taskAssignee']);
+                    }
+
+                    // Sync tags
+                    if (! empty($data['tags'])) {
+                        $record->tags()->sync($data['tags']);
+                    }
+
+                    Notification::make()
+                        ->title(__('messages.projects.task_updated_successfully'))
+                        ->success()
+                        ->send();
+                } else {
+
+                    $data['created_by'] = Auth::id();
+
+                    $record = TaskModel::create($data);
+
+                    // Assign task to users
+                    if (! empty($data['taskAssignee'])) {
+                        foreach ($data['taskAssignee'] as $userId) {
+                            DB::table('task_assignees')->insert([
+                                'task_id' => $record->id,
+                                'user_id' => $userId,
+                            ]);
+                        }
+                    }
+
+                    // Send notifications
+                    $userIds = $data['taskAssignee'] ?? [];
+                    foreach ($userIds as $id) {
+                        UserNotification::create([
+                            'title'       => 'New Task Assigned',
+                            'description' => $record->title . ' assigned to you',
+                            'type'        => TaskModel::class,
+                            'user_id'     => $id,
+                        ]);
+                    }
+
+                    Notification::make()
+                        ->title(__('messages.projects.task_created_successfully'))
+                        ->success()
+                        ->send();
+                }
+
+                // Set the input value
+                if ($inputName) {
+                    $set($inputName, $record->id);
+                }
+            });
     }
 }

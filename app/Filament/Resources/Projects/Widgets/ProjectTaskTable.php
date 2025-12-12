@@ -29,6 +29,7 @@ use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Tables\Columns\ImageColumn;
 
 class ProjectTaskTable extends TableWidget
 {
@@ -57,32 +58,49 @@ class ProjectTaskTable extends TableWidget
                     ->label(__('messages.projects.title'))
                     ->searchable(),
 
-                // ImageColumn::make('users')
-                //     ->label('Team')
-                //     ->default(function () use ($project) {
-                //         $users = $project->users ?? collect();
+                ImageColumn::make('task_assignees')
+                    ->label(__('messages.projects.assignee'))
+                    ->default(function ($record) {
+                        if (!$record) return [];
 
-                //         if ($users->isEmpty()) {
-                //             $users = User::whereIn('id', function ($query) use ($project) {
-                //                 $query->select('user_id')
-                //                     ->from('project_user')
-                //                     ->where('project_id', $project->id);
-                //             })->get();
-                //         }
+                        $assignees = $record->taskAssignee;
 
-                //         return $users->map(function ($user) {
-                //             return $user->img_avatar
-                //                 ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&background=random";
-                //         })->toArray();
-                //     })
-                //     ->circular()
-                //     ->stacked()
-                //     ->limit(6)
-                //     ->limitedRemainingText()
-                //     ->imageHeight(40)
-                //     ->extraAttributes([
-                //         'style' => 'display: flex;',
-                //     ]),
+                        return $assignees->map(function ($user) {
+                            $profileImage = $user->getFirstMediaUrl(User::IMAGE_PATH);
+                            if (!empty($profileImage)) {
+                                return $profileImage;
+                            }
+
+                            $avatar = $user->img_avatar;
+                            if (empty($avatar) || !filter_var($avatar, FILTER_VALIDATE_URL)) {
+                                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=random';
+                            }
+                            return $avatar;
+                        })->toArray();
+                    })
+                    ->circular()
+                    ->stacked()
+                    ->limit(5)
+                    ->limitedRemainingText()
+                    ->imageHeight(40)
+                    ->extraAttributes([
+                        'style' => 'display: flex;',
+                    ]),
+
+                TextColumn::make('duration')
+                    ->label('Time Entry')
+                    ->formatStateUsing(function ($state, $record) {
+                        if (!$record) return '00:00 M';
+
+                        $totalMinutes = $record->timeEntries->sum('duration');
+                        if ($totalMinutes <= 0) return '00:00 M';
+
+                        $hours = floor($totalMinutes / 60);
+                        $minutes = $totalMinutes % 60;
+
+                        return sprintf('%02d:%02d M', $hours, $minutes);
+                    })
+                    ->default('00:00 M'),
 
                 TextColumn::make('priority')
                     ->label(__('messages.projects.priority'))
@@ -399,7 +417,7 @@ class ProjectTaskTable extends TableWidget
                                             ->schema([
 
                                                 TextEntry::make('created_at')
-                                                    ->label( __('messages.projects.start_at'))
+                                                    ->label(__('messages.projects.start_at'))
                                                     ->inlineLabel()
                                                     ->formatStateUsing(function ($state) {
                                                         return Carbon::parse($state)->format('jS M, Y');
@@ -624,6 +642,9 @@ class ProjectTaskTable extends TableWidget
                                     $set('estimate_time', null);
                                 })
                         ),
+
+                    Hidden::make('estimate_time_type')
+                        ->default(Task::IN_HOURS),
 
                     Select::make('tags')
                         ->label(__('messages.settings.tags'))

@@ -33,11 +33,13 @@ use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -494,6 +496,49 @@ class TaskKanban extends Page implements HasActions, HasForms
                         'project_id' => $record->project_id,
                     ]);
                 }
+            })
+            ->mutateFormDataUsing(function (array $data): array {
+
+                $start = Carbon::parse($data['start_time']);
+                $end   = Carbon::parse($data['end_time']);
+
+                if ($start >= $end) {
+                    Notification::make()
+                        ->danger()
+                        ->title('Start time must be less than end time')
+                        ->send();
+                    throw new Halt();
+                }
+
+                $diffHours = $start->diffInHours($end);
+                if ($diffHours > 12) {
+                    Notification::make()
+                        ->danger()
+                        ->title('Time Entry must be less than 12 hours.')
+                        ->send();
+                    throw new Halt();
+                }
+
+                $exists = TimeEntry::where('task_id', $data['task_id'])
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('start_time', [$start, $end])
+                            ->orWhereBetween('end_time', [$start, $end])
+                            ->orWhere(function ($q2) use ($start, $end) {
+                                $q2->where('start_time', '<=', $start)
+                                    ->where('end_time', '>=', $end);
+                            });
+                    })
+                    ->exists();
+
+                if ($exists) {
+                    Notification::make()
+                        ->danger()
+                        ->title('Time entry between this duration already exist.')
+                        ->send();
+                    throw new Halt();
+                }
+
+                return $data;
             })
             ->action(function (array $data) {
                 if (!isset($data['duration']) || empty($data['duration'])) {

@@ -377,7 +377,7 @@
                     // Show empty state when no tasks
                     const emptyState = document.createElement('div');
                     emptyState.className =
-                        'flex flex-col items-center justify-center py-4 text-slate-500 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700';
+                        'flex flex-col items-center justify-center py-4 text-slate-500 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 empty-state';
                     emptyState.innerHTML = `
                         <div class="relative mb-2">
                             <svg class="w-10 h-10 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -577,6 +577,7 @@
                         group: 'kanban-group',
                         animation: 180,
                         ghostClass: 'card-dragging',
+                        filter: '.add-task-btn, .empty-state', 
                         onEnd: function(evt) {
                             const el = evt.item;
                             const id = el.dataset.id;

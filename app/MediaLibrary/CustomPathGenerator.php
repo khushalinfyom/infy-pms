@@ -38,6 +38,8 @@ class CustomPathGenerator implements PathGenerator
                 return str_replace('{PARENT_DIR}', Project::PATH, $path);
             case TaskAttachment::PATH:
                 return str_replace('{PARENT_DIR}', TaskAttachment::PATH, $path);
+            case Setting::LOGIN_BG_IMAGE:
+                return str_replace('{PARENT_DIR}', Setting::LOGIN_BG_IMAGE, $path);
             case 'default':
                 return '';
         }

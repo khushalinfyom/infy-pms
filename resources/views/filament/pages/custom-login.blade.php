@@ -1,4 +1,8 @@
-<div class="w-full max-w-sm sm:max-w-md mx-auto px-4">
+<div class="w-full max-w-sm sm:max-w-md mx-auto px-4 relative"
+    @php
+$appSetting = \App\Models\Setting::where('key', 'app_name')->first();
+        $bgImageUrl = $appSetting && $appSetting->getFirstMediaUrl('login_bg_image') ? $appSetting->getFirstMediaUrl('login_bg_image') : ''; @endphp
+    @if ($bgImageUrl) style="background-image: url('{{ $bgImageUrl }}'); background-size: cover; background-position: center; background-repeat: no-repeat;" @endif>
 
     <div class="flex justify-center mb-6">
         <img src="{{ !empty(getLogoUrl()) ? getLogoUrl() : asset('assets/img/logo-red-black.png') }}"
