@@ -73,6 +73,8 @@ class Setting extends Model implements HasMedia
 
     public const APP_FAVICON = 'app_favicon';
 
+    public const LOGIN_BG_IMAGE = 'login_bg_image';
+
     const CURRENCIES = [
         'eur' => 'Euro (EUR)',
         'aud' => 'Australia Dollar (AUD)',

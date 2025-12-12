@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Filament\Pages\Task as PagesTask;
 use App\Models\ActivityType;
 use App\Models\Project;
 use App\Models\Task;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -88,7 +90,11 @@ class StopWatchModal extends Component implements HasForms
                     ->searchable()
                     ->preload()
                     ->native(false)
-                    ->required(),
+                    ->required()
+                    // ->suffixAction(function (Get $get) {
+                    //     return PagesTask::getSuffixAction('project_id', 'task_id', $get('project_id'), $get('task_id'));
+                    // })
+                    ,
 
                 Select::make('activity_id')
                     ->label('Activity Type')

@@ -21,6 +21,9 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
+use Filament\Notifications\Notification;
+use Filament\Support\Exceptions\Halt;
 
 class TaskTimeEntryTable extends TableWidget
 {
@@ -109,6 +112,49 @@ class TaskTimeEntryTable extends TableWidget
 
                         return TimeEntry::create($data);
                     })
+                    ->mutateFormDataUsing(function (array $data): array {
+
+                        $start = Carbon::parse($data['start_time']);
+                        $end   = Carbon::parse($data['end_time']);
+
+                        if ($start >= $end) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Start time must be less than end time')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        $diffHours = $start->diffInHours($end);
+                        if ($diffHours > 12) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Time Entry must be less than 12 hours.')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        $exists = \App\Models\TimeEntry::where('task_id', $data['task_id'])
+                            ->where(function ($q) use ($start, $end) {
+                                $q->whereBetween('start_time', [$start, $end])
+                                    ->orWhereBetween('end_time', [$start, $end])
+                                    ->orWhere(function ($q2) use ($start, $end) {
+                                        $q2->where('start_time', '<=', $start)
+                                            ->where('end_time', '>=', $end);
+                                    });
+                            })
+                            ->exists();
+
+                        if ($exists) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Time entry between this duration already exist.')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        return $data;
+                    })
                     ->visible(authUserHasPermission('manage_time_entries'))
                     ->successNotificationTitle(__('messages.projects.time_entry_created_successfully')),
             ])
@@ -132,6 +178,49 @@ class TaskTimeEntryTable extends TableWidget
                         $record->update($data);
 
                         return $record;
+                    })
+                    ->mutateFormDataUsing(function (array $data): array {
+
+                        $start = Carbon::parse($data['start_time']);
+                        $end   = Carbon::parse($data['end_time']);
+
+                        if ($start >= $end) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Start time must be less than end time')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        $diffHours = $start->diffInHours($end);
+                        if ($diffHours > 12) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Time Entry must be less than 12 hours.')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        $exists = \App\Models\TimeEntry::where('task_id', $data['task_id'])
+                            ->where(function ($q) use ($start, $end) {
+                                $q->whereBetween('start_time', [$start, $end])
+                                    ->orWhereBetween('end_time', [$start, $end])
+                                    ->orWhere(function ($q2) use ($start, $end) {
+                                        $q2->where('start_time', '<=', $start)
+                                            ->where('end_time', '>=', $end);
+                                    });
+                            })
+                            ->exists();
+
+                        if ($exists) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Time entry between this duration already exist.')
+                                ->send();
+                            throw new Halt();
+                        }
+
+                        return $data;
                     })
                     ->successNotificationTitle(__('messages.projects.time_entry_updated_successfully')),
 
